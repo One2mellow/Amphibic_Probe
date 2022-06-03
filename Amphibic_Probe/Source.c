@@ -15,9 +15,9 @@ typedef struct { //bmp file values struct
 } image_t;
 
 typedef struct { //pixel color
-	int r;
-	int g;
-	int b;
+	unsigned char r;
+	unsigned char g;
+	unsigned char b;
 } color_t;
 
 typedef struct { //pixel's coordinates
@@ -25,10 +25,6 @@ typedef struct { //pixel's coordinates
 	int y;
 }co_t;
 
-typedef struct pxgroup {
-	color_t color;
-	co_t position;
-}pxgroup;
 
 typedef struct pixel { //list of pixels
 	co_t p;
@@ -42,15 +38,17 @@ typedef struct pool { //pools' list extructed of bmp
 	struct pool* next;
 }poolList_t;
 
+
 bool LoadSprite(image_t* image, const char* filename);
 
 co_t pool_middle(co_t arr[], int size);
 
+void imgtrx(color_t** mtrx, image_t image, char* filename);
 
 int main() {
 	int i, j;
 
-	pxgroup** imgtrx;
+	color_t** matrix;
 	static image_t image;
 
 	if ((LoadSprite(&image, BMP)) != 0) {
@@ -58,10 +56,12 @@ int main() {
 		return -1;
 	}
 
-	imgtrx = malloc(sizeof(pxgroup*) * image.height); // allocate memory to image pixel matrix
+	matrix = malloc(sizeof(color_t*) * image.height); // allocate memory to image pixel matrix
 	for (i = 0;i < image.height;i++) {
-		imgtrx[i] = malloc(sizeof(pxgroup) * image.width);
+		matrix[i] = malloc(sizeof(color_t) * image.width);
 	}
+
+	imgtrx(matrix, image, BMP);
 
 
 	return 0;
@@ -146,3 +146,46 @@ bool LoadSprite(image_t* image, const char* filename) {
 	}
 	return return_value;
 }
+
+void imgtrx(color_t** mtrx, image_t image, char* filename) {
+	int val, t, i = 0, j, k = 0;
+	FILE* file;
+	
+	val = fopen_s(&file, filename, "rt");
+
+	//fseek(file, 54, SEEK_SET);
+
+	fseek(file, 10, SEEK_SET);
+	fread(&t, 1, 4, file);     //reads the offset and puts it in t
+	fseek(file, t, SEEK_SET);
+	int  p, e;
+
+	for ( i = 0; i < image.width; i++)
+	{
+		for (j = 0;j < image.height;j++) {
+			fread(&mtrx[i][j].r, 8, 1, file);
+			fread(&mtrx[i][j].g, 8, 1, file);
+			fread(&mtrx[i][j].b, 8, 1, file);
+		}
+	}
+
+	//Print Matrix
+	for (i = 0;i < image.width;i++) {
+		//putchar('\t');
+		for (j = 0;j < image.height;j++) {
+			printf_s("{%d ", mtrx[i][j].r);
+
+			printf_s(",%d ", mtrx[i][j].g);
+
+			printf_s(",%d}", mtrx[i][j].b);
+
+			printf_s("\n");
+
+		}
+	}
+
+	fclose(file);
+
+	return 0;
+}
+
