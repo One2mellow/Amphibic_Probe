@@ -13,9 +13,7 @@ typedef struct { //bmp file values struct
 	union { int width, w; };
 	union { int height, h; };
 	union { int* pixels, * p; };
-} map_t;
-
-map_t frame;
+} image_t;
 
 typedef struct { //pixel color
 	int r;
@@ -40,16 +38,16 @@ typedef struct pool { //pools' list extructed of bmp
 	struct pool* next;
 }poolList_t;
 
-bool LoadSprite(map_t* sprite, const char* filename);
+bool LoadSprite(image_t* sprite, const char* filename);
 
 co_t pool_middle(co_t arr[], int size);
 
 
 int main() {
 
-	static map_t sprite;
+	static image_t sprite;
 	
-	if (!LoadSprite(&sprite, BMP)) {
+	if ((LoadSprite(&sprite, BMP)) != 0) {
 		printf_s("Failed to load file: \" %s\"",BMP);
 		return -1;
 	}
@@ -105,8 +103,8 @@ co_t pool_middle(co_t arr[], int size) {
  * BITMAP DATA:
  *	138:	X	Pixels
  */
-bool LoadSprite(map_t* sprite, const char* filename) {
-	bool return_value = true;
+bool LoadSprite(image_t* sprite, const char* filename) {
+	int return_value = 0;
 
 	unsigned int image_data_address;
 	int width;
@@ -119,7 +117,7 @@ bool LoadSprite(map_t* sprite, const char* filename) {
 	printf("Loading bitmap file: %s\n", filename);
 
 	FILE* file;
-	return_value = fopen_s(&file, filename, "rb");
+	return_value = fopen_s(&file,filename, "rb");
 	if (file) {
 		if (fgetc(file) == 'B' && fgetc(file) == 'M') {
 			printf("BM read; bitmap file confirmed.\n");
