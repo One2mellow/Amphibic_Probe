@@ -10,9 +10,8 @@
 #define BEST_TXT "best-route.txt"
 
 typedef struct { //bmp file values struct
-	union { int width, w; };
-	union { int height, h; };
-	union { int* pixels, * p; };
+	int width;
+	int height;
 } image_t;
 
 typedef struct { //pixel color
@@ -26,6 +25,11 @@ typedef struct { //pixel's coordinates
 	int y;
 }co_t;
 
+typedef struct pxgroup {
+	color_t color;
+	co_t position;
+}pxgroup;
+
 typedef struct pixel { //list of pixels
 	co_t p;
 	struct pixel* next;
@@ -38,18 +42,25 @@ typedef struct pool { //pools' list extructed of bmp
 	struct pool* next;
 }poolList_t;
 
-bool LoadSprite(image_t* sprite, const char* filename);
+bool LoadSprite(image_t* image, const char* filename);
 
 co_t pool_middle(co_t arr[], int size);
 
 
 int main() {
+	int i, j;
 
-	static image_t sprite;
-	
-	if ((LoadSprite(&sprite, BMP)) != 0) {
-		printf_s("Failed to load file: \" %s\"",BMP);
+	pxgroup** imgtrx;
+	static image_t image;
+
+	if ((LoadSprite(&image, BMP)) != 0) {
+		printf_s("Failed to load file: \" %s\"", BMP);
 		return -1;
+	}
+
+	imgtrx = malloc(sizeof(pxgroup*) * image.height); // allocate memory to image pixel matrix
+	for (i = 0;i < image.height;i++) {
+		imgtrx[i] = malloc(sizeof(pxgroup) * image.width);
 	}
 
 
@@ -82,42 +93,38 @@ co_t pool_middle(co_t arr[], int size) {
 	printf_s("The pool middle cordinate is (%d,%d)", middle_cot.x, middle_cot.y);*/
 
 
-/* Bitmap file format
- *
- * SECTION
- * Address:Bytes	Name
- *
- * HEADER:
- *	  0:	2		"BM" magic number
- *	  2:	4		file size
- *	  6:	4		junk
- *	 10:	4		Starting address of image data
- * BITMAP HEADER:
- *	 14:	4		header size
- *	 18:	4		width  (signed)
- *	 22:	4		height (signed)
- *	 26:	2		Number of color planes
- *	 28:	2		Bits per pixel
- *	[...]
- * [OPTIONAL COLOR PALETTE, NOT PRESENT IN 32 BIT BITMAPS]
- * BITMAP DATA:
- *	138:	X	Pixels
- */
-bool LoadSprite(image_t* sprite, const char* filename) {
+	/* Bitmap file format
+	 *
+	 * SECTION
+	 * Address:Bytes	Name
+	 *
+	 * HEADER:
+	 *	  0:	2		"BM" magic number
+	 *	  2:	4		file size
+	 *	  6:	4		junk
+	 *	 10:	4		Starting address of image data
+	 * BITMAP HEADER:
+	 *	 14:	4		header size
+	 *	 18:	4		width  (signed)
+	 *	 22:	4		height (signed)
+	 *	 26:	2		Number of color planes
+	 *	 28:	2		Bits per pixel
+	 *	[...]
+	 * [OPTIONAL COLOR PALETTE, NOT PRESENT IN 32 BIT BITMAPS]
+	 * BITMAP DATA:
+	 *	138:	X	Pixels
+	 */
+bool LoadSprite(image_t* image, const char* filename) {
 	int return_value = 0;
 
 	unsigned int image_data_address;
 	int width;
 	int height;
-	unsigned int pixel_count;
-	unsigned int bit_depth;
-	unsigned int byte_depth;
-	unsigned int* pixels;
 
 	printf("Loading bitmap file: %s\n", filename);
 
 	FILE* file;
-	return_value = fopen_s(&file,filename, "rb");
+	return_value = fopen_s(&file, filename, "rb");
 	if (file) {
 		if (fgetc(file) == 'B' && fgetc(file) == 'M') {
 			printf("BM read; bitmap file confirmed.\n");
@@ -127,46 +134,10 @@ bool LoadSprite(image_t* sprite, const char* filename) {
 			fread(&width, 4, 1, file);
 			fread(&height, 4, 1, file);
 			fseek(file, 2, SEEK_CUR);
-			fread(&bit_depth, 2, 1, file);
-			if (image_data_address != 138) { // Potential version mismatch or corrupt file
-				//PRINT_ERROR("(%s) Image data address expected %d is %d", filename, 138, image_data_address);
-				return_value = false;
-			}
-			else if (bit_depth != 32) {
-				//PRINT_ERROR("(%s) Bit depth expected %d is %d", filename, 32, bit_depth);
-				return_value = false;
-			}
-			else { // Image metadata correct
-				printf("image data address:\t%d\nwidth:\t\t\t%d pix\nheight:\t\t\t%d pix\nbit depth:\t\t%d bpp\n", image_data_address, width, height, bit_depth);
-				pixel_count = width * height;
-				byte_depth = bit_depth / 8;
-				pixels = malloc(pixel_count * byte_depth);
-				if (pixels) {
-					fseek(file, image_data_address, SEEK_SET);
-					int pixels_read = fread(pixels, byte_depth, pixel_count, file);
-					printf("Read %d pixels\n", pixels_read);
-					if (pixels_read == pixel_count) {
-						sprite->w = width;
-						sprite->h = height;
-						sprite->p = pixels;
-					}
-					else {
-						//PRINT_ERROR("(%s) Read pixel count incorrect. Is %d expected %d", filename, pixels_read, pixel_count);
-						free(pixels);
-						return_value = false;
-					}
-				}
-				else {
-					printf("(%s) Failed to allocate %d pixels.\n", filename, pixel_count);
-					return_value = false;
-				}
-			} // Done loading sprite
-		}
-		else {
-			//PRINT_ERROR("(%s) First two bytes of file are not \"BM\"", filename);
-			return_value = false;
-		}
 
+			image->width = width;
+			image->height = height;
+		}
 		fclose(file);
 	}
 	else {
