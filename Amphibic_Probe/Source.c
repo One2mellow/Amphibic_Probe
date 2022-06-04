@@ -45,6 +45,8 @@ co_t pool_middle(co_t arr[], int size);
 
 void imgtrx(color_t** mtrx, image_t image, char* filename);
 
+void CreateBMP(char* filename, color_t** matrix, int height, int width);
+
 int main() {
 	int i, j;
 
@@ -62,6 +64,7 @@ int main() {
 	}
 
 	imgtrx(matrix, image, BMP);
+	CreateBMP(BMPCPY, matrix, image.height, image.width);
 
 
 	return 0;
@@ -120,6 +123,7 @@ bool LoadSprite(image_t* image, const char* filename) {
 	unsigned int image_data_address;
 	int width;
 	int height;
+	int bpp;
 
 	printf("Loading bitmap file: %s\n", filename);
 
@@ -134,6 +138,7 @@ bool LoadSprite(image_t* image, const char* filename) {
 			fread(&width, 4, 1, file);
 			fread(&height, 4, 1, file);
 			fseek(file, 2, SEEK_CUR);
+			fread(&bpp, 4, 1, file);
 
 			image->width = width;
 			image->height = height;
@@ -169,23 +174,73 @@ void imgtrx(color_t** mtrx, image_t image, char* filename) {
 		}
 	}
 
-	//Print Matrix
-	for (i = 0;i < image.width;i++) {
-		//putchar('\t');
-		for (j = 0;j < image.height;j++) {
-			printf_s("{%d ", mtrx[i][j].r);
+	////Print Matrix
+	//for (i = 0;i < image.width;i++) {
+	//	//putchar('\t');
+	//	for (j = 0;j < image.height;j++) {
+	//		printf_s("{%d ", mtrx[i][j].r);
 
-			printf_s(",%d ", mtrx[i][j].g);
+	//		printf_s(",%d ", mtrx[i][j].g);
 
-			printf_s(",%d}", mtrx[i][j].b);
+	//		printf_s(",%d}", mtrx[i][j].b);
 
-			printf_s("\n");
+	//		printf_s("\n");
 
-		}
-	}
+	//	}
+	//}
 
 	fclose(file);
 
 	return 0;
 }
 
+
+
+void CreateBMP(char* filename, color_t** matrix, int height, int width) {
+
+
+	int i, j;
+	int padding, bitmap_size;
+	color_t* wrmat;
+
+	wrmat = malloc(sizeof(color_t) * height * width);
+
+	for (i = 0;i < height;i++) {
+		for (j = 0;j < width;j++) {
+			wrmat[i + j] = matrix[i][j];
+		}
+	}
+
+	if (((width * 3) % 4) != 0) {
+		padding = (width * 3) + 1;
+	}
+	else
+	{
+		padding = width * 3;
+	}
+
+	bitmap_size = height * padding * 3;
+
+	char tag[] = { 'B', 'M' };
+	int header[] = {
+		0x3a, 0x00, 0x36,
+		0x28,                // Header Size
+		width, height,       // Image dimensions in pixels
+		0x180001,            // 24 bits/pixel, 1 color plane
+		0,                   // BI_RGB no compression
+		0,                   // Pixel data size in bytes
+		0x002e23, 0x002e23,  // Print resolution
+		0, 0,                // No color palette
+	};
+	header[0] = sizeof(tag) + sizeof(header) + bitmap_size;
+
+	FILE* fp;
+	fopen_s(&fp, filename, "w+");
+	fwrite(&tag, sizeof(tag), 1, fp);
+	fwrite(&header, sizeof(header), 1, fp); //write header to disk
+	fwrite(wrmat, bitmap_size * sizeof(char), 1, fp);
+	fclose(fp);
+
+	fclose(fp);
+	free(wrmat);
+}
