@@ -46,9 +46,9 @@ co_t pool_middle(co_t arr[], int size);
 int main() {
 
 	static image_t sprite;
-	
+
 	if ((LoadSprite(&sprite, BMP)) != 0) {
-		printf_s("Failed to load file: \" %s\"",BMP);
+		printf_s("Failed to load file: \" %s\"", BMP);
 		return -1;
 	}
 
@@ -56,6 +56,60 @@ int main() {
 	return 0;
 }
 
+void pools_mapping(co_t i, color_t j)
+{
+	co_t** color_1;
+
+	typedef struct pixels { //pixel's coordinates  
+		int x;
+		int y;
+		struct color_t;
+		struct pixels* next; //linked list
+	}co_t;
+
+	co_t pool; co_t no_pool;
+
+	co_t* head = NULL, * ptr = NULL;
+	int i, j;
+	for (i = 0; i <= sizeof(co_t); i++)
+	{
+		ptr = malloc(sizeof(co_t));
+		ptr->x = i;
+		ptr->next = head;
+		head = ptr;
+		for (color_t j = 0; j <= sizeof(color_t); j++)
+		{
+			if ((*color_t[j].color_1.r = 155) && (*color_t.color_1.g = 190) && (*color_t.color_1.b = 1245))
+				co_t[i] = pool;
+			else
+			{
+				co_t[i] = no_pool;
+			}
+		}
+
+	}
+
+
+	/*
+	co_t* ptr_cordinates, cordinates_1;
+	ptr_cordinates = malloc(sizeof(co_t));
+
+	int x , y ;
+	for (  x= 0;  x<=colomns ; x++)
+	{
+		for ( y = 0; y < rows; y++)
+		{
+
+
+		}
+
+	}
+	free(ptr_cordinates);
+	*/
+
+	free(ptr_color);
+
+}
 
 co_t pool_middle(co_t arr[], int size) {
 	int x_max, x_min, y_max, y_min, i;
@@ -82,27 +136,27 @@ co_t pool_middle(co_t arr[], int size) {
 	printf_s("The pool middle cordinate is (%d,%d)", middle_cot.x, middle_cot.y);*/
 
 
-/* Bitmap file format
- *
- * SECTION
- * Address:Bytes	Name
- *
- * HEADER:
- *	  0:	2		"BM" magic number
- *	  2:	4		file size
- *	  6:	4		junk
- *	 10:	4		Starting address of image data
- * BITMAP HEADER:
- *	 14:	4		header size
- *	 18:	4		width  (signed)
- *	 22:	4		height (signed)
- *	 26:	2		Number of color planes
- *	 28:	2		Bits per pixel
- *	[...]
- * [OPTIONAL COLOR PALETTE, NOT PRESENT IN 32 BIT BITMAPS]
- * BITMAP DATA:
- *	138:	X	Pixels
- */
+	/* Bitmap file format
+	 *
+	 * SECTION
+	 * Address:Bytes	Name
+	 *
+	 * HEADER:
+	 *	  0:	2		"BM" magic number
+	 *	  2:	4		file size
+	 *	  6:	4		junk
+	 *	 10:	4		Starting address of image data
+	 * BITMAP HEADER:
+	 *	 14:	4		header size
+	 *	 18:	4		width  (signed)
+	 *	 22:	4		height (signed)
+	 *	 26:	2		Number of color planes
+	 *	 28:	2		Bits per pixel
+	 *	[...]
+	 * [OPTIONAL COLOR PALETTE, NOT PRESENT IN 32 BIT BITMAPS]
+	 * BITMAP DATA:
+	 *	138:	X	Pixels
+	 */
 bool LoadSprite(image_t* sprite, const char* filename) {
 	int return_value = 0;
 
@@ -117,7 +171,7 @@ bool LoadSprite(image_t* sprite, const char* filename) {
 	printf("Loading bitmap file: %s\n", filename);
 
 	FILE* file;
-	return_value = fopen_s(&file,filename, "rb");
+	return_value = fopen_s(&file, filename, "rb");
 	if (file) {
 		if (fgetc(file) == 'B' && fgetc(file) == 'M') {
 			printf("BM read; bitmap file confirmed.\n");
