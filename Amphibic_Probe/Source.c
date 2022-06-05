@@ -79,7 +79,7 @@ void pools_mapping(co_t i, color_t j)
 		head = ptr;
 		for (color_t j = 0; j <= sizeof(color_t); j++)
 		{
-			if ((*color_t[j].color_1.r = 155) && (*color_t.color_1.g = 190) && (*color_t.color_1.b = 1245))
+			if ((*color_t[j].color_1.r = 155) && (*color_t.color_1.g = 190) && (*color_t.color_1.b = 145))
 				co_t[i] = pool;
 			else
 			{
