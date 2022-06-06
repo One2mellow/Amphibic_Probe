@@ -25,7 +25,7 @@ typedef struct { //pixel's coordinates
 	int y;
 }co_t;
 
-typedef struct {
+typedef struct { // struct to contain each pixel color & coordinates
 	color_t color;
 	co_t cordinate;
 } pixmat;
@@ -45,7 +45,7 @@ typedef struct pool { //pools' list extructed of bmp
 
 bool LoadSprite(image_t* image, const char* filename);
 
-co_t pool_middle(co_t arr[], int size);
+co_t pool_middle(pixmat arr[], int size);
 
 void imgtrx(pixmat* mtrx, image_t image, char* filename);
 
@@ -74,20 +74,20 @@ int main() {
 }
 
 
-co_t pool_middle(co_t arr[], int size) {
+co_t pool_middle(pixmat arr[], int size) {
 	int x_max, x_min, y_max, y_min, i;
 	co_t middle;
-	x_max = x_min = arr[0].x;
-	y_max = y_min = arr[0].y;
+	x_max = x_min = arr[0].cordinate.x;
+	y_max = y_min = arr[0].cordinate.y;
 	for (i = 0; i < size; i++) {
-		if (x_min > arr[i].x)
-			x_min = arr[i].x;
-		if (x_max < arr[i].x)
-			x_max = arr[i].x;
-		if (y_min > arr[i].y)
-			y_min = arr[i].y;
-		if (y_max < arr[i].y)
-			y_max = arr[i].y;
+		if (x_min > arr[i].cordinate.x)
+			x_min = arr[i].cordinate.x;
+		if (x_max < arr[i].cordinate.x)
+			x_max = arr[i].cordinate.x;
+		if (y_min > arr[i].cordinate.y)
+			y_min = arr[i].cordinate.y;
+		if (y_max < arr[i].cordinate.y)
+			y_max = arr[i].cordinate.y;
 	}
 	middle.x = (x_max + x_min) / 2;
 	middle.y = (y_max + y_min) / 2;
@@ -156,9 +156,8 @@ bool LoadSprite(image_t* image, const char* filename) {
 }
 
 void imgtrx(pixmat* mtrx, image_t image, char* filename) {
-	int val, t = 0, i = 0, j, k = 0;
+	int val, i = 0, j, k = 0;
 	FILE* file;
-	int temp[165 * 3];
 
 	k = image.height * image.width;
 
@@ -182,25 +181,8 @@ void imgtrx(pixmat* mtrx, image_t image, char* filename) {
 
 	}
 
-	////Print Matrix
-	for (i = 0;i < k;i++) {
-		//	for (j = 0;j < image.height;j++) {
-		printf("(%d, %d)", mtrx[i].cordinate.x, mtrx[i].cordinate.y);
-		printf_s("{%d ", mtrx[i].color.r);
-
-		printf_s(",%d ", mtrx[i].color.g);
-
-		printf_s(",%d}", mtrx[i].color.b);
-		printf_s("\n");
-		//printf_s("\t");
-
-//	}
-	//printf("%d",i);
-	//printf_s("\n");
-
-	}
-
-	fclose(file);
+	if (val != 0)
+		fclose(file);
 
 	return 0;
 }
