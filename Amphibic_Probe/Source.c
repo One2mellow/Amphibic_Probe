@@ -4,7 +4,7 @@
 #include <string.h>
 #include <math.h>
 
-#define BMP "fishpool.bmp"
+#define BMP "fishpool-another-ex1.bmp"
 #define BMPCPY "fishpool-copy.bmp"
 #define TXT "pools.txt"
 #define BEST_TXT "best-route.txt"
@@ -25,6 +25,10 @@ typedef struct { //pixel's coordinates
 	int y;
 }co_t;
 
+typedef struct {
+	color_t color;
+	co_t cordinate;
+} pixmat;
 
 typedef struct pixel { //list of pixels
 	co_t p;
@@ -43,12 +47,14 @@ bool LoadSprite(image_t* image, const char* filename);
 
 co_t pool_middle(co_t arr[], int size);
 
-void imgtrx(color_t** mtrx, image_t image, char* filename);
+void imgtrx(pixmat* mtrx, image_t image, char* filename);
+
+void CreateBMP(char* filename, color_t** matrix, int height, int width);
 
 int main() {
-	int i, j;
+	int i, j, t;
 
-	color_t** matrix;
+	pixmat* matrix;
 	static image_t image;
 
 	if ((LoadSprite(&image, BMP)) != 0) {
@@ -56,14 +62,14 @@ int main() {
 		return -1;
 	}
 
-	matrix = malloc(sizeof(color_t*) * image.height); // allocate memory to image pixel matrix
-	for (i = 0;i < image.height;i++) {
-		matrix[i] = malloc(sizeof(color_t) * image.width);
-	}
+
+	matrix = malloc(sizeof(pixmat) * image.height * image.width); // allocate memory to image pixel matrix
+
 
 	imgtrx(matrix, image, BMP);
+	//	CreateBMP(BMPCPY, matrix, image.height, image.width);
 
-
+	free(matrix);
 	return 0;
 }
 
@@ -120,6 +126,7 @@ bool LoadSprite(image_t* image, const char* filename) {
 	unsigned int image_data_address;
 	int width;
 	int height;
+	int bpp;
 
 	printf("Loading bitmap file: %s\n", filename);
 
@@ -134,6 +141,7 @@ bool LoadSprite(image_t* image, const char* filename) {
 			fread(&width, 4, 1, file);
 			fread(&height, 4, 1, file);
 			fseek(file, 2, SEEK_CUR);
+			fread(&bpp, 4, 1, file);
 
 			image->width = width;
 			image->height = height;
@@ -147,41 +155,49 @@ bool LoadSprite(image_t* image, const char* filename) {
 	return return_value;
 }
 
-void imgtrx(color_t** mtrx, image_t image, char* filename) {
-	int val, t, i = 0, j, k = 0;
+void imgtrx(pixmat* mtrx, image_t image, char* filename) {
+	int val, t = 0, i = 0, j, k = 0;
 	FILE* file;
-	
-	val = fopen_s(&file, filename, "rt");
+	int temp[165 * 3];
 
-	//fseek(file, 54, SEEK_SET);
+	k = image.height * image.width;
 
-	fseek(file, 10, SEEK_SET);
-	fread(&t, 1, 4, file);     //reads the offset and puts it in t
-	fseek(file, t, SEEK_SET);
-	int  p, e;
+	val = fopen_s(&file, filename, "rb");
 
-	for ( i = 0; i < image.width; i++)
+	if (file != 0)
 	{
-		for (j = 0;j < image.height;j++) {
-			fread(&mtrx[i][j].r, 8, 1, file);
-			fread(&mtrx[i][j].g, 8, 1, file);
-			fread(&mtrx[i][j].b, 8, 1, file);
+
+		fseek(file, 54, SEEK_SET);
+		for (i = 0; i < k; i++)
+		{
+			mtrx[i].color.b = fgetc(file);
+			mtrx[i].color.g = fgetc(file);
+			mtrx[i].color.r = fgetc(file);
+			mtrx[i].cordinate.x = i % image.width;
+			mtrx[i].cordinate.y = i / image.width;
+			if (mtrx[i].color.b == 0 && mtrx[i].color.g == 0 && mtrx[i].color.r == 0) {
+				i--;
+			}
 		}
+
 	}
 
-	//Print Matrix
-	for (i = 0;i < image.width;i++) {
-		//putchar('\t');
-		for (j = 0;j < image.height;j++) {
-			printf_s("{%d ", mtrx[i][j].r);
+	////Print Matrix
+	for (i = 0;i < k;i++) {
+		//	for (j = 0;j < image.height;j++) {
+		printf("(%d, %d)", mtrx[i].cordinate.x, mtrx[i].cordinate.y);
+		printf_s("{%d ", mtrx[i].color.r);
 
-			printf_s(",%d ", mtrx[i][j].g);
+		printf_s(",%d ", mtrx[i].color.g);
 
-			printf_s(",%d}", mtrx[i][j].b);
+		printf_s(",%d}", mtrx[i].color.b);
+		printf_s("\n");
+		//printf_s("\t");
 
-			printf_s("\n");
+//	}
+	//printf("%d",i);
+	//printf_s("\n");
 
-		}
 	}
 
 	fclose(file);
@@ -189,3 +205,49 @@ void imgtrx(color_t** mtrx, image_t image, char* filename) {
 	return 0;
 }
 
+
+
+void CreateBMP(char* filename, pixmat* matrix, int height, int width) {
+
+
+	int i, j;
+	int padding, bitmap_size;
+	color_t* wrmat;
+	int t = width * height;
+	wrmat = malloc(sizeof(color_t) * height * width);
+
+
+
+	if (((width * 3) % 4) != 0) {
+		padding = (width * 3) + 1;
+	}
+	else
+	{
+		padding = width * 3;
+	}
+
+	bitmap_size = height * padding * 3;
+
+	char tag[] = { 'B', 'M' };
+	int header[] = {
+		0x3a, 0x00, 0x36,
+		0x28,                // Header Size
+		width, height,       // Image dimensions in pixels
+		0x180001,            // 24 bits/pixel, 1 color plane
+		0,                   // BI_RGB no compression
+		0,                   // Pixel data size in bytes
+		0x002e23, 0x002e23,  // Print resolution
+		0, 0,                // No color palette
+	};
+	header[0] = sizeof(tag) + sizeof(header) + bitmap_size;
+
+	FILE* fp;
+	fopen_s(&fp, filename, "w+");
+	fwrite(&tag, sizeof(tag), 1, fp);
+	fwrite(&header, sizeof(header), 1, fp); //write header to disk
+	fwrite(wrmat, bitmap_size * sizeof(char), 1, fp);
+	fclose(fp);
+
+	fclose(fp);
+	free(wrmat);
+}
