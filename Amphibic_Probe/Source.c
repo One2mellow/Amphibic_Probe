@@ -4,10 +4,13 @@
 #include <string.h>
 #include <math.h>
 
-#define BMP "fishpool-another-ex1.bmp"
+#define BMP "fishpool.bmp"
 #define BMPCPY "fishpool-copy.bmp"
 #define TXT "pools.txt"
 #define BEST_TXT "best-route.txt"
+
+const int FILE_HEADER_SIZE = 14;
+const int INFO_HEADER_SIZE = 40;
 
 typedef struct { //bmp file values struct
 	int width;
@@ -67,7 +70,7 @@ int main() {
 
 
 	imgtrx(matrix, image, BMP);
-	//	CreateBMP(BMPCPY, matrix, image.height, image.width);
+	CreateBMP(BMPCPY, matrix, image.height, image.width);
 
 	free(matrix);
 	return 0;
@@ -181,6 +184,13 @@ void imgtrx(pixmat* mtrx, image_t image, char* filename) {
 
 	}
 
+	for ( i = 0; i < k; i++)
+	{
+		printf("(%d, %d) : ", mtrx[i].cordinate.x, mtrx[i].cordinate.y);
+		printf("{ %d, %d , %d }\n", mtrx[i].color.r, mtrx[i].color.g, mtrx[i].color.b);
+
+	}
+
 	if (val != 0)
 		fclose(file);
 
@@ -191,7 +201,68 @@ void imgtrx(pixmat* mtrx, image_t image, char* filename) {
 
 void CreateBMP(char* filename, pixmat* matrix, int height, int width) {
 
+	int fileSize = FILE_HEADER_SIZE + INFO_HEADER_SIZE + (height * width);
+	int val,i;
 
+	static unsigned char fileHeader[] = {
+	  'B','M',     /// signature
+	  0,0,0,0, /// image file size in bytes
+	  0,0,0,0, /// reserved
+	  0,0,0,0, /// start of pixel array
+	};
+
+	fileHeader[2] = (unsigned char)(fileSize);
+	fileHeader[3] = (unsigned char)(fileSize >> 8);
+	fileHeader[4] = (unsigned char)(fileSize >> 16);
+	fileHeader[5] = (unsigned char)(fileSize >> 24);
+	fileHeader[10] = (unsigned char)(FILE_HEADER_SIZE + INFO_HEADER_SIZE);
+
+	static unsigned char infoHeader[] = {
+	   0,0,0,0, /// header size
+	   0,0,0,0, /// image width
+	   0,0,0,0, /// image height
+	   0,0,     /// number of color planes
+	   0,0,     /// bits per pixel
+	   0,0,0,0, /// compression
+	   0,0,0,0, /// image size
+	   0,0,0,0, /// horizontal resolution
+	   0,0,0,0, /// vertical resolution
+	   0,0,0,0, /// colors in color table
+	   0,0,0,0, /// important color count
+	};
+
+	infoHeader[0] = (unsigned char)(INFO_HEADER_SIZE);
+	infoHeader[4] = (unsigned char)(width);
+	infoHeader[5] = (unsigned char)(width >> 8);
+	infoHeader[6] = (unsigned char)(width >> 16);
+	infoHeader[7] = (unsigned char)(width >> 24);
+	infoHeader[8] = (unsigned char)(height);
+	infoHeader[9] = (unsigned char)(height >> 8);
+	infoHeader[10] = (unsigned char)(height >> 16);
+	infoHeader[11] = (unsigned char)(height >> 24);
+	infoHeader[12] = (unsigned char)(1);
+	infoHeader[14] = (unsigned char)(3 * 8);
+
+	FILE* image;
+
+	val = fopen_s(&image, BMPCPY, "wb");
+
+	if (val != 0)
+	{
+		fwrite(fileHeader, FILE_HEADER_SIZE, 1, image);
+		fwrite(infoHeader, INFO_HEADER_SIZE, 1, image);
+
+		for ( i = 0; i < height*width; i++)
+		{
+			fwrite(matrix[i].color.b, 1, 1, image);
+			fwrite(matrix[i].color.g, 1, 1, image);
+			fwrite(matrix[i].color.r, 1, 1, image);
+		}
+		fclose(image);
+	}
+
+
+/*
 	int i, j;
 	int padding, bitmap_size;
 	color_t* wrmat;
@@ -231,5 +302,5 @@ void CreateBMP(char* filename, pixmat* matrix, int height, int width) {
 	fclose(fp);
 
 	fclose(fp);
-	free(wrmat);
+	free(wrmat);*/
 }
