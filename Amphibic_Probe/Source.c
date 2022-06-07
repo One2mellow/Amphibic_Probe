@@ -52,11 +52,13 @@ co_t pool_middle(pixmat arr[], int size);
 
 void imgtrx(pixmat* mtrx, image_t image, char* filename);
 
+void Pools(pixmat** mtrx, image_t image,poolList_t* pools);
+
 void CreateBMP(char* filename, color_t** matrix, int height, int width);
 
 int main() {
 	int i, j, t;
-
+	poolList_t* pools[200];
 	pixmat* matrix;
 	static image_t image;
 
@@ -70,7 +72,8 @@ int main() {
 
 
 	imgtrx(matrix, image, BMP);
-	CreateBMP(BMPCPY, matrix, image.height, image.width);
+	Pools(matrix, image, pools);
+	//CreateBMP(BMPCPY, matrix, image.height, image.width);
 
 	free(matrix);
 	return 0;
@@ -184,12 +187,12 @@ void imgtrx(pixmat* mtrx, image_t image, char* filename) {
 
 	}
 
-	for ( i = 0; i < k; i++)
-	{
-		printf("(%d, %d) : ", mtrx[i].cordinate.x, mtrx[i].cordinate.y);
-		printf("{ %d, %d , %d }\n", mtrx[i].color.r, mtrx[i].color.g, mtrx[i].color.b);
+	//for ( i = 0; i < k; i++)
+	//{
+	//	printf("(%d, %d) : ", mtrx[i].cordinate.x, mtrx[i].cordinate.y);
+	//	printf("{ %d, %d , %d }\n", mtrx[i].color.r, mtrx[i].color.g, mtrx[i].color.b);
 
-	}
+	//}
 
 	if (val != 0)
 		fclose(file);
@@ -303,4 +306,27 @@ void CreateBMP(char* filename, pixmat* matrix, int height, int width) {
 
 	fclose(fp);
 	free(wrmat);*/
+}
+
+
+
+void Pools(pixmat* mtrx, image_t image, poolList_t* pools){
+	pixmat** pixmtrx;
+	int i,j;
+
+	pixmtrx = malloc(sizeof(pixmat*) * image.width);
+	for ( i = 0; i < image.width; i++)
+	{
+		pixmtrx[i] = malloc(sizeof(pixmat) * image.height);
+	}
+
+	for ( i = 0; i < image.width; i++)
+	{
+		for ( j = 0; j < image.height; j++)
+		{
+			pixmtrx[i][j] = mtrx[(j*image.width)+i];
+		}
+
+	}
+
 }
