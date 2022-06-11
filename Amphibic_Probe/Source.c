@@ -4,7 +4,7 @@
 #include <string.h>
 #include <math.h>
 
-#define BMP "centers.bmp"
+#define BMP "paintpool-3.bmp"
 #define BMPCPY "fishpool-copy.bmp"
 #define TXT "pools.txt"
 #define BEST_TXT "best-route.txt"
@@ -403,11 +403,11 @@ poolList_t* Pools(pixmat** mtrx, image_t image, poolList_t* pools){
 
 				if (size > 10)
 				{
-				//	printf("NEW POOL\n\n");
-				//	printf("--%d--\n", size);
+					//printf("NEW POOL\n\n");
+					//printf("--%d--\n", size);
 					center = pool_middle(root, size);
 					pool_insert(&pools, size, center, &root);//insert segmention function
-				//	printf("%d, %d\n", center.x, center.y);
+					//printf("%d, %d\n", center.x, center.y);
 				}
 				else
 				{
