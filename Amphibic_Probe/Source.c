@@ -4,10 +4,13 @@
 #include <string.h>
 #include <math.h>
 
-#define BMP "fishpool-another-ex1.bmp"
+#define BMP "centers.bmp"
 #define BMPCPY "fishpool-copy.bmp"
 #define TXT "pools.txt"
 #define BEST_TXT "best-route.txt"
+
+const int FILE_HEADER_SIZE = 14;
+const int INFO_HEADER_SIZE = 40;
 
 typedef struct { //bmp file values struct
 	int width;
@@ -38,23 +41,35 @@ typedef struct pixel { //list of pixels
 typedef struct pool { //pools' list extructed of bmp
 	int size; //the number of pixels that combine the pool
 	co_t poolCenter;
-	pix_t* pArr; //list of pool pixels
+	pix_t* pix; //list of pool pixels
 	struct pool* next;
 }poolList_t;
 
 
 bool LoadSprite(image_t* image, const char* filename);
 
-co_t pool_middle(pixmat arr[], int size);
+co_t pool_middle(pix_t *root, int size);
 
-void imgtrx(pixmat* mtrx, image_t image, char* filename);
+void imgtrx(pixmat** mtrx, image_t image, char* filename);
+
+poolList_t* Pools(pixmat** mtrx, image_t image, poolList_t* pools);
 
 void CreateBMP(char* filename, color_t** matrix, int height, int width);
 
-int main() {
-	int i, j, t;
+int segment(pix_t* root, pixmat** mtrx, int** temp, image_t image, int i, int j, int* size);
 
-	pixmat* matrix;
+void pix_insert(pix_t** root, co_t coordinate);
+
+void pool_insert(poolList_t** root, int size, co_t center, pix_t* pix);
+
+void deallocpix(pix_t** root);
+
+void deallocpool(poolList_t** root);
+
+int main() {
+	int i, j;
+	poolList_t* pools = NULL;
+	pixmat** matrix;
 	static image_t image;
 
 	if ((LoadSprite(&image, BMP)) != 0) {
@@ -63,31 +78,70 @@ int main() {
 	}
 
 
-	matrix = malloc(sizeof(pixmat) * image.height * image.width); // allocate memory to image pixel matrix
+	matrix = malloc(sizeof(pixmat*) * image.width);
+	if (matrix)
+	{
+		for (i = 0;i < image.width;i++) {
+			matrix[i] = malloc(sizeof(pixmat) * image.height);
+		}
+	}// allocate memory to image pixel matrix
+
 
 
 	imgtrx(matrix, image, BMP);
-	//	CreateBMP(BMPCPY, matrix, image.height, image.width);
+	pools = Pools(matrix, image, pools);
+	//CreateBMP(BMPCPY, matrix, image.height, image.width);
 
+	for (poolList_t* curr = pools; curr != NULL; curr = curr->next) {
+		printf("size : %d\n center : (%d, %d)\n\n\n", curr->size, curr->poolCenter.x, curr->poolCenter.y);
+	}
+
+	deallocpool(&pools);
+	for (i = 0;i < image.width;i++) {
+		free(matrix[i]);
+	}	
 	free(matrix);
+
 	return 0;
 }
 
 
-co_t pool_middle(pixmat arr[], int size) {
+co_t pool_middle(pix_t* root, int size) {
+
 	int x_max, x_min, y_max, y_min, i;
 	co_t middle;
-	x_max = x_min = arr[0].cordinate.x;
-	y_max = y_min = arr[0].cordinate.y;
+	pix_t* curr;
+	co_t* pixels;
+
+	pixels = malloc(sizeof(co_t) * size+1);
+	
+	i = 0;
+
+	curr = root;
+
+	while (curr != NULL)
+	{
+		pixels[i].x = curr->p.x + 1;
+		pixels[i].y = curr->p.y + 1;
+		//printf("%d, %d\n", pixels[i].x, pixels[i].y);
+		curr = curr->next;
+		i++;
+	}
+
+
+	x_max = pixels[0].x;
+	x_min = pixels[0].x;
+	y_max = pixels[0].y;
+	y_min = pixels[0].y;
 	for (i = 0; i < size; i++) {
-		if (x_min > arr[i].cordinate.x)
-			x_min = arr[i].cordinate.x;
-		if (x_max < arr[i].cordinate.x)
-			x_max = arr[i].cordinate.x;
-		if (y_min > arr[i].cordinate.y)
-			y_min = arr[i].cordinate.y;
-		if (y_max < arr[i].cordinate.y)
-			y_max = arr[i].cordinate.y;
+		if (x_min > pixels[i].x)
+			x_min = pixels[i].x;
+		if (x_max < pixels[i].x)
+			x_max = pixels[i].x;
+		if (y_min > pixels[i].y)
+			y_min = pixels[i].y;
+		if (y_max < pixels[i].y)
+			y_max = pixels[i].y;
 	}
 	middle.x = (x_max + x_min) / 2;
 	middle.y = (y_max + y_min) / 2;
@@ -155,7 +209,7 @@ bool LoadSprite(image_t* image, const char* filename) {
 	return return_value;
 }
 
-void imgtrx(pixmat* mtrx, image_t image, char* filename) {
+void imgtrx(pixmat** mtrx, image_t image, char* filename) {
 	int val, i = 0, j, k = 0;
 	FILE* file;
 
@@ -167,19 +221,29 @@ void imgtrx(pixmat* mtrx, image_t image, char* filename) {
 	{
 
 		fseek(file, 54, SEEK_SET);
-		for (i = 0; i < k; i++)
+		for (i = 0; i < image.height; i++)
 		{
-			mtrx[i].color.b = fgetc(file);
-			mtrx[i].color.g = fgetc(file);
-			mtrx[i].color.r = fgetc(file);
-			mtrx[i].cordinate.x = i % image.width;
-			mtrx[i].cordinate.y = i / image.width;
-			if (mtrx[i].color.b == 0 && mtrx[i].color.g == 0 && mtrx[i].color.r == 0) {
-				i--;
+			for ( j = 0; j < image.width; j++)
+			{
+				mtrx[j][i].color.b = fgetc(file);
+				mtrx[j][i].color.g = fgetc(file);
+				mtrx[j][i].color.r = fgetc(file);
+				mtrx[j][i].cordinate.x = j;
+				mtrx[j][i].cordinate.y = i;
+				if (mtrx[j][i].color.b == 0 || mtrx[j][i].color.g == 0 || mtrx[j][i].color.r == 0) {
+					j--;
+				}
 			}
 		}
 
 	}
+
+	//for ( i = 0; i < k; i++)
+	//{
+	//	printf("(%d, %d) : ", mtrx[i].cordinate.x, mtrx[i].cordinate.y);
+	//	printf("{ %d, %d , %d }\n", mtrx[i].color.r, mtrx[i].color.g, mtrx[i].color.b);
+
+	//}
 
 	if (val != 0)
 		fclose(file);
@@ -189,9 +253,72 @@ void imgtrx(pixmat* mtrx, image_t image, char* filename) {
 
 
 
-void CreateBMP(char* filename, pixmat* matrix, int height, int width) {
 
 
+/*void CreateBMP(char* filename, pixmat* matrix, int height, int width) {
+
+	int fileSize = FILE_HEADER_SIZE + INFO_HEADER_SIZE + (height * width);
+	int val,i;
+
+	static unsigned char fileHeader[] = {
+	  'B','M',     /// signature
+	  0,0,0,0, /// image file size in bytes
+	  0,0,0,0, /// reserved
+	  0,0,0,0, /// start of pixel array
+	};
+
+	fileHeader[2] = (unsigned char)(fileSize);
+	fileHeader[3] = (unsigned char)(fileSize >> 8);
+	fileHeader[4] = (unsigned char)(fileSize >> 16);
+	fileHeader[5] = (unsigned char)(fileSize >> 24);
+	fileHeader[10] = (unsigned char)(FILE_HEADER_SIZE + INFO_HEADER_SIZE);
+
+	static unsigned char infoHeader[] = {
+	   0,0,0,0, /// header size
+	   0,0,0,0, /// image width
+	   0,0,0,0, /// image height
+	   0,0,     /// number of color planes
+	   0,0,     /// bits per pixel
+	   0,0,0,0, /// compression
+	   0,0,0,0, /// image size
+	   0,0,0,0, /// horizontal resolution
+	   0,0,0,0, /// vertical resolution
+	   0,0,0,0, /// colors in color table
+	   0,0,0,0, /// important color count
+	};
+
+	infoHeader[0] = (unsigned char)(INFO_HEADER_SIZE);
+	infoHeader[4] = (unsigned char)(width);
+	infoHeader[5] = (unsigned char)(width >> 8);
+	infoHeader[6] = (unsigned char)(width >> 16);
+	infoHeader[7] = (unsigned char)(width >> 24);
+	infoHeader[8] = (unsigned char)(height);
+	infoHeader[9] = (unsigned char)(height >> 8);
+	infoHeader[10] = (unsigned char)(height >> 16);
+	infoHeader[11] = (unsigned char)(height >> 24);
+	infoHeader[12] = (unsigned char)(1);
+	infoHeader[14] = (unsigned char)(3 * 8);
+
+	FILE* image;
+
+	val = fopen_s(&image, BMPCPY, "wb");
+
+	if (val != 0)
+	{
+		fwrite(fileHeader, FILE_HEADER_SIZE, 1, image);
+		fwrite(infoHeader, INFO_HEADER_SIZE, 1, image);
+
+		for ( i = 0; i < height*width; i++)
+		{
+			fwrite(matrix[i].color.b, 1, 1, image);
+			fwrite(matrix[i].color.g, 1, 1, image);
+			fwrite(matrix[i].color.r, 1, 1, image);
+		}
+		fclose(image);
+	}
+
+
+/*
 	int i, j;
 	int padding, bitmap_size;
 	color_t* wrmat;
@@ -231,5 +358,191 @@ void CreateBMP(char* filename, pixmat* matrix, int height, int width) {
 	fclose(fp);
 
 	fclose(fp);
-	free(wrmat);
+	free(wrmat);*/
+//}*/
+
+
+poolList_t* Pools(pixmat** mtrx, image_t image, poolList_t* pools){
+	int i, j, val;
+	int** temp;
+	int size;
+	pix_t* root = NULL;
+	co_t center;
+	FILE* file;
+
+	temp = malloc(sizeof(int*) * image.width);
+	if (temp)
+	{
+		for (i = 0;i < image.width;i++) {
+			temp[i] = malloc(sizeof(int) * image.height);
+		}
+	}// allocate memory to temp color signed matrix
+
+	for ( i = 0; i < image.height; i++)
+	{
+		for (j = 0;j < image.width;j++) {
+			if (mtrx[j][i].color.r == 155 && mtrx[j][i].color.g == 190 && mtrx[j][i].color.b == 245)
+			{
+				temp[j][i] = 1;
+			}
+			else {
+				temp[j][i] = 0;
+			}
+		}
+	}
+
+
+	for (i = 0;i < image.height;i++) {
+		for (j = 0;j < image.width;j++) {
+			if (temp[j][i] == 1)
+			{
+				size = 1;
+				temp[j][i] = 0;
+				pix_insert(&root, mtrx[j][i].cordinate);
+				segment(&root, mtrx, temp, image, i, j, &size);
+
+				if (size > 10)
+				{
+				//	printf("NEW POOL\n\n");
+				//	printf("--%d--\n", size);
+					center = pool_middle(root, size);
+					pool_insert(&pools, size, center, &root);//insert segmention function
+				//	printf("%d, %d\n", center.x, center.y);
+				}
+				else
+				{
+					//printf("NOT POOL\n\n");
+					//printf("--%d--\n", size);
+				}
+			}
+			deallocpix(&root);
+		}
+	}
+
+
+
+
+	for (i = 0;i < image.width;i++) {
+			free(temp[i]);
+	}
+	free(temp);
+
+	return pools;
+}
+
+
+int segment(pix_t* root, pixmat** mtrx, int** temp, image_t image, int i, int j, int* size) {
+
+	//pix_insert(root, mtrx[j][i].cordinate);
+
+	if (j > 0) {
+		if (temp[j - 1][i] == 1) {
+			pix_insert(root, mtrx[j-1][i].cordinate);
+			*size += 1;
+			temp[j-1][i] = 0;
+			segment(root, mtrx, temp, image, i, j - 1, size);
+		}
+	}
+
+	if (j < image.width - 1) {
+		if (temp[j + 1][i] == 1) {
+			pix_insert(root, mtrx[j + 1][i].cordinate);
+			*size += 1;
+			temp[j + 1][i] = 0;
+			segment(root, mtrx, temp, image, i, j + 1, size);
+
+		}
+	}
+
+	if (i > 0)
+	{
+		if (temp[j][i - 1] == 1) {
+			pix_insert(root, mtrx[j][i - 1].cordinate);
+			*size += 1;
+			temp[j][i-1] = 0;
+			segment(root, mtrx, temp, image, i - 1, j, size);
+		}
+	}
+
+	if (i < image.height - 1)
+	{
+		if (temp[j][i + 1] == 1) {
+			pix_insert(root, mtrx[j][i + 1].cordinate);
+			*size += 1;
+			temp[j][i + 1] = 0;
+			segment(root, mtrx, temp, image, i + 1, j, size);
+		}
+
+	}
+
+
+
+	
+}
+
+
+void pix_insert(pix_t** root, co_t coordinate) {
+	pix_t* new_pix = malloc(sizeof(pix_t));
+	if (new_pix == NULL) {
+		exit(1);
+	}
+	new_pix->next = NULL;
+	new_pix->p.x = coordinate.x;
+	new_pix->p.y = coordinate.y;
+
+	if (*root == NULL) {
+		*root = new_pix;
+		return;
+	}
+
+	pix_t* curr = *root;
+	while (curr->next != NULL) {
+		curr = curr->next;
+	}
+	curr->next = new_pix;
+}
+
+void pool_insert(poolList_t** root, int size, co_t center, pix_t* pix){
+	
+	poolList_t* new_pool = malloc(sizeof(poolList_t));
+	if (new_pool == NULL) {
+		exit(1);
+	}
+	new_pool->next = NULL;
+	new_pool->poolCenter.x = center.x;
+	new_pool->poolCenter.y = center.y;
+	new_pool->size = size;
+	new_pool->pix = pix;
+
+	if (*root == NULL) {
+		*root = new_pool;
+		return;
+	}
+
+	poolList_t* curr = *root;
+	while (curr->next != NULL) {
+		curr = curr->next;
+	}
+	curr->next = new_pool;
+	}
+
+void deallocpix(pix_t** root) {
+	pix_t* curr = *root;
+	while (curr != NULL) {
+		pix_t* aux = curr;
+		curr = curr->next;
+		free(aux);
+	}
+	*root = NULL;
+}
+
+void deallocpool(poolList_t** root) {
+	poolList_t* curr = *root;
+	while (curr != NULL)
+	{
+		poolList_t* aux = curr;
+		curr = curr->next;
+		free(aux);
+	}
+	*root = NULL;
 }
