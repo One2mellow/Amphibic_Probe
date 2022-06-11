@@ -41,7 +41,7 @@ typedef struct pixel { //list of pixels
 typedef struct pool { //pools' list extructed of bmp
 	int size; //the number of pixels that combine the pool
 	co_t poolCenter;
-	pix_t* pArr; //list of pool pixels
+	pix_t* pix; //list of pool pixels
 	struct pool* next;
 }poolList_t;
 
@@ -52,14 +52,19 @@ co_t pool_middle(pixmat arr[], int size);
 
 void imgtrx(pixmat** mtrx, image_t image, char* filename);
 
-void Pools(pixmat** mtrx, image_t image,poolList_t* pools);
+void Pools(pixmat** mtrx, image_t image, poolList_t* pools);
 
 void CreateBMP(char* filename, color_t** matrix, int height, int width);
 
+int segment(pix_t* root, pixmat** mtrx, int** temp, image_t image, int i, int j, int* size);
+
+void pix_insert(pix_t** root, co_t coordinate);
+
+void pool_insert(poolList_t** root, int size, co_t center, pix_t* pix);
 
 int main() {
 	int i, j;
-	poolList_t* pools[200];
+	poolList_t* pools = NULL;
 	pixmat** matrix;
 	static image_t image;
 
@@ -81,6 +86,9 @@ int main() {
 	imgtrx(matrix, image, BMP);
 	Pools(matrix, image, pools);
 	//CreateBMP(BMPCPY, matrix, image.height, image.width);
+	for (i = 0;i < image.width;i++) {
+		free(matrix[i]);
+	}	
 	free(matrix);
 	return 0;
 }
@@ -195,24 +203,14 @@ void imgtrx(pixmat** mtrx, image_t image, char* filename) {
 		}
 
 
-		for ( i = 0; i < image.height; i++)
-		{
-			for ( j = 0; j < image.width; j++)
-			{
-				printf("{%d, %d, %d}\n", mtrx[j][i].color.r, mtrx[j][i].color.g, mtrx[j][i].color.b);
-			}
-		}
-	/*	for (i = 0; i < k; i++)
-		{
-			mtrx[i].color.b = fgetc(file);
-			mtrx[i].color.g = fgetc(file);
-			mtrx[i].color.r = fgetc(file);
-			mtrx[i].cordinate.x = i % image.width;
-			mtrx[i].cordinate.y = i / image.width;
-			if (mtrx[i].color.b == 0 && mtrx[i].color.g == 0 && mtrx[i].color.r == 0) {
-				i--;
-			}
-		}*/
+		//for ( i = 0; i < image.height; i++)
+		//{
+		//	for ( j = 0; j < image.width; j++)
+		//	{
+		//		printf("{%d, %d, %d}\n", mtrx[j][i].color.r, mtrx[j][i].color.g, mtrx[j][i].color.b);
+		//	}
+		//}
+
 
 	}
 
@@ -334,6 +332,13 @@ void imgtrx(pixmat** mtrx, image_t image, char* filename) {
 void Pools(pixmat** mtrx, image_t image, poolList_t* pools){
 	int i, j;
 	int** temp;
+	int size;
+	pix_t* root = NULL;
+	co_t center;
+
+
+	center = pool_middle(*mtrx, 2); // just for running, need to be modified corretcly to linked list and size.
+
 
 	temp = malloc(sizeof(int*) * image.width);
 	if (temp)
@@ -356,4 +361,127 @@ void Pools(pixmat** mtrx, image_t image, poolList_t* pools){
 		}
 	}
 
+
+	for ( i = 0; i < image.height; i++)
+	{
+		for (j = 0;j < image.width;j++) {
+			printf("(%d, %d) : --%d--\t", j, i, temp[j][i]);
+		}
+		printf("\n");
+	}
+
+	for (i = 0;i < image.height;i++) {
+		for (j = 0;j < image.width;j++) {
+			if (temp[j][i] == 1)
+			{
+				size = 1;
+				segment(&root, mtrx, temp, image, i, j, &size);
+				pool_insert(&pools, size, center, &root);//insert segmention function
+				temp[j][i] = 0;
+			}
+		}
+	}
+
+	for (i = 0;i < image.width;i++) {
+			free(temp[i]);
+	}
+	free(temp);
 }
+
+
+int segment(pix_t* root, pixmat** mtrx, int** temp, image_t image, int i, int j, int* size) {
+
+//	pix_insert(root, mtrx[j][i].cordinate);
+
+	if (j > 0) {
+		if (temp[j - 1][i] == 1) {
+			printf("(%d, %d) -- %d --\n", j - 1, i, temp[j - 1][i]);
+			//pix_insert(root, mtrx[j-1][i].cordinate);
+			size += 1;
+			temp[j-1][i] = 0;
+			segment(root, mtrx, temp, image, i, j - 1, size);
+		}
+	}
+
+	if (i > 0)
+	{
+		if (temp[j][i - 1] == 1) {
+			printf("(%d, %d) -- %d --\n", j, i-1, temp[j][i-1]);
+			//pix_insert(root, mtrx[j][i - 1].cordinate);
+			*size += 1;
+			temp[j][i-1] = 0;
+			segment(root, mtrx, temp, image, i - 1, j, size);
+		}
+	}
+
+	if (j < image.width - 1) {
+		if (temp[j + 1][i] == 1) {
+			printf("(%d, %d) -- %d --\n", j + 1, i, temp[j + 1][i]);
+			//pix_insert(root, mtrx[j+1][i].cordinate);
+			*size += 1;
+			temp[j + 1][i] = 0;
+			segment(root, mtrx, temp, image, i, j + 1, size);
+
+		}
+	}
+
+	if (i < image.height - 1)
+	{
+		if (temp[j][i + 1] == 1) {
+			printf("(%d, %d) -- %d --\n", j, i+1, temp[j][i+1]);
+			//pix_insert(root, mtrx[j][i - 1].cordinate);
+			*size += 1;
+			temp[j][i + 1] = 0;
+			segment(root, mtrx, temp, image, i + 1, j, size);
+		}
+		
+	}
+
+	return 0;
+}
+
+
+void pix_insert(pix_t** root, co_t coordinate) {
+	pix_t* new_pix = malloc(sizeof(pix_t));
+	if (new_pix == NULL) {
+		exit(1);
+	}
+	new_pix->next = NULL;
+	new_pix->p.x = coordinate.x;
+	new_pix->p.y = coordinate.y;
+
+	if (*root == NULL) {
+		*root = new_pix;
+		return;
+	}
+
+	pix_t* curr = *root;
+	while (curr->next != NULL) {
+		curr = curr->next;
+	}
+	curr->next = new_pix;
+}
+
+void pool_insert(poolList_t** root, int size, co_t center, pix_t* pix){
+	
+	poolList_t* new_pool = malloc(sizeof(poolList_t));
+	if (new_pool == NULL) {
+		exit(1);
+	}
+	new_pool->next = NULL;
+	new_pool->poolCenter.x = 0;
+	new_pool->poolCenter.y = 0; // Adapt pool center function to this
+	new_pool->size = size;
+	new_pool->pix = pix;
+
+	if (*root == NULL) {
+		*root = new_pool;
+		return;
+	}
+
+	poolList_t* curr = *root;
+	while (curr->next != NULL) {
+		curr = curr->next;
+	}
+	curr->next = new_pool;
+	}
