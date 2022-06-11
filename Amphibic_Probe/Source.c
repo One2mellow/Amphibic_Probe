@@ -46,6 +46,8 @@ typedef struct pool { //pools' list extructed of bmp
 }poolList_t;
 
 
+int menu();
+
 bool LoadSprite(image_t* image, const char* filename);
 
 co_t pool_middle(pix_t *root, int size);
@@ -67,7 +69,7 @@ void deallocpix(pix_t** root);
 void deallocpool(poolList_t** root);
 
 int main() {
-	int i, j, choice;
+	int i, j, choice = 0;
 	poolList_t* pools = NULL;
 	pixmat** matrix;
 	static image_t image;
@@ -88,25 +90,32 @@ int main() {
 
 	imgtrx(matrix, image, BMP);
 
-	printf_s("--------------------------\nME LAB services\n--------------------------");
+	choice = menu();
 
-	printf_s("\nMenu:\n1. Scan pools\n2. Print sorted pool list\n3. Select route\n4. Numeric report.\n5. Students addition\n6. Exit\nEnter choice: ");
-
-	scanf_s("%d", &choice);
-
-	switch (choice)
+	do
 	{
-	case 1:
-		pools = Pools(matrix, image, pools);
-		break;
-	default:
-		break;
-	}
+		switch (choice)
+		{
+		case 1:
+			pools = Pools(matrix, image, pools);
+			for (poolList_t* curr = pools; curr != NULL; curr = curr->next) {
+				printf_s("size : %d\n center : (%d, %d)\n\n\n", curr->size, curr->poolCenter.x, curr->poolCenter.y);
+			}
+			choice = menu();
+			break;
+		case 9:
+			return 0;
+			break;
+		default:
+			break;
+		}
+	} while (choice != 9);
+
+
+
 	//CreateBMP(BMPCPY, matrix, image.height, image.width);
 
-	for (poolList_t* curr = pools; curr != NULL; curr = curr->next) {
-		printf_s("size : %d\n center : (%d, %d)\n\n\n", curr->size, curr->poolCenter.x, curr->poolCenter.y);
-	}
+
 
 	deallocpool(&pools);
 	for (i = 0;i < image.width;i++) {
@@ -117,6 +126,17 @@ int main() {
 	return 0;
 }
 
+
+int menu() {
+	int choice;
+	printf_s("--------------------------\nME LAB services\n--------------------------");
+
+	printf_s("\nMenu:\n1. Scan pools\n2. Print sorted pool list\n3. Select route\n4. Numeric report.\n5. Students addition\n9. Exit\nEnter choice: ");
+
+	scanf_s("%d", &choice);
+
+	return choice;
+}
 
 co_t pool_middle(pix_t* root, int size) {
 
