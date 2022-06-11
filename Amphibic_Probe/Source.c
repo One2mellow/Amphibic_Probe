@@ -50,23 +50,17 @@ bool LoadSprite(image_t* image, const char* filename);
 
 co_t pool_middle(pixmat arr[], int size);
 
-void imgtrx(pixmat* mtrx, image_t image, char* filename);
+void imgtrx(pixmat** mtrx, image_t image, char* filename);
 
 void Pools(pixmat** mtrx, image_t image,poolList_t* pools);
 
 void CreateBMP(char* filename, color_t** matrix, int height, int width);
 
 
-int blueNOTblue(pixmat** pixmtrx, int i, int j);
-int neighbors(pixmat** pixmtrx, int i, int j);
-poolList_t poolsREC(pixmat** pixmtrx, pix_t pArr[], int i, int j);
-
-
-
 int main() {
-	int i, j, t;
+	int i, j;
 	poolList_t* pools[200];
-	pixmat* matrix;
+	pixmat** matrix;
 	static image_t image;
 
 	if ((LoadSprite(&image, BMP)) != 0) {
@@ -75,7 +69,13 @@ int main() {
 	}
 
 
-	matrix = malloc(sizeof(pixmat) * image.height * image.width); // allocate memory to image pixel matrix
+	matrix = malloc(sizeof(pixmat*) * image.width);
+	if (matrix)
+	{
+		for (i = 0;i < image.width;i++) {
+			matrix[i] = malloc(sizeof(pixmat) * image.height);
+		}
+	}// allocate memory to image pixel matrix
 
 
 	imgtrx(matrix, image, BMP);
@@ -167,7 +167,7 @@ bool LoadSprite(image_t* image, const char* filename) {
 	return return_value;
 }
 
-void imgtrx(pixmat* mtrx, image_t image, char* filename) {
+void imgtrx(pixmat** mtrx, image_t image, char* filename) {
 	int val, i = 0, j, k = 0;
 	FILE* file;
 
@@ -179,7 +179,30 @@ void imgtrx(pixmat* mtrx, image_t image, char* filename) {
 	{
 
 		fseek(file, 54, SEEK_SET);
-		for (i = 0; i < k; i++)
+
+		for ( i = 0; i < image.height; i++)
+		{
+			for (j = 0;j < image.width;j++) {
+				mtrx[j][i].color.b = fgetc(file);
+				mtrx[j][i].color.g = fgetc(file);
+				mtrx[j][i].color.r = fgetc(file);
+				mtrx[j][i].cordinate.x = j;
+				mtrx[j][i].cordinate.y = i;
+				if (mtrx[j][i].color.b == 0 && mtrx[j][i].color.g == 0 && mtrx[j][i].color.r == 0) {
+					j--;
+				}
+			}
+		}
+
+
+		for ( i = 0; i < image.height; i++)
+		{
+			for ( j = 0; j < image.width; j++)
+			{
+				printf("{%d, %d, %d}\n", mtrx[j][i].color.r, mtrx[j][i].color.g, mtrx[j][i].color.b);
+			}
+		}
+	/*	for (i = 0; i < k; i++)
 		{
 			mtrx[i].color.b = fgetc(file);
 			mtrx[i].color.g = fgetc(file);
@@ -189,16 +212,9 @@ void imgtrx(pixmat* mtrx, image_t image, char* filename) {
 			if (mtrx[i].color.b == 0 && mtrx[i].color.g == 0 && mtrx[i].color.r == 0) {
 				i--;
 			}
-		}
+		}*/
 
 	}
-
-	//for ( i = 0; i < k; i++)
-	//{
-	//	printf("(%d, %d) : ", mtrx[i].cordinate.x, mtrx[i].cordinate.y);
-	//	printf("{ %d, %d , %d }\n", mtrx[i].color.r, mtrx[i].color.g, mtrx[i].color.b);
-
-	//}
 
 	if (val != 0)
 		fclose(file);
@@ -208,191 +224,136 @@ void imgtrx(pixmat* mtrx, image_t image, char* filename) {
 
 
 
-void CreateBMP(char* filename, pixmat* matrix, int height, int width) {
+//void CreateBMP(char* filename, pixmat* matrix, int height, int width) {
+//
+//	int fileSize = FILE_HEADER_SIZE + INFO_HEADER_SIZE + (height * width);
+//	int val,i;
+//
+//	static unsigned char fileHeader[] = {
+//	  'B','M',     /// signature
+//	  0,0,0,0, /// image file size in bytes
+//	  0,0,0,0, /// reserved
+//	  0,0,0,0, /// start of pixel array
+//	};
+//
+//	fileHeader[2] = (unsigned char)(fileSize);
+//	fileHeader[3] = (unsigned char)(fileSize >> 8);
+//	fileHeader[4] = (unsigned char)(fileSize >> 16);
+//	fileHeader[5] = (unsigned char)(fileSize >> 24);
+//	fileHeader[10] = (unsigned char)(FILE_HEADER_SIZE + INFO_HEADER_SIZE);
+//
+//	static unsigned char infoHeader[] = {
+//	   0,0,0,0, /// header size
+//	   0,0,0,0, /// image width
+//	   0,0,0,0, /// image height
+//	   0,0,     /// number of color planes
+//	   0,0,     /// bits per pixel
+//	   0,0,0,0, /// compression
+//	   0,0,0,0, /// image size
+//	   0,0,0,0, /// horizontal resolution
+//	   0,0,0,0, /// vertical resolution
+//	   0,0,0,0, /// colors in color table
+//	   0,0,0,0, /// important color count
+//	};
+//
+//	infoHeader[0] = (unsigned char)(INFO_HEADER_SIZE);
+//	infoHeader[4] = (unsigned char)(width);
+//	infoHeader[5] = (unsigned char)(width >> 8);
+//	infoHeader[6] = (unsigned char)(width >> 16);
+//	infoHeader[7] = (unsigned char)(width >> 24);
+//	infoHeader[8] = (unsigned char)(height);
+//	infoHeader[9] = (unsigned char)(height >> 8);
+//	infoHeader[10] = (unsigned char)(height >> 16);
+//	infoHeader[11] = (unsigned char)(height >> 24);
+//	infoHeader[12] = (unsigned char)(1);
+//	infoHeader[14] = (unsigned char)(3 * 8);
+//
+//	FILE* image;
+//
+//	val = fopen_s(&image, BMPCPY, "wb");
+//
+//	if (val != 0)
+//	{
+//		fwrite(fileHeader, FILE_HEADER_SIZE, 1, image);
+//		fwrite(infoHeader, INFO_HEADER_SIZE, 1, image);
+//
+//		for ( i = 0; i < height*width; i++)
+//		{
+//			fwrite(matrix[i].color.b, 1, 1, image);
+//			fwrite(matrix[i].color.g, 1, 1, image);
+//			fwrite(matrix[i].color.r, 1, 1, image);
+//		}
+//		fclose(image);
+//	}
+//
+//
+///*
+//	int i, j;
+//	int padding, bitmap_size;
+//	color_t* wrmat;
+//	int t = width * height;
+//	wrmat = malloc(sizeof(color_t) * height * width);
+//
+//
+//
+//	if (((width * 3) % 4) != 0) {
+//		padding = (width * 3) + 1;
+//	}
+//	else
+//	{
+//		padding = width * 3;
+//	}
+//
+//	bitmap_size = height * padding * 3;
+//
+//	char tag[] = { 'B', 'M' };
+//	int header[] = {
+//		0x3a, 0x00, 0x36,
+//		0x28,                // Header Size
+//		width, height,       // Image dimensions in pixels
+//		0x180001,            // 24 bits/pixel, 1 color plane
+//		0,                   // BI_RGB no compression
+//		0,                   // Pixel data size in bytes
+//		0x002e23, 0x002e23,  // Print resolution
+//		0, 0,                // No color palette
+//	};
+//	header[0] = sizeof(tag) + sizeof(header) + bitmap_size;
+//
+//	FILE* fp;
+//	fopen_s(&fp, filename, "w+");
+//	fwrite(&tag, sizeof(tag), 1, fp);
+//	fwrite(&header, sizeof(header), 1, fp); //write header to disk
+//	fwrite(wrmat, bitmap_size * sizeof(char), 1, fp);
+//	fclose(fp);
+//
+//	fclose(fp);
+//	free(wrmat);*/
+//}
 
-	int fileSize = FILE_HEADER_SIZE + INFO_HEADER_SIZE + (height * width);
-	int val,i;
 
-	static unsigned char fileHeader[] = {
-	  'B','M',     /// signature
-	  0,0,0,0, /// image file size in bytes
-	  0,0,0,0, /// reserved
-	  0,0,0,0, /// start of pixel array
-	};
-
-	fileHeader[2] = (unsigned char)(fileSize);
-	fileHeader[3] = (unsigned char)(fileSize >> 8);
-	fileHeader[4] = (unsigned char)(fileSize >> 16);
-	fileHeader[5] = (unsigned char)(fileSize >> 24);
-	fileHeader[10] = (unsigned char)(FILE_HEADER_SIZE + INFO_HEADER_SIZE);
-
-	static unsigned char infoHeader[] = {
-	   0,0,0,0, /// header size
-	   0,0,0,0, /// image width
-	   0,0,0,0, /// image height
-	   0,0,     /// number of color planes
-	   0,0,     /// bits per pixel
-	   0,0,0,0, /// compression
-	   0,0,0,0, /// image size
-	   0,0,0,0, /// horizontal resolution
-	   0,0,0,0, /// vertical resolution
-	   0,0,0,0, /// colors in color table
-	   0,0,0,0, /// important color count
-	};
-
-	infoHeader[0] = (unsigned char)(INFO_HEADER_SIZE);
-	infoHeader[4] = (unsigned char)(width);
-	infoHeader[5] = (unsigned char)(width >> 8);
-	infoHeader[6] = (unsigned char)(width >> 16);
-	infoHeader[7] = (unsigned char)(width >> 24);
-	infoHeader[8] = (unsigned char)(height);
-	infoHeader[9] = (unsigned char)(height >> 8);
-	infoHeader[10] = (unsigned char)(height >> 16);
-	infoHeader[11] = (unsigned char)(height >> 24);
-	infoHeader[12] = (unsigned char)(1);
-	infoHeader[14] = (unsigned char)(3 * 8);
-
-	FILE* image;
-
-	val = fopen_s(&image, BMPCPY, "wb");
-
-	if (val != 0)
-	{
-		fwrite(fileHeader, FILE_HEADER_SIZE, 1, image);
-		fwrite(infoHeader, INFO_HEADER_SIZE, 1, image);
-
-		for ( i = 0; i < height*width; i++)
-		{
-			fwrite(matrix[i].color.b, 1, 1, image);
-			fwrite(matrix[i].color.g, 1, 1, image);
-			fwrite(matrix[i].color.r, 1, 1, image);
-		}
-		fclose(image);
-	}
-
-
-/*
+void Pools(pixmat** mtrx, image_t image, poolList_t* pools){
 	int i, j;
-	int padding, bitmap_size;
-	color_t* wrmat;
-	int t = width * height;
-	wrmat = malloc(sizeof(color_t) * height * width);
+	int** temp;
 
-
-
-	if (((width * 3) % 4) != 0) {
-		padding = (width * 3) + 1;
-	}
-	else
+	temp = malloc(sizeof(int*) * image.width);
+	if (temp)
 	{
-		padding = width * 3;
-	}
-
-	bitmap_size = height * padding * 3;
-
-	char tag[] = { 'B', 'M' };
-	int header[] = {
-		0x3a, 0x00, 0x36,
-		0x28,                // Header Size
-		width, height,       // Image dimensions in pixels
-		0x180001,            // 24 bits/pixel, 1 color plane
-		0,                   // BI_RGB no compression
-		0,                   // Pixel data size in bytes
-		0x002e23, 0x002e23,  // Print resolution
-		0, 0,                // No color palette
-	};
-	header[0] = sizeof(tag) + sizeof(header) + bitmap_size;
-
-	FILE* fp;
-	fopen_s(&fp, filename, "w+");
-	fwrite(&tag, sizeof(tag), 1, fp);
-	fwrite(&header, sizeof(header), 1, fp); //write header to disk
-	fwrite(wrmat, bitmap_size * sizeof(char), 1, fp);
-	fclose(fp);
-
-	fclose(fp);
-	free(wrmat);*/
-}
-
-poolList_t poolsREC(pixmat** pixmtrx,pix_t pArr[], int i, int j)
-{
-	poolList_t* ptr = malloc(sizeof(poolList_t));;
-
-	while (blueNOTblue(pixmtrx, i, j) == 1 && neighbors(pixmtrx, i, j) == 1)
-		{
-			pArr[i].p = pixmtrx[i][j].cordinate;
-			pixmtrx[i][j].color.r = 255;
-			pixmtrx[i][j].color.g = 255;
-			pixmtrx[i][j].color.b = 255;
-			poolsREC(pixmtrx, pArr, i, j);
+		for (i = 0;i < image.width;i++) {
+			temp[i] = malloc(sizeof(int) * image.height);
 		}
-	
-		
-		return *ptr;
-	}
+	}// allocate memory to temp color signed matrix
 
-	int blueNOTblue(pixmat** pixmtrx, int i, int j){
-		if (pixmtrx[i][j].color.r == 155 && pixmtrx[i][j].color.g == 190 && pixmtrx[i][j].color.b == 245)
-		{
-			return 1;
-		}
-		else
-		{
-			return 0;
-		}
-	}
-
-	int neighbors(pixmat** pixmtrx, int i, int j) {
-	if (((abs(pixmtrx[i][j].cordinate.x - pixmtrx[i+1][j].cordinate.x) == 1)
-		|| (abs(pixmtrx[i][j].cordinate.x - pixmtrx[i-1][j].cordinate.x) == 1)
-			|| (abs(pixmtrx[i][j].cordinate.x - pixmtrx[i][j+1].cordinate.x) == 1)
-				|| (abs(pixmtrx[i][j].cordinate.x - pixmtrx[i][j-1].cordinate.x) == 1)) ||
-			((abs(pixmtrx[i][j].cordinate.y - pixmtrx[i + 1][j].cordinate.y) == 1)
-					|| (abs(pixmtrx[i][j].cordinate.y - pixmtrx[i - 1][j].cordinate.y) == 1)
-						|| (abs(pixmtrx[i][j].cordinate.y - pixmtrx[i][j + 1].cordinate.y) == 1)
-							|| (abs(pixmtrx[i][j].cordinate.y - pixmtrx[i][j - 1].cordinate.y) == 1)))
+	for ( i = 0; i < image.height; i++)
 	{
-		return 1;
-	}
-	else { return 0; }
-
-	}
-
-void Pools(pixmat* mtrx, image_t image, poolList_t* pools){
-	pixmat** pixmtrx;
-	int i,j;
-
-	pix_t pArr[200];
-	pixmtrx = malloc(sizeof(pixmat*) * image.width);
-
-	for ( i = 0; i < image.width; i++)
-	{
-		pixmtrx[i] = malloc(sizeof(pixmat) * image.height);
-	}
-
-	for ( i = 0; i < image.width; i++)
-	{
-		for ( j = 0; j < image.height; j++)
-		{
-			pixmtrx[i][j] = mtrx[(j*image.width)+i];
-		}
-
-	}
-	for (i = 0; i < image.width; i++)
-	{
-		for (j = 0; j < image.height; j++)
-		{
-			if (blueNOTblue(*pixmtrx, i, j) == 1)
+		for (j = 0;j < image.width;j++) {
+			if (mtrx[j][i].color.r == 155 && mtrx[j][i].color.g == 190 && mtrx[j][i].color.b == 245)
 			{
-				
-				pArr[i].p = pixmtrx[i][j].cordinate;
-				pixmtrx[i][j].color.r = 255;
-				pixmtrx[i][j].color.g = 255;
-				pixmtrx[i][j].color.b = 255;
-				poolsREC(pixmtrx, pArr, i, j);
-
+				temp[j][i] = 1;
+			}
+			else {
+				temp[j][i] = 0;
 			}
 		}
 	}
-	
+
 }
