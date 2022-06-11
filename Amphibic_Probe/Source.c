@@ -4,7 +4,7 @@
 #include <string.h>
 #include <math.h>
 
-#define BMP "fishpool.bmp"
+#define BMP "paintpool-3.bmp"
 #define BMPCPY "fishpool-copy.bmp"
 #define TXT "pools.txt"
 #define BEST_TXT "best-route.txt"
@@ -81,6 +81,7 @@ int main() {
 			matrix[i] = malloc(sizeof(pixmat) * image.height);
 		}
 	}// allocate memory to image pixel matrix
+
 
 
 	imgtrx(matrix, image, BMP);
@@ -187,38 +188,37 @@ void imgtrx(pixmat** mtrx, image_t image, char* filename) {
 	{
 
 		fseek(file, 54, SEEK_SET);
-
-		for ( i = 0; i < image.height; i++)
+		for (i = 0; i < image.height; i++)
 		{
-			for (j = 0;j < image.width;j++) {
+			for ( j = 0; j < image.width; j++)
+			{
 				mtrx[j][i].color.b = fgetc(file);
 				mtrx[j][i].color.g = fgetc(file);
 				mtrx[j][i].color.r = fgetc(file);
 				mtrx[j][i].cordinate.x = j;
 				mtrx[j][i].cordinate.y = i;
-				if (mtrx[j][i].color.b == 0 && mtrx[j][i].color.g == 0 && mtrx[j][i].color.r == 0) {
+				if (mtrx[j][i].color.b == 0 || mtrx[j][i].color.g == 0 || mtrx[j][i].color.r == 0) {
 					j--;
 				}
 			}
 		}
 
-
-		//for ( i = 0; i < image.height; i++)
-		//{
-		//	for ( j = 0; j < image.width; j++)
-		//	{
-		//		printf("{%d, %d, %d}\n", mtrx[j][i].color.r, mtrx[j][i].color.g, mtrx[j][i].color.b);
-		//	}
-		//}
-
-
 	}
+
+	//for ( i = 0; i < k; i++)
+	//{
+	//	printf("(%d, %d) : ", mtrx[i].cordinate.x, mtrx[i].cordinate.y);
+	//	printf("{ %d, %d , %d }\n", mtrx[i].color.r, mtrx[i].color.g, mtrx[i].color.b);
+
+	//}
 
 	if (val != 0)
 		fclose(file);
 
 	return 0;
 }
+
+
 
 
 
@@ -334,10 +334,13 @@ void Pools(pixmat** mtrx, image_t image, poolList_t* pools){
 	int** temp;
 	int size;
 	pix_t* root = NULL;
+	pixmat** pixmtrx;
 	co_t center;
 
 
-	center = pool_middle(*mtrx, 2); // just for running, need to be modified corretcly to linked list and size.
+	center = pool_middle(mtrx, 2); // just for running, need to be modified corretcly to linked list and size.
+
+
 
 
 	temp = malloc(sizeof(int*) * image.width);
@@ -362,22 +365,23 @@ void Pools(pixmat** mtrx, image_t image, poolList_t* pools){
 	}
 
 
-	for ( i = 0; i < image.height; i++)
-	{
-		for (j = 0;j < image.width;j++) {
-			printf("(%d, %d) : --%d--\t", j, i, temp[j][i]);
-		}
-		printf("\n");
-	}
+	//for ( i = 0; i < image.height; i++)
+	//{
+	//	for (j = 0;j < image.width;j++) {
+	//		printf("--%d--\t", temp[j][i]);//(%d, %d) : 
+	//	}
+	//	printf("\n");
+	//}
 
 	for (i = 0;i < image.height;i++) {
 		for (j = 0;j < image.width;j++) {
 			if (temp[j][i] == 1)
 			{
 				size = 1;
+				temp[j][i] = 0;
 				segment(&root, mtrx, temp, image, i, j, &size);
 				pool_insert(&pools, size, center, &root);//insert segmention function
-				temp[j][i] = 0;
+				printf("NEW POOL\n\n");
 			}
 		}
 	}
@@ -392,12 +396,13 @@ void Pools(pixmat** mtrx, image_t image, poolList_t* pools){
 int segment(pix_t* root, pixmat** mtrx, int** temp, image_t image, int i, int j, int* size) {
 
 //	pix_insert(root, mtrx[j][i].cordinate);
+	//printf("(%d, %d) -- %d --\n", j, i, temp[j][i]);
 
 	if (j > 0) {
 		if (temp[j - 1][i] == 1) {
-			printf("(%d, %d) -- %d --\n", j - 1, i, temp[j - 1][i]);
+			//printf("(%d, %d) -- %d --\n", j - 1, i, temp[j - 1][i]);
 			//pix_insert(root, mtrx[j-1][i].cordinate);
-			size += 1;
+			*size += 1;
 			temp[j-1][i] = 0;
 			segment(root, mtrx, temp, image, i, j - 1, size);
 		}
@@ -406,7 +411,7 @@ int segment(pix_t* root, pixmat** mtrx, int** temp, image_t image, int i, int j,
 	if (i > 0)
 	{
 		if (temp[j][i - 1] == 1) {
-			printf("(%d, %d) -- %d --\n", j, i-1, temp[j][i-1]);
+			//printf("(%d, %d) -- %d --\n", j, i-1, temp[j][i-1]);
 			//pix_insert(root, mtrx[j][i - 1].cordinate);
 			*size += 1;
 			temp[j][i-1] = 0;
@@ -416,7 +421,7 @@ int segment(pix_t* root, pixmat** mtrx, int** temp, image_t image, int i, int j,
 
 	if (j < image.width - 1) {
 		if (temp[j + 1][i] == 1) {
-			printf("(%d, %d) -- %d --\n", j + 1, i, temp[j + 1][i]);
+			//printf("(%d, %d) -- %d --\n", j + 1, i, temp[j + 1][i]);
 			//pix_insert(root, mtrx[j+1][i].cordinate);
 			*size += 1;
 			temp[j + 1][i] = 0;
@@ -428,7 +433,7 @@ int segment(pix_t* root, pixmat** mtrx, int** temp, image_t image, int i, int j,
 	if (i < image.height - 1)
 	{
 		if (temp[j][i + 1] == 1) {
-			printf("(%d, %d) -- %d --\n", j, i+1, temp[j][i+1]);
+			//printf("(%d, %d) -- %d --\n", j, i+1, temp[j][i+1]);
 			//pix_insert(root, mtrx[j][i - 1].cordinate);
 			*size += 1;
 			temp[j][i + 1] = 0;
