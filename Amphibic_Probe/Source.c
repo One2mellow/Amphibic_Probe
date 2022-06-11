@@ -4,7 +4,7 @@
 #include <string.h>
 #include <math.h>
 
-#define BMP "fishpool.bmp"
+#define BMP "centers.bmp"
 #define BMPCPY "fishpool-copy.bmp"
 #define TXT "pools.txt"
 #define BEST_TXT "best-route.txt"
@@ -110,8 +110,8 @@ co_t pool_middle(pix_t* root, int size) {
 
 	while (curr != NULL)
 	{
-		pixels[i].x = curr->p.x;
-		pixels[i].y = curr->p.y;
+		pixels[i].x = curr->p.x + 1;
+		pixels[i].y = curr->p.y + 1;
 		//printf("%d, %d\n", pixels[i].x, pixels[i].y);
 		curr = curr->next;
 		i++;
@@ -390,14 +390,20 @@ void Pools(pixmat** mtrx, image_t image, poolList_t* pools){
 				pix_insert(&root, mtrx[j][i].cordinate);
 				segment(&root, mtrx, temp, image, i, j, &size);
 				//pool_insert(&pools, size, center, &root);//insert segmention function
-				printf("NEW POOL\n\n");
-				printf("--%d--\n", size);
+
 
 				if (size > 10)
 				{
+					printf("NEW POOL\n\n");
+					printf("--%d--\n", size);
 					center = pool_middle(root, size);
-					printf("%d,%d,%d\n", mtrx[center.x][center.y].color.r, mtrx[center.x][center.y].color.g, mtrx[center.x][center.y].color.b);
+		//			printf("%d,%d,%d\n", mtrx[center.x][center.y].color.r, mtrx[center.x][center.y].color.g, mtrx[center.x][center.y].color.b);
 					printf("%d, %d\n", center.x, center.y);
+				}
+				else
+				{
+					printf("NOT POOL\n\n");
+					printf("--%d--\n", size);
 				}
 			}
 		}
@@ -421,14 +427,15 @@ int segment(pix_t* root, pixmat** mtrx, int** temp, image_t image, int i, int j,
 			temp[j-1][i] = 0;
 			segment(root, mtrx, temp, image, i, j - 1, size);
 		}
-		if (j < image.width - 1) {
-			if (temp[j + 1][i] == 1) {
-				pix_insert(root, mtrx[j + 1][i].cordinate);
-				*size += 1;
-				temp[j + 1][i] = 0;
-				segment(root, mtrx, temp, image, i, j + 1, size);
+	}
 
-			}
+	if (j < image.width - 1) {
+		if (temp[j + 1][i] == 1) {
+			pix_insert(root, mtrx[j + 1][i].cordinate);
+			*size += 1;
+			temp[j + 1][i] = 0;
+			segment(root, mtrx, temp, image, i, j + 1, size);
+
 		}
 	}
 
@@ -440,16 +447,15 @@ int segment(pix_t* root, pixmat** mtrx, int** temp, image_t image, int i, int j,
 			temp[j][i-1] = 0;
 			segment(root, mtrx, temp, image, i - 1, j, size);
 		}
+	}
 
-		if (i < image.height - 1)
-		{
-			if (temp[j][i + 1] == 1) {
-				pix_insert(root, mtrx[j][i - 1].cordinate);
-				*size += 1;
-				temp[j][i + 1] = 0;
-				segment(root, mtrx, temp, image, i + 1, j, size);
-			}
-
+	if (i < image.height - 1)
+	{
+		if (temp[j][i + 1] == 1) {
+			pix_insert(root, mtrx[j][i + 1].cordinate);
+			*size += 1;
+			temp[j][i + 1] = 0;
+			segment(root, mtrx, temp, image, i + 1, j, size);
 		}
 
 	}
