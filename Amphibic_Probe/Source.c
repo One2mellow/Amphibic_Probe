@@ -92,7 +92,7 @@ int main() {
 
 	choice = menu();
 
-	do
+	while (choice != 9)
 	{
 		switch (choice)
 		{
@@ -107,9 +107,11 @@ int main() {
 			return 0;
 			break;
 		default:
+			printf("\nBad input, try again\n\n");
+			choice = menu();
 			break;
 		}
-	} while (choice != 9);
+	}
 
 
 
