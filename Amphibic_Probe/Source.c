@@ -56,6 +56,13 @@ void Pools(pixmat** mtrx, image_t image,poolList_t* pools);
 
 void CreateBMP(char* filename, color_t** matrix, int height, int width);
 
+
+int blueNOTblue(pixmat** pixmtrx, int i, int j);
+int neighbors(pixmat** pixmtrx, int i, int j);
+poolList_t poolsREC(pixmat** pixmtrx, pix_t pArr[], int i, int j);
+
+
+
 int main() {
 	int i, j, t;
 	poolList_t* pools[200];
@@ -74,7 +81,6 @@ int main() {
 	imgtrx(matrix, image, BMP);
 	Pools(matrix, image, pools);
 	//CreateBMP(BMPCPY, matrix, image.height, image.width);
-
 	free(matrix);
 	return 0;
 }
@@ -308,13 +314,57 @@ void CreateBMP(char* filename, pixmat* matrix, int height, int width) {
 	free(wrmat);*/
 }
 
+poolList_t poolsREC(pixmat** pixmtrx,pix_t pArr[], int i, int j)
+{
+	poolList_t* ptr = malloc(sizeof(poolList_t));;
 
+	while (blueNOTblue(pixmtrx, i, j) == 1 && neighbors(pixmtrx, i, j) == 1)
+		{
+			pArr[i].p = pixmtrx[i][j].cordinate;
+			pixmtrx[i][j].color.r = 255;
+			pixmtrx[i][j].color.g = 255;
+			pixmtrx[i][j].color.b = 255;
+			poolsREC(pixmtrx, pArr, i, j);
+		}
+	
+		
+		return *ptr;
+	}
+
+	int blueNOTblue(pixmat** pixmtrx, int i, int j){
+		if (pixmtrx[i][j].color.r == 155 && pixmtrx[i][j].color.g == 190 && pixmtrx[i][j].color.b == 245)
+		{
+			return 1;
+		}
+		else
+		{
+			return 0;
+		}
+	}
+
+	int neighbors(pixmat** pixmtrx, int i, int j) {
+	if (((abs(pixmtrx[i][j].cordinate.x - pixmtrx[i+1][j].cordinate.x) == 1)
+		|| (abs(pixmtrx[i][j].cordinate.x - pixmtrx[i-1][j].cordinate.x) == 1)
+			|| (abs(pixmtrx[i][j].cordinate.x - pixmtrx[i][j+1].cordinate.x) == 1)
+				|| (abs(pixmtrx[i][j].cordinate.x - pixmtrx[i][j-1].cordinate.x) == 1)) ||
+			((abs(pixmtrx[i][j].cordinate.y - pixmtrx[i + 1][j].cordinate.y) == 1)
+					|| (abs(pixmtrx[i][j].cordinate.y - pixmtrx[i - 1][j].cordinate.y) == 1)
+						|| (abs(pixmtrx[i][j].cordinate.y - pixmtrx[i][j + 1].cordinate.y) == 1)
+							|| (abs(pixmtrx[i][j].cordinate.y - pixmtrx[i][j - 1].cordinate.y) == 1)))
+	{
+		return 1;
+	}
+	else { return 0; }
+
+	}
 
 void Pools(pixmat* mtrx, image_t image, poolList_t* pools){
 	pixmat** pixmtrx;
 	int i,j;
 
+	pix_t pArr[200];
 	pixmtrx = malloc(sizeof(pixmat*) * image.width);
+
 	for ( i = 0; i < image.width; i++)
 	{
 		pixmtrx[i] = malloc(sizeof(pixmat) * image.height);
@@ -328,5 +378,21 @@ void Pools(pixmat* mtrx, image_t image, poolList_t* pools){
 		}
 
 	}
+	for (i = 0; i < image.width; i++)
+	{
+		for (j = 0; j < image.height; j++)
+		{
+			if (blueNOTblue(*pixmtrx, i, j) == 1)
+			{
+				
+				pArr[i].p = pixmtrx[i][j].cordinate;
+				pixmtrx[i][j].color.r = 255;
+				pixmtrx[i][j].color.g = 255;
+				pixmtrx[i][j].color.b = 255;
+				poolsREC(pixmtrx, pArr, i, j);
 
+			}
+		}
+	}
+	
 }
