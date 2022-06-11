@@ -67,7 +67,7 @@ void deallocpix(pix_t** root);
 void deallocpool(poolList_t** root);
 
 int main() {
-	int i, j;
+	int i, j, choice;
 	poolList_t* pools = NULL;
 	pixmat** matrix;
 	static image_t image;
@@ -86,14 +86,26 @@ int main() {
 		}
 	}// allocate memory to image pixel matrix
 
-
-
 	imgtrx(matrix, image, BMP);
-	pools = Pools(matrix, image, pools);
+
+	printf_s("--------------------------\nME LAB services\n--------------------------");
+
+	printf_s("\nMenu:\n1. Scan pools\n2. Print sorted pool list\n3. Select route\n4. Numeric report.\n5. Students addition\n6. Exit\nEnter choice: ");
+
+	scanf_s("%d", &choice);
+
+	switch (choice)
+	{
+	case 1:
+		pools = Pools(matrix, image, pools);
+		break;
+	default:
+		break;
+	}
 	//CreateBMP(BMPCPY, matrix, image.height, image.width);
 
 	for (poolList_t* curr = pools; curr != NULL; curr = curr->next) {
-		printf("size : %d\n center : (%d, %d)\n\n\n", curr->size, curr->poolCenter.x, curr->poolCenter.y);
+		printf_s("size : %d\n center : (%d, %d)\n\n\n", curr->size, curr->poolCenter.x, curr->poolCenter.y);
 	}
 
 	deallocpool(&pools);
@@ -123,7 +135,7 @@ co_t pool_middle(pix_t* root, int size) {
 	{
 		pixels[i].x = curr->p.x + 1;
 		pixels[i].y = curr->p.y + 1;
-		//printf("%d, %d\n", pixels[i].x, pixels[i].y);
+		//printf_s("%d, %d\n", pixels[i].x, pixels[i].y);
 		curr = curr->next;
 		i++;
 	}
@@ -150,7 +162,7 @@ co_t pool_middle(pix_t* root, int size) {
 //try it in the main function
 /*co_t test[] = {{5,2}, {15,1}, {2,3}, {300,6}, {11,100}, {2,1}, {50,5}};
 	co_t middle_cot = pool_middle(test,sizeof test/8);
-	printf_s("The pool middle cordinate is (%d,%d)", middle_cot.x, middle_cot.y);*/
+	printf_s_s("The pool middle cordinate is (%d,%d)", middle_cot.x, middle_cot.y);*/
 
 
 	/* Bitmap file format
@@ -182,13 +194,13 @@ bool LoadSprite(image_t* image, const char* filename) {
 	int height;
 	int bpp;
 
-	printf("Loading bitmap file: %s\n", filename);
+	printf_s("Loading bitmap file: %s\n", filename);
 
 	FILE* file;
 	return_value = fopen_s(&file, filename, "rb");
 	if (file) {
 		if (fgetc(file) == 'B' && fgetc(file) == 'M') {
-			printf("BM read; bitmap file confirmed.\n");
+			printf_s("BM read; bitmap file confirmed.\n");
 			fseek(file, 8, SEEK_CUR);
 			fread(&image_data_address, 4, 1, file);
 			fseek(file, 4, SEEK_CUR);
@@ -240,8 +252,8 @@ void imgtrx(pixmat** mtrx, image_t image, char* filename) {
 
 	//for ( i = 0; i < k; i++)
 	//{
-	//	printf("(%d, %d) : ", mtrx[i].cordinate.x, mtrx[i].cordinate.y);
-	//	printf("{ %d, %d , %d }\n", mtrx[i].color.r, mtrx[i].color.g, mtrx[i].color.b);
+	//	printf_s("(%d, %d) : ", mtrx[i].cordinate.x, mtrx[i].cordinate.y);
+	//	printf_s("{ %d, %d , %d }\n", mtrx[i].color.r, mtrx[i].color.g, mtrx[i].color.b);
 
 	//}
 
@@ -403,16 +415,16 @@ poolList_t* Pools(pixmat** mtrx, image_t image, poolList_t* pools){
 
 				if (size > 10)
 				{
-					//printf("NEW POOL\n\n");
-					//printf("--%d--\n", size);
+					//printf_s("NEW POOL\n\n");
+					//printf_s("--%d--\n", size);
 					center = pool_middle(root, size);
 					pool_insert(&pools, size, center, &root);//insert segmention function
-					//printf("%d, %d\n", center.x, center.y);
+					//printf_s("%d, %d\n", center.x, center.y);
 				}
 				else
 				{
-					//printf("NOT POOL\n\n");
-					//printf("--%d--\n", size);
+					//printf_s("NOT POOL\n\n");
+					//printf_s("--%d--\n", size);
 				}
 			}
 			deallocpix(&root);
