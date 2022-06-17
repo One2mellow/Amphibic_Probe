@@ -103,6 +103,10 @@ int main() {
 			}
 			choice = menu();
 			break;
+		case 2:
+			printf("Sorted lists\n");
+			choice = menu();
+			break;
 		case 9:
 			return 0;
 			break;
