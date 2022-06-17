@@ -68,6 +68,8 @@ void deallocpix(pix_t** root);
 
 void deallocpool(poolList_t** root);
 
+co_t InputCheck(image_t image);
+
 int main() {
 	int i, j, choice = 0;
 	poolList_t* pools = NULL;
@@ -107,6 +109,11 @@ int main() {
 			printf("Sorted lists\n");
 			choice = menu();
 			break;
+		case 3:
+			putchar('\n');
+			InputCheck(image);
+			choice = menu();
+			break;
 		case 9:
 			return 0;
 			break;
@@ -140,7 +147,7 @@ int menu() {
 	printf_s("\nMenu:\n1. Scan pools\n2. Print sorted pool list\n3. Select route\n4. Numeric report.\n5. Students addition\n9. Exit\nEnter choice: ");
 
 	scanf_s("%d", &choice);
-
+	getchar();
 	return choice;
 }
 
@@ -288,10 +295,6 @@ void imgtrx(pixmat** mtrx, image_t image, char* filename) {
 
 	return 0;
 }
-
-
-
-
 
 /*void CreateBMP(char* filename, pixmat* matrix, int height, int width) {
 
@@ -583,4 +586,59 @@ void deallocpool(poolList_t** root) {
 		free(aux);
 	}
 	*root = NULL;
+}
+
+
+co_t InputCheck(image_t image) {
+	co_t coordinate;
+	char *input;
+
+	do
+	{
+		char x[4], y[4];
+		int i, j = 0;
+		int flag = 0;
+
+		input = malloc(sizeof(char) * image.width);
+		printf_s("Please Enter valid x,y start coordinate, bmp width is %d and height is %d\n", image.width, image.height);
+		gets_s(input, image.width);
+
+
+		for (i = 0; input[i] != '\0'; i++)
+		{
+			if (input[i] < '0' || input[i] > '9')
+				if (input[i] != ',' && input[i] != ' ')
+				{
+					free(input);
+					input = malloc(sizeof(char) * image.width);
+					printf_s("Please Enter valid x,y start coordinate, bmp width is %d and height is %d\n", image.width, image.height);
+					gets_s(input, image.width);
+					i = 0;
+				}
+		}
+
+		for (i = 0; input[i] != '\0'; i++)
+		{
+			if (input[i] == ',') {
+				flag = 1;
+				i++;
+			}
+			if (flag == 0)
+			{
+				x[i] = input[i];
+			}
+			else {
+				y[j] = input[i];
+				j++;
+			}
+		}
+
+		coordinate.x = (int)atof(x);
+		coordinate.y = (int)atof(y);
+
+	} while (coordinate.x > image.width || coordinate.y > image.height);
+
+	free(input);
+
+	return coordinate;
 }
