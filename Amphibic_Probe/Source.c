@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdbool.h>
 #include <string.h>
 #include <math.h>
 
@@ -8,9 +7,6 @@
 #define BMPCPY "fishpool-copy.bmp"
 #define TXT "pools.txt"
 #define BEST_TXT "best-route.txt"
-
-const int FILE_HEADER_SIZE = 14;
-const int INFO_HEADER_SIZE = 40;
 
 typedef struct { //bmp file values struct
 	int width;
@@ -46,29 +42,29 @@ typedef struct pool { //pools' list extructed of bmp
 }poolList_t;
 
 
-int menu();
+int menu(); //menu function
 
-bool LoadSprite(image_t* image, const char* filename);
+int LoadImage(image_t* image, const char* filename); //loading the BMP image and getting WxH values
 
-co_t pool_middle(pix_t *root, int size);
+co_t pool_middle(pix_t *root, int size); //returning the pool's center coordinates from given coordinate array
 
-void imgtrx(pixmat** mtrx, image_t image, char* filename);
+void imgtrx(pixmat** mtrx, image_t image, char* filename); //converting the BMP image to 2d array of type pixmat
 
-poolList_t* Pools(pixmat** mtrx, image_t image, poolList_t* pools);
+poolList_t* Pools(pixmat** mtrx, image_t image, poolList_t* pools); //Creating list of pools which contain size and center co. for each pool
 
-void CreateBMP(char* filename, color_t** matrix, int height, int width);
+void CreateBMP(char* filename, color_t** matrix, int height, int width); //UNFINISHED! creating BMP of best route
 
-int segment(pix_t* root, pixmat** mtrx, int** temp, image_t image, int i, int j, int* size);
+int segment(pix_t* root, pixmat** mtrx, int** temp, image_t image, int i, int j, int* size); //using region base image segmentation to detect pools
 
-void pix_insert(pix_t** root, co_t coordinate);
+void pix_insert(pix_t** root, co_t coordinate); //appending new pixel to the end of pixels list
 
-void pool_insert(poolList_t** root, int size, co_t center, pix_t* pix);
+void pool_insert(poolList_t** root, int size, co_t center, pix_t* pix); //appending new pool element to the end of pools list
 
-void deallocpix(pix_t** root);
+void deallocpix(pix_t** root); //deallocating memory of the pixel list
 
-void deallocpool(poolList_t** root);
+void deallocpool(poolList_t** root); //deallocating memory of the pools list
 
-co_t InputCheck(image_t image);
+co_t InputCheck(image_t image); //checking the validity of the starting coordinates
 
 int main() {
 	int i, j, choice = 0;
@@ -76,7 +72,7 @@ int main() {
 	pixmat** matrix;
 	static image_t image;
 
-	if ((LoadSprite(&image, BMP)) != 0) {
+	if ((LoadImage(&image, BMP)) != 0) {
 		printf_s("Failed to load file: \" %s\"", BMP);
 		return -1;
 	}
@@ -101,7 +97,7 @@ int main() {
 		case 1:
 			pools = Pools(matrix, image, pools);
 			for (poolList_t* curr = pools; curr != NULL; curr = curr->next) {
-				printf_s("size : %d\n center : (%d, %d)\n\n\n", curr->size, curr->poolCenter.x, curr->poolCenter.y);
+				printf_s("size : %d\n center : (%d, %d)\n\n\n", curr->size, curr->poolCenter.x, curr->poolCenter.y); //iterating through the pool list, printing size and center
 			}
 			choice = menu();
 			break;
@@ -114,6 +110,9 @@ int main() {
 			InputCheck(image);
 			choice = menu();
 			break;
+		case 4:
+			//Naama
+			break;
 		case 9:
 			return 0;
 			break;
@@ -123,10 +122,6 @@ int main() {
 			break;
 		}
 	}
-
-
-
-	//CreateBMP(BMPCPY, matrix, image.height, image.width);
 
 
 
@@ -168,7 +163,6 @@ co_t pool_middle(pix_t* root, int size) {
 	{
 		pixels[i].x = curr->p.x + 1;
 		pixels[i].y = curr->p.y + 1;
-		//printf_s("%d, %d\n", pixels[i].x, pixels[i].y);
 		curr = curr->next;
 		i++;
 	}
@@ -192,10 +186,6 @@ co_t pool_middle(pix_t* root, int size) {
 	middle.y = (y_max + y_min) / 2;
 	return middle;
 }
-//try it in the main function
-/*co_t test[] = {{5,2}, {15,1}, {2,3}, {300,6}, {11,100}, {2,1}, {50,5}};
-	co_t middle_cot = pool_middle(test,sizeof test/8);
-	printf_s_s("The pool middle cordinate is (%d,%d)", middle_cot.x, middle_cot.y);*/
 
 
 	/* Bitmap file format
@@ -219,7 +209,7 @@ co_t pool_middle(pix_t* root, int size) {
 	 * BITMAP DATA:
 	 *	138:	X	Pixels
 	 */
-bool LoadSprite(image_t* image, const char* filename) {
+int LoadImage(image_t* image, const char* filename) {
 	int return_value = 0;
 
 	unsigned int image_data_address;
@@ -248,8 +238,8 @@ bool LoadSprite(image_t* image, const char* filename) {
 		fclose(file);
 	}
 	else {
-		//PRINT_ERROR("(%s) Failed to open file", filename);
-		return_value = false;
+		printf_s("(%s) Failed to open file\n", filename);
+		return_value = NULL;
 	}
 	return return_value;
 }
@@ -282,13 +272,6 @@ void imgtrx(pixmat** mtrx, image_t image, char* filename) {
 		}
 
 	}
-
-	//for ( i = 0; i < k; i++)
-	//{
-	//	printf_s("(%d, %d) : ", mtrx[i].cordinate.x, mtrx[i].cordinate.y);
-	//	printf_s("{ %d, %d , %d }\n", mtrx[i].color.r, mtrx[i].color.g, mtrx[i].color.b);
-
-	//}
 
 	if (val != 0)
 		fclose(file);
@@ -444,16 +427,8 @@ poolList_t* Pools(pixmat** mtrx, image_t image, poolList_t* pools){
 
 				if (size > 10)
 				{
-					//printf_s("NEW POOL\n\n");
-					//printf_s("--%d--\n", size);
 					center = pool_middle(root, size);
-					pool_insert(&pools, size, center, &root);//insert segmention function
-					//printf_s("%d, %d\n", center.x, center.y);
-				}
-				else
-				{
-					//printf_s("NOT POOL\n\n");
-					//printf_s("--%d--\n", size);
+					pool_insert(&pools, size, center, &root);
 				}
 			}
 			deallocpix(&root);
