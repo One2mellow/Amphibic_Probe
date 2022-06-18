@@ -66,11 +66,16 @@ void deallocpool(poolList_t** root); //deallocating memory of the pools list
 
 co_t InputCheck(image_t image); //checking the validity of the starting coordinates
 
+int SpaceMod(int x, int y); //making sure that the correct number of spaces is printed between co. and size in pools.txt
+
 int main() {
-	int i, j,count = 0, choice = 0;
+	int i, j, val, count = 0, choice = 0;
 	poolList_t* pools = NULL;
 	pixmat** matrix;
 	static image_t image;
+	FILE* tx;
+
+	val = fopen_s(&tx, TXT, "w");
 
 	if ((LoadImage(&image, BMP)) != 0) {
 		printf_s("Failed to load file: \" %s\"", BMP);
@@ -98,10 +103,24 @@ int main() {
 			pools = Pools(matrix, image, pools);
 			printf_s("\nCoordinate x1,y1 of the first discoverd pool (%d,%d)", pools->poolCenter.x, pools->poolCenter.y);
 			printf_s("\nSize %d",pools->size);
-			for (poolList_t* curr = pools; curr != NULL; curr = curr->next) {
-				count++; //iterating through the pool list, printing size and center
-			}
+				if (val == 0) {
+//					fwrite("Image size (", 1, 12, tx); //initializing pools.txt
+					fprintf_s(tx, "%s%dx%d%s", "Image size (", image.width, image.height, ")\nPool Center	Size\n===========	====");
+					for (poolList_t* curr = pools; curr != NULL; curr = curr->next) {
+						fprintf_s(tx, "\n(%d,%d)", curr->poolCenter.x, curr->poolCenter.y);
+						for (i = 0; i < 9 - SpaceMod(curr->poolCenter.x,curr->poolCenter.y); i++)
+							fputc(' ', tx);
+						fprintf_s(tx, "%d", curr->size);
+						count++; //iterating through the pool list, printing size and center
+					}
+				}
+				else
+				{
+					printf_s("ERROR! couldn't open %s", TXT);
+				}
+
 			printf_s("\nTotal of %d pools.\n", count);
+			fclose(tx);
 			choice = menu();
 			break;
 		case 2:
@@ -619,4 +638,23 @@ co_t InputCheck(image_t image) {
 	free(input);
 
 	return coordinate;
+}
+
+int SpaceMod(int x, int y) {
+	int n;
+	int space = 0;
+	n = x;
+	while (n != 0)
+	{
+		n = n / 10;
+		space++;
+	}
+	n = y;
+	while (n != 0)
+	{
+		n = n / 10;
+		space++;
+	}
+
+	return space;
 }
