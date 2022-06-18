@@ -67,7 +67,7 @@ void deallocpool(poolList_t** root); //deallocating memory of the pools list
 co_t InputCheck(image_t image); //checking the validity of the starting coordinates
 
 int main() {
-	int i, j, choice = 0;
+	int i, j,count = 0, choice = 0;
 	poolList_t* pools = NULL;
 	pixmat** matrix;
 	static image_t image;
@@ -96,9 +96,12 @@ int main() {
 		{
 		case 1:
 			pools = Pools(matrix, image, pools);
+			printf_s("\nCoordinate x1,y1 of the first discoverd pool (%d,%d)", pools->poolCenter.x, pools->poolCenter.y);
+			printf_s("\nSize %d",pools->size);
 			for (poolList_t* curr = pools; curr != NULL; curr = curr->next) {
-				printf_s("size : %d\n center : (%d, %d)\n\n\n", curr->size, curr->poolCenter.x, curr->poolCenter.y); //iterating through the pool list, printing size and center
+				count++; //iterating through the pool list, printing size and center
 			}
+			printf_s("\nTotal of %d pools.\n", count);
 			choice = menu();
 			break;
 		case 2:
