@@ -68,6 +68,10 @@ void deallocpix(pix_t** root);
 
 void deallocpool(poolList_t** root);
 
+void printNsortpools();
+
+
+
 int main() {
 	int i, j, choice = 0;
 	poolList_t* pools = NULL;
@@ -104,7 +108,7 @@ int main() {
 			choice = menu();
 			break;
 		case 2:
-			printf("Sorted lists\n");
+			printNsortpools(	);
 			choice = menu();
 			break;
 		case 9:
@@ -518,6 +522,101 @@ int segment(pix_t* root, pixmat** mtrx, int** temp, image_t image, int i, int j,
 	
 }
 
+void printNsortpools() {
+	FILE* f;
+	int a = fopen_s(&f, "pools.txt", "rt");
+	int i, j=0; int  count_pools = -3; ; int flag = 0;
+	char chr;
+	char filechar[22];
+	if (f == NULL ) {
+		printf_s("Problem reading pools.txt file\nList is empty"); //if there is no such a file  //failed to open pools.txt
+		return 0; 
+	}
+	if (a == 0) // open successfully
+	{
+		chr = fgetc(f);
+		while (chr != EOF)
+		{
+			if (chr == '\n')
+			{
+				count_pools = count_pools + 1; //counter pools
+			}
+			chr = fgetc(f);
+		}
+		if (count_pools == 0) { printf_s("List is empty"); } //if there are no pools
+		if (count_pools > 0 )
+		{
+			printf_s("\nSorted pools by size:\nCoordinate      Size\n==========  \t====\n");
+
+			for ( i=0 ; i < count_pools; i++)
+			{
+				char str[21], x[3], y[3], size[4];
+				char* cursor = str;
+				fseek(f, 56+i*13, SEEK_SET);
+				fgets(str, 19, f);
+				for ( i = 0; i <= strlen(str); i++)
+				{
+					if (str[i] != ',' && flag == 0)
+					{
+						x[i] = str[i+1];
+					}
+					if (str[i] == ',')
+					{
+						flag = 1;
+					}
+					if (str[i] != ')' && flag == 1)
+					{
+						y[j] = str[i + 1];
+						j++; i++;
+						
+					}		
+					if (str[i] == ')') { flag = 2; i++; }
+					if (flag == 2)
+					{
+
+					}
+					}
+				}
+				/*for (j = 0; j <= 17; j++) 
+				{
+					if (( str[j] > 57 || str[j] < 47) && str[j] != '\0')
+					{
+						str[j] = ' ';
+					}
+					if (str[j] == ' ' || str [j+1] == ' ')
+					{
+						while (str[j+1] == ' ')
+						{
+							strcpy_s(&str[j+1], strlen(&str[j]), &str[j+2]);
+						}
+
+					}
+
+				}*/
+				/*for (j = 0; j < strlen(str) ; j++)
+				{
+					cursor = str;
+
+					
+					strcpy_s(&str[j], strlen(&str[j]), &str[j + 2]);
+					cursor = str;
+
+					y = strtol(str, &cursor, 10);
+					strcpy_s(&str[j], strlen(&str[j]), &str[j + 2]);
+					cursor = str;
+
+					size = strtol(str, &cursor, 10);
+					
+				}*/
+				//long int arr[] = { x,y,size };
+				//sscanf_s(str, "&ld&ld&ld", &x, &y, &size);
+				//x = strtol(str, &cursor, 10);
+				
+				//printf_s("%s \n", str);
+			}
+		}
+		fclose(f);
+}
 
 void pix_insert(pix_t** root, co_t coordinate) {
 	pix_t* new_pix = malloc(sizeof(pix_t));
