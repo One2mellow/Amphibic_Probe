@@ -68,6 +68,122 @@ co_t InputCheck(image_t image); //checking the validity of the starting coordina
 
 int SpaceMod(int x, int y); //making sure that the correct number of spaces is printed between co. and size in pools.txt
 
+
+///////////////////////////////////////////function for section 3- START///////////////////////////////////////////
+
+//find distance between to cordinates
+double distance(co_t a, co_t b) {
+	double x1, x2, y1, y2;
+	x1 = a.x, x2 = b.x, y1 = a.y, y2 = b.y;
+	double d;
+	d = sqrt(pow(x1 - x2, 2) + pow(y1 - y2, 2));
+	return d;
+}
+
+//find the closest pool
+/*The function receives an array of pools and a current coordinate and
+returns the index in the array of the nearest pool.*/
+int closest_pool(co_t current_pos, co_t middle_arr[], int size) {
+	int i, j = -1;
+	double smallest_d = 10000;
+	for (i = 0; i < size; i++) {
+		if (middle_arr[i].x != 2000)
+			if (smallest_d > distance(middle_arr[i], current_pos)) {
+				smallest_d = distance(middle_arr[i], current_pos);
+				j = i;
+			}
+	}
+	return j;
+}
+
+
+int route_finder(co_t tracker_coordinate, co_t end_coordinate, float oil, float time, int pool_size_arr[], co_t middle_arr[], int size_of_pool, int r) {
+	int x = 1;
+	r++;
+	if (oil >= 0) {
+		if ((distance(tracker_coordinate, end_coordinate)) * 0.2 - 0.009 <= oil) {
+			float ab = (oil - distance(tracker_coordinate, end_coordinate) * 0.2);
+			if (ab < 0)
+				ab = ab * -1;
+			FILE* best_route;
+			fopen_s(&best_route, "best-route.txt", "at");
+			if (!best_route) return x;
+			fprintf_s(best_route, "(%d) %.2f %.2f %d %d %d\n", r, time + distance(tracker_coordinate, end_coordinate) / 0.2, ab, size_of_pool, end_coordinate.x, end_coordinate.y);
+			fclose(best_route);
+			char test = 0;
+			int i = 0;
+			int j = 0;
+
+			return 0;
+		}
+		else {
+			int p1 = closest_pool(tracker_coordinate, middle_arr, sizeof middle_arr);
+			if (p1 == -1)return 1;
+			co_t temp1 = middle_arr[p1];
+			float ab = oil - distance(tracker_coordinate, temp1) * 0.2 + pool_size_arr[p1] * 0.2;
+			float bb = time + pool_size_arr[p1] + distance(tracker_coordinate, temp1) / 0.2;
+
+			if ((oil - distance(tracker_coordinate, temp1) * 0.2) > 0) {
+				if (middle_arr[p1].x != 2000) {
+					FILE* best_route;
+					fopen_s(&best_route, "best-route.txt", "at");
+					if (!best_route) return x;
+					fprintf_s(best_route, "(%d) %.2f %.2f %d %d %d	", r, bb, ab, pool_size_arr[p1], temp1.x, temp1.y);
+					fclose(best_route);
+
+
+				}
+
+				middle_arr[p1].x = 2000;
+				middle_arr[p1].y = 2000;
+				co_t middle_arr2[5];
+				for (int i = 0; i < 5; i++)
+					middle_arr2[i] = middle_arr[i];
+
+				x *= route_finder(temp1, end_coordinate, ab, time + pool_size_arr[p1] + distance(tracker_coordinate, temp1) / 0.2, pool_size_arr, middle_arr2, pool_size_arr[p1], r);
+			}
+			int p2 = closest_pool(tracker_coordinate, middle_arr, sizeof middle_arr);
+			if (p2 == -1)return 1;
+			co_t temp2 = middle_arr[p2];
+			float ac = oil - distance(tracker_coordinate, temp2) * 0.2 + pool_size_arr[p2] * 0.2;
+			float aa = time + pool_size_arr[p2] + distance(tracker_coordinate, temp2) / 0.2;
+
+			if ((oil - distance(tracker_coordinate, temp1) * 0.2) > 0) {
+
+				if (middle_arr[p2].x != 2000) {
+					FILE* best_route;
+					fopen_s(&best_route, "best-route.txt", "at");
+					if (!best_route) return x;
+					fprintf_s(best_route, "(%d) %.2f %.2f %d %d %d	", r, aa, ac, pool_size_arr[p2], temp2.x, temp2.y);
+					fclose(best_route);
+
+
+				}
+
+				middle_arr[p2].x = 2000;
+				middle_arr[p2].y = 2000;
+				co_t middle_arr3[5];
+				for (int i = 0; i < 5; i++)
+					middle_arr3[i] = middle_arr[i];
+				x *= route_finder(temp2, end_coordinate, ac, time + pool_size_arr[p2] + distance(tracker_coordinate, temp2) / 0.2, pool_size_arr, middle_arr3, pool_size_arr[p2], r);
+			}
+		}
+	}
+	FILE* best_route;
+	fopen_s(&best_route, "best-route.txt", "at");
+	if (!best_route) return x;
+	fprintf_s(best_route, "X\n");
+	fclose(best_route);
+	return x;
+}
+///////////////////////////////////////////function for section 3- END///////////////////////////////////////////
+
+
+
+
+
+
+
 int main() {
 	int i, j, val, count = 0, choice = 0;
 	poolList_t* pools = NULL;
@@ -157,6 +273,375 @@ int main() {
 		free(matrix[i]);
 	}	
 	free(matrix);
+
+	///////////////////////////////////////////section 3 - START///////////////////////////////////////////
+
+	pools;
+	char trash;
+	co_t end_coordinate = { 0 };
+	i = 0;
+
+	char pointer = 0;
+	int num_of_pool = 0;
+	fopen_s(&pools, "pools.txt", "rt");
+	if (!pools) return;
+	fseek(pools, 40, SEEK_CUR);
+	for (pointer = getc(pools); pointer != EOF; pointer = getc(pools)) {
+		if (pointer == '(') {
+			num_of_pool++;
+		}
+	}
+	fclose(pools);
+
+	int* pool_size_arr = NULL;
+	pool_size_arr = (int*)malloc(num_of_pool * sizeof(int));
+	if (pool_size_arr == NULL) {
+		exit(0);
+	}
+	for (i = 0; i < num_of_pool; i++) {
+		pool_size_arr[i] = 0;
+	}
+	i = 0;
+
+	co_t* middle_arr = NULL;
+	middle_arr = (co_t*)malloc(num_of_pool * sizeof(co_t));
+	if (middle_arr == NULL) {
+		exit(0);
+	}
+	for (i = 0; i < num_of_pool; i++) {
+		middle_arr[i].x = 0;
+		middle_arr[i].y = 0;
+	}
+	i = 0;
+
+	fopen_s(&pools, "pools.txt", "rt");
+	if (!pools) return;
+	fseek(pools, 12, SEEK_SET);
+	fscanf_s(pools, "%d %c %d", &end_coordinate.x, &trash, 1, &end_coordinate.y);
+	fseek(pools, 40, SEEK_CUR);
+	for (i = 0; i < num_of_pool; i++) {
+		fscanf_s(pools, "%d %c %d", &middle_arr[i].x, &trash, 1, &middle_arr[i].y);
+		fseek(pools, num_of_pool, SEEK_CUR);
+		fscanf_s(pools, "%d %c ", &pool_size_arr[i], &trash, 1);
+	}
+	fclose(pools);
+
+	FILE* best_route;
+	fopen_s(&best_route, "best-route.txt", "wt");
+	if (!best_route) return;
+	fprintf_s(best_route, "");
+	fclose(best_route);
+
+	fopen_s(&best_route, "best-route2.txt", "wt");
+	if (!best_route) return;
+	fprintf_s(best_route, "");
+	fclose(best_route);
+
+	co_t current_pos = { 0 };
+	float oil;
+	printf_s("Please Enter valid x,y start coordinate, bmp width is %d and height is %d\n", end_coordinate.x, end_coordinate.y);
+	scanf_s("%d,%d", &current_pos.x, &current_pos.y);
+
+	do {
+		printf_s("Please enter valid oil supply in range 1-1000\n");
+		scanf_s("%f", &oil);
+	} while ((oil < 1) || (oil > 1000));
+
+	int r = 0;
+	float time = 0;
+	int size_of_pool = 0;
+
+	if (route_finder(current_pos, end_coordinate, oil, time, pool_size_arr, middle_arr, size_of_pool, r) != 0) {
+		printf_s("Sorry, could not reach destination with these inputs\n");
+		remove("best-route.txt");
+		remove("best-route2.txt");
+	}
+	else {
+		char test = 0;
+		int k = 0;
+		int j = 0;
+		i = 0;
+		fopen_s(&best_route, "best-route.txt", "rt");
+		if (!best_route) return;
+		FILE* best_route2;
+		fopen_s(&best_route2, "temp.txt", "a");
+		if (!best_route2) return;
+		for (test = getc(best_route); test != EOF; test = getc(best_route)) {
+			if (test != 'X') {
+				if (test == '\n') {
+					j = i;
+					fseek(best_route, -j + k - 2, SEEK_CUR);
+					for (test = getc(best_route); k < j + 1; test = getc(best_route)) {
+						fprintf_s(best_route2, "%c", test);
+						k++;
+					}
+					k = j + 1;
+					fseek(best_route, -2, SEEK_CUR);
+					test = getc(best_route);
+				}
+			}
+			else {
+				fseek(best_route, -2, SEEK_CUR);
+				test = getc(best_route);
+				if (test == '\n') {
+					k = j + 2;
+					fseek(best_route, 1, SEEK_CUR);
+					test = getc(best_route);
+				}
+				else {
+					j = i;
+					k += 5;
+					fseek(best_route, -j + k - 2, SEEK_CUR);
+					for (test = getc(best_route); k < j + 3; test = getc(best_route)) {
+						fprintf_s(best_route2, "%c", test);
+						k++;
+					}
+					fprintf_s(best_route2, "\n");
+					k = j + 1;
+				}
+			}
+			i++;
+		}
+		fclose(best_route2);
+		fclose(best_route);
+		remove("best-route2.txt");
+		char old_name[] = "temp.txt";
+		char new_name[] = "best-route2.txt";
+		int d = rename(old_name, new_name);
+
+		k = 0;
+		j = 0;
+		i = 0;
+
+		fopen_s(&best_route, "best-route2.txt", "rt");
+		if (!best_route) return;
+		fopen_s(&best_route2, "temp.txt", "a");
+		if (!best_route2) return;
+		for (test = getc(best_route); test != EOF; test = getc(best_route)) {
+			if (test == '\n') {
+				j = i;
+				fseek(best_route, -3, SEEK_CUR);
+				test = getc(best_route);
+				if (test != 'X') {
+					fseek(best_route, -j + k, SEEK_CUR);
+					for (test = getc(best_route); k < j + 1; test = getc(best_route)) {
+						fprintf_s(best_route2, "%c", test);
+						k++;
+					}
+					k = j + 1;
+					fseek(best_route, -2, SEEK_CUR);
+					test = getc(best_route);
+				}
+				else {
+					test = getc(best_route);
+					k = j + 1;
+				}
+			}
+			i++;
+		}
+		fclose(best_route2);
+		fclose(best_route);
+		remove("best-route2.txt");
+		d = rename(old_name, new_name);
+
+		k = 0;
+		j = 0;
+		i = 0;
+		fopen_s(&best_route, "best-route2.txt", "rt");
+		if (!best_route) return;
+		fopen_s(&best_route2, "temp.txt", "a");
+		if (!best_route2) return;
+		for (test = getc(best_route); test != EOF; test = getc(best_route)) {
+			if (test == '\n') {
+				j = i;
+				fseek(best_route, k - j - 1, SEEK_CUR);
+				test = getc(best_route);
+				if (test == '1') {
+					fseek(best_route, -2, SEEK_CUR);
+					for (test = getc(best_route); k < j + 1; test = getc(best_route)) {
+						fprintf_s(best_route2, "%c", test);
+						k++;
+					}
+					fseek(best_route, -2, SEEK_CUR);
+					test = getc(best_route);
+				}
+				else {
+					int r = 0;
+					int n = 0;
+					if (test != "1") {
+						char temp = test;
+						fseek(best_route, -k - 3, SEEK_CUR);
+						for (test = getc(best_route); test != '\n'; test = getc(best_route)) {
+							if (test == '(') {
+								test = getc(best_route);
+								if (test == temp) {
+									fseek(best_route, -r - 3, SEEK_CUR);
+									for (test = getc(best_route); n < r + 1; test = getc(best_route)) {
+										fprintf_s(best_route2, "%c", test);
+										n++;
+									}
+									fseek(best_route, k - r - 1, SEEK_CUR);
+									for (test = getc(best_route); k < j + 1; test = getc(best_route)) {
+										fprintf_s(best_route2, "%c", test);
+										k++;
+									}
+									fseek(best_route, -2, SEEK_CUR);
+								}
+							}
+							r++;
+						}
+					}
+					r = 0;
+					n = 0;
+				}
+			}
+			i++;
+		}
+		fclose(best_route2);
+		fclose(best_route);
+		remove("best-route2.txt");
+		d = rename(old_name, new_name);
+
+		int counter = 0;
+		fopen_s(&best_route, "best-route2.txt", "rt");
+		if (!best_route) return;
+		for (test = getc(best_route); test != EOF; test = getc(best_route)) {
+			if (test == '\n')
+				counter++;
+		}
+		fclose(best_route);
+
+		float* data = NULL;
+		data = (float*)malloc(counter * sizeof(float));
+		if (data == NULL) {
+			exit(0);
+		}
+		for (i = 0; i < counter; i++) {
+			data[i] = 0;
+		}
+		i = 0;
+		j = 0;
+		k = 0;
+		fopen_s(&best_route, "best-route2.txt", "rt");
+		if (!best_route) return;
+		for (test = getc(best_route); test != EOF; test = getc(best_route)) {
+			if (test == ')')
+				j = i;
+			if (test == '\n') {
+
+				fseek(best_route, j - i, SEEK_CUR);
+				fscanf_s(best_route, "%f", &data[k]);
+				k++;
+				for (test = getc(best_route); test != '\n'; test = getc(best_route));
+			}
+			i++;
+		}
+		fclose(best_route);
+
+		float timeb = 0;
+		float oilb = 0;
+		int sizeb = 0;
+		int xb = 0;
+		int yb = 0;
+		i = 0;
+		j = 0;
+		int p = 0;
+		float kk = data[0];
+		int counter2 = 0;
+		int garbi = 0;
+		fopen_s(&best_route, "best-route2.txt", "rt");
+		if (!best_route) return;
+		for (test = getc(best_route); test != EOF; test = getc(best_route)) {
+			for (test = getc(best_route); (test != '\n') && (test != EOF); test = getc(best_route)) {
+				if (test == ')')
+					counter2++;
+				j++;
+			}
+			if (i == counter)
+				i--;
+			if (kk >= data[i]) {
+				kk = data[i];
+				fseek(best_route, -j + 1, SEEK_CUR);
+				for (p = 0; p < counter2; p++) {
+
+					fscanf_s(best_route, "%f %f %d %d %d ", &timeb, &oilb, &garbi, &xb, &yb);
+					fseek(best_route, 3, SEEK_CUR);
+					if (p == 0)
+						printf_s("Time=0.00 (%d,%d) oil=%.2f", current_pos.x, current_pos.y, oil);
+					printf_s(" -> Time=%.2f (%d,%d) oil=%.2f", timeb, xb, yb, oilb);
+					if (p == (counter2 - 1)) {
+						printf_s("\n");
+						fseek(best_route, -4, SEEK_CUR);
+						counter2 = 0;
+						j = 0;
+					}
+				}
+			}
+			i++;
+		}
+		fclose(best_route);
+
+		kk = data[0];
+		i = 0;
+		j = 0;
+		p = 0;
+		int c = 0;
+		counter2 = 0;
+
+		remove("best-route.txt");
+		fopen_s(&best_route, "best-route2.txt", "rt");
+		if (!best_route) return;
+		FILE* best_route3;
+		fopen_s(&best_route3, "best-route.txt", "at");
+		if (!best_route3) return;
+		for (i = 0; i < counter; i++)
+			if (kk >= data[i]) {
+				kk = data[i];
+				j++;
+			}
+		j--;
+		for (test = getc(best_route); test != EOF; test = getc(best_route)) {
+			if (test == '\n')
+				p++;
+			if (p == j) {
+				for (test = getc(best_route); test != '\n'; test = getc(best_route)) {
+					if (test == ')')
+						counter2++;
+					c++;
+				}
+				fseek(best_route, -c, SEEK_CUR);
+				for (p = 0; p < counter2; p++) {
+
+					fscanf_s(best_route, "%f %f %d %d %d ", &timeb, &oilb, &sizeb, &xb, &yb);
+					fseek(best_route, 3, SEEK_CUR);
+					if (p == 0) {
+						fprintf_s(best_route3, "Best Route	Size\n");
+						fprintf_s(best_route3, "(%3d,%3d)	0\n", current_pos.x, current_pos.y);
+					}
+					else
+						fprintf_s(best_route3, "(%3d,%3d)	%d\n", xb, yb, sizeb);
+				}
+			}
+		}
+		fprintf_s(best_route3, "(%3d,%3d)	0\n", end_coordinate.x, end_coordinate.y);
+		fclose(best_route3);
+		fclose(best_route);
+		remove("best-route2.txt");
+		printf_s("New best-route.txt file was created\n");
+		free(data);
+	}
+	free(pool_size_arr);
+	free(middle_arr);
+	return 0;
+
+	///////////////////////////////////////////section 3 - END///////////////////////////////////////////
+
+
+
+
+
+
+
 
 	return 0;
 }
