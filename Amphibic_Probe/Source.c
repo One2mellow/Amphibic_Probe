@@ -3,7 +3,7 @@
 #include <string.h>
 #include <math.h>
 
-#define BMP "Crysis.bmp"
+#define BMP "fishpool-3.bmp"
 #define BMPCPY "fishpool-copy.bmp"
 #define TXT "pools.txt"
 #define BEST_TXT "best-route.txt"
@@ -109,7 +109,6 @@ int main() {
 			printf_s("\nCoordinate x1,y1 of the first discoverd pool (%d,%d)", pools->poolCenter.x, pools->poolCenter.y);
 			printf_s("\nSize %d",pools->size);
 				if (val == 0) {
-//					fwrite("Image size (", 1, 12, tx); //initializing pools.txt
 					fprintf_s(tx, "%s%dx%d%s", "Image size (", image.width, image.height, ")\nPool Center	Size\n===========	====");
 					for (poolList_t* curr = pools; curr != NULL; curr = curr->next) {
 						fprintf_s(tx, "\n(%d,%d)", curr->poolCenter.x, curr->poolCenter.y);
