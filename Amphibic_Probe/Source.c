@@ -3,7 +3,7 @@
 #include <string.h>
 #include <math.h>
 
-#define BMP "paintpool-3.bmp"
+#define BMP "Crysis.bmp"
 #define BMPCPY "fishpool-copy.bmp"
 #define TXT "pools.txt"
 #define BEST_TXT "best-route.txt"
@@ -101,6 +101,11 @@ int main() {
 		{
 		case 1:
 			pools = Pools(matrix, image, pools);
+			if (pools == NULL) {
+				printf_s("\nTotal of 0 pools.\n");
+				menu();
+				break;
+			}
 			printf_s("\nCoordinate x1,y1 of the first discoverd pool (%d,%d)", pools->poolCenter.x, pools->poolCenter.y);
 			printf_s("\nSize %d",pools->size);
 				if (val == 0) {
