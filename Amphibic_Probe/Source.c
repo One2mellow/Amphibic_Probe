@@ -69,7 +69,7 @@ co_t InputCheck(image_t image); //checking the validity of the starting coordina
 int SpaceMod(int x, int y); //making sure that the correct number of spaces is printed between co. and size in pools.txt
 
 int main() {
-	int i, j, val, count = 0, choice = 0;
+	int i, val, count = 0, choice = 0;
 	poolList_t* pools = NULL;
 	pixmat** matrix;
 	static image_t image;
@@ -265,7 +265,7 @@ int LoadImage(image_t* image, const char* filename) {
 	}
 	else {
 		printf_s("(%s) Failed to open file\n", filename);
-		return_value = NULL;
+		return_value = 0;
 	}
 	return return_value;
 }
@@ -592,28 +592,31 @@ void deallocpool(poolList_t** root) {
 
 co_t InputCheck(image_t image) {
 	co_t coordinate;
-	char *input;
 
 	do
 	{
-		char x[4], y[4];
+		char input[81], * dex;
+		char x[80], y[80];
 		int i, j = 0;
 		int flag = 0;
 
-		input = malloc(sizeof(char) * image.width);
 		printf_s("Please Enter valid x,y start coordinate, bmp width is %d and height is %d\n", image.width, image.height);
-		gets_s(input, image.width);
-
+		gets_s(input, 81);
+		dex = strchr(input, ',');
+		do
+		{
+			printf_s("Please Enter valid x,y start coordinate, bmp width is %d and height is %d\n", image.width, image.height);
+			gets_s(input, 81);
+			dex = strchr(input, ',');
+		} while (dex == NULL);
 
 		for (i = 0; input[i] != '\0'; i++)
 		{
 			if (input[i] < '0' || input[i] > '9')
 				if (input[i] != ',' && input[i] != ' ')
 				{
-					free(input);
-					input = malloc(sizeof(char) * image.width);
 					printf_s("Please Enter valid x,y start coordinate, bmp width is %d and height is %d\n", image.width, image.height);
-					gets_s(input, image.width);
+					gets_s(input, 81);
 					i = 0;
 				}
 		}
@@ -636,10 +639,8 @@ co_t InputCheck(image_t image) {
 
 		coordinate.x = (int)atof(x);
 		coordinate.y = (int)atof(y);
-
 	} while (coordinate.x > image.width || coordinate.y > image.height);
 
-	free(input);
 
 	return coordinate;
 }
