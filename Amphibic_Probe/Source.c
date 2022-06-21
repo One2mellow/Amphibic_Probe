@@ -71,8 +71,6 @@ co_t InputCheck(image_t image); //checking the validity of the starting coordina
 
 int SpaceMod(int x, int y); //making sure that the correct number of spaces is printed between co. and size in pools.txt
 
-void time2glow(char* filename);
-
 int main() {
 	int i, val, count = 0, choice = 0;
 	poolList_t* pools = NULL;
@@ -166,7 +164,6 @@ int main() {
 	return 0;
 }
 
-
 int menu() {
 	int choice;
 	printf_s("--------------------------\nME LAB services\n--------------------------");
@@ -218,7 +215,6 @@ co_t pool_middle(pix_t* root, int size) {
 	middle.y = (y_max + y_min) / 2;
 	return middle;
 }
-
 
 int LoadImage(image_t* image, const char* filename, unsigned char *head) {
 	int return_value = 0;
@@ -360,8 +356,6 @@ void CreateBMP(pixmat** matrix, int height, int width, unsigned char* header) {
 	fclose(route);
 }
 
-
-
 poolList_t* Pools(pixmat** mtrx, image_t image, poolList_t* pools){
 	int i, j, val;
 	int** temp;
@@ -422,7 +416,6 @@ poolList_t* Pools(pixmat** mtrx, image_t image, poolList_t* pools){
 	return pools;
 }
 
-
 int segment(pix_t* root, pixmat** mtrx, int** temp, image_t image, int i, int j, int* size) {
 
 	//pix_insert(root, mtrx[j][i].cordinate);
@@ -471,7 +464,6 @@ int segment(pix_t* root, pixmat** mtrx, int** temp, image_t image, int i, int j,
 
 	
 }
-
 
 void pix_insert(pix_t** root, co_t coordinate) {
 	pix_t* new_pix = malloc(sizeof(pix_t));
@@ -538,7 +530,6 @@ void deallocpool(poolList_t** root) {
 	}
 	*root = NULL;
 }
-
 
 co_t InputCheck(image_t image) {
 	co_t coordinate;
@@ -611,12 +602,4 @@ int SpaceMod(int x, int y) {
 	}
 
 	return space;
-}
-
-void time2glow(char* filename) {
-	FILE* file;
-	fopen_s(&file, Special, "rt");
-	if (file != 0) {
-
-	}
 }
