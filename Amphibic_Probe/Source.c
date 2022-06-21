@@ -53,6 +53,11 @@ typedef struct lists {//route data
 	struct lists* next;
 } list_t;
 
+typedef struct cot_list {
+	co_t coordinate;
+	struct cot_list* next;
+} cot_list;
+
 
 int menu(); //menu function
 
@@ -72,13 +77,19 @@ void pix_insert(pix_t** root, co_t coordinate); //appending new pixel to the end
 
 void pool_insert(poolList_t** root, int size, co_t center, pix_t* pix); //appending new pool element to the end of pools list
 
+void coordinat_insert(cot_list** root, co_t coordinate); //appending new coordinate element to the end of coordinate list
+
 void deallocpix(pix_t** root); //deallocating memory of the pixel list
 
 void deallocpool(poolList_t** root); //deallocating memory of the pools list
 
+void dealloccoordinate(cot_list** root);
+
 int SpaceMod(int x, int y); //making sure that the correct number of spaces is printed between co. and size in pools.txt
 
-void RoutePainter(pixmat** matrix, int x, int y, int height, int width);
+void RoutePainter(pixmat** matrix, int x, int y, int x_final, int y_final, int height, int width);
+
+co_t best_co(FILE* route); //extrcats coordinates from best route file
 
 void section_3();
 
@@ -374,15 +385,25 @@ void imgtrx(pixmat** mtrx, image_t image, char* filename) {
 }
 
 void CreateBMP(pixmat** matrix, int height, int width, unsigned char* header) {
-	int x = 14, y = 98;
-	FILE* image,* route;
+	FILE* image, * route;
+	co_t start, end;
+	cot_list* root;
+	char position;
 	fopen_s(&image, BMPCPY, "wb");
 	fopen_s(&route, BEST_TXT, "rt");
 
+	if (image != 0 && route != 0) {
 
-	//////////// export to function -> Draw route
-	if (image != 0 && route != 0){
-		RoutePainter(matrix, x, y, height, width);
+		position = fgetc(route);
+		fseek(route, 14, SEEK_SET);
+		start = best_co(route);
+		do {
+			position = fgetc(route);
+			fseek(route, 2, SEEK_CUR);
+			end = best_co(route);
+			RoutePainter(matrix, start.x, start.y, end.x, end.y, height, width);
+			start = end;
+		} while (end.x != width && end.y != height);
 		for (int i = 0; i < 54; i++)
 		{
 			fputc(header[i], image);
@@ -398,8 +419,6 @@ void CreateBMP(pixmat** matrix, int height, int width, unsigned char* header) {
 			}
 		}
 	}
-
-	// up to HERE!
 
 	else { return -1; }
 	fclose(image);
@@ -600,16 +619,16 @@ int SpaceMod(int x, int y) {
 	return space;
 }
 
-void RoutePainter(pixmat** matrix, int x, int y, int height, int width) {
+void RoutePainter(pixmat** matrix, int x, int y, int x_final, int y_final, int height, int width) {
 	int  j = 0, i = 0, movratio;
-	matrix[x][y].color.r = 250; matrix[x][y].color.g = 180; matrix[x][y].color.b = 30; //color pixel at the beggining
+	//matrix[x][y].color.r = 250; matrix[x][y].color.g = 180; matrix[x][y].color.b = 30; //color pixel at the beggining
 	matrix[width - 1][height - 1].color.r = 250; matrix[width - 1][height - 1].color.g = 180; matrix[width - 1][height - 1].color.b = 30; //color pixel at the end
 	movratio = x / y;
 	x++;y++;
 	if (movratio > 1) {
-		for (y; y < height; y++)
+		for (y; y < height && y < y_final; y++)
 		{
-			for (x; (x % movratio != 0) && x < width;x++) {
+			for (x; (x % movratio != 0) && x < width && x < x_final;x++) {
 				matrix[x][y].color.r = 100; matrix[x][y].color.g = 30; matrix[x][y].color.b = 232;
 			}
 			if ((x % movratio == 0) && x < width) {
@@ -619,17 +638,17 @@ void RoutePainter(pixmat** matrix, int x, int y, int height, int width) {
 		}
 	}
 	else if (movratio == 1) {
-		for (y; y < height && x < width; y++)
+		for (y; y < height && x < width && x < x_final && y < y_final; y++)
 		{
-			matrix[j][i].color.r = 100; matrix[j][i].color.g = 30; matrix[j][i].color.b = 232;
+			matrix[x][y].color.r = 100; matrix[x][y].color.g = 30; matrix[x][y].color.b = 232;
 			x++;
 		}
 	}
 	else {
 		movratio = y / x;
-		for (x; x < width; x++)
+		for (x; x < width && x < x_final; x++)
 		{
-			for (y; (y % movratio != 0) && y < height; y++) {
+			for (y; (y % movratio != 0) && y < height && y < y_final; y++) {
 				matrix[x][y].color.r = 100; matrix[x][y].color.g = 30; matrix[x][y].color.b = 232;
 			}
 			if ((y % movratio == 0) && y < height) {
@@ -640,6 +659,74 @@ void RoutePainter(pixmat** matrix, int x, int y, int height, int width) {
 	}
 }
 
+void coordinat_insert(cot_list** root , co_t coordinate) {
+	cot_list* new_co = malloc(sizeof(pix_t));
+	if (new_co == NULL) {
+		exit(1);
+	}
+	new_co->next = NULL;
+	new_co->coordinate.x = coordinate.x;
+	new_co->coordinate.y = coordinate.y;
+
+	if (*root == NULL) {
+		*root = new_co;
+		return;
+	}
+
+	pix_t* curr = *root;
+	while (curr->next != NULL) {
+		curr = curr->next;
+	}
+	curr->next = new_co;
+}
+
+void dealloccoordinate(cot_list** root) {
+	cot_list* curr = *root;
+	while (curr != NULL)
+	{
+		cot_list* aux = curr;
+		curr = curr->next;
+		free(aux);
+	}
+	*root = NULL;
+}
+
+co_t best_co(FILE* route) {
+	int flag = 0, j = 0;
+	char temp[10], tmpx[3], tmpy[3];
+	co_t coordinate;
+
+	if (route != 0) {
+
+		fread(&temp, 1, 10, route);
+
+		for (int i = 0; temp[i] < strlen(temp); i++)
+		{
+			if (temp[i] == ',') {
+				flag = 1;
+				j = 0;
+			}
+			if (flag == 1)
+			{
+				if (temp[i] >= '0' && temp[i] <= '9') {
+					tmpy[j] = temp[i];
+					j++;
+				}
+
+			}
+			else
+			{
+				if (temp[i] >= '0' && temp[i] <= '9') {
+					tmpx[j] = temp[i];
+					j++;
+				}
+			}
+		}
+		coordinate.x = (int)atof(tmpx);
+		coordinate.y = (int)atof(tmpy);
+	}
+	return coordinate;
+}
 
 ///////////////////////////////////////////function for section 3- START///////////////////////////////////////////
 
