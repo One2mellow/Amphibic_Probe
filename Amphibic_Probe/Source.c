@@ -3,7 +3,7 @@
 #include <string.h>
 #include <math.h>
 
-#define BMP "fishpool-3.bmp"
+#define BMP "paintpool-3.bmp"
 #define BMPCPY "fishpool-copy.bmp"
 #define TXT "pools.txt"
 #define BEST_TXT "best-route.txt"
@@ -11,6 +11,7 @@
 typedef struct { //bmp file values struct
 	int width;
 	int height;
+	unsigned char header[54];
 } image_t;
 
 typedef struct { //pixel color
@@ -44,7 +45,7 @@ typedef struct pool { //pools' list extructed of bmp
 
 int menu(); //menu function
 
-int LoadImage(image_t* image, const char* filename); //loading the BMP image and getting WxH values
+int LoadImage(image_t* image, const char* filename, unsigned char* head); //loading the BMP image and getting WxH values
 
 co_t pool_middle(pix_t *root, int size); //returning the pool's center coordinates from given coordinate array
 
@@ -52,7 +53,7 @@ void imgtrx(pixmat** mtrx, image_t image, char* filename); //converting the BMP 
 
 poolList_t* Pools(pixmat** mtrx, image_t image, poolList_t* pools); //Creating list of pools which contain size and center co. for each pool
 
-void CreateBMP(char* filename, color_t** matrix, int height, int width); //UNFINISHED! creating BMP of best route
+void CreateBMP(pixmat** matrix, int height, int width, unsigned char* header); //UNFINISHED! creating BMP of best route
 
 int segment(pix_t* root, pixmat** mtrx, int** temp, image_t image, int i, int j, int* size); //using region base image segmentation to detect pools
 
@@ -77,7 +78,7 @@ int main() {
 
 	val = fopen_s(&tx, TXT, "w");
 
-	if ((LoadImage(&image, BMP)) != 0) {
+	if ((LoadImage(&image, BMP,image.header[0])) != 0) {
 		printf_s("Failed to load file: \" %s\"", BMP);
 		return -1;
 	}
@@ -124,6 +125,7 @@ int main() {
 				}
 
 			printf_s("\nTotal of %d pools.\n", count);
+			CreateBMP(matrix, image.height, image.width, &image.header);
 			fclose(tx);
 			choice = menu();
 			break;
@@ -235,9 +237,8 @@ co_t pool_middle(pix_t* root, int size) {
 	 * BITMAP DATA:
 	 *	138:	X	Pixels
 	 */
-int LoadImage(image_t* image, const char* filename) {
+int LoadImage(image_t* image, const char* filename, unsigned char *head) {
 	int return_value = 0;
-
 	unsigned int image_data_address;
 	int width;
 	int height;
@@ -251,15 +252,18 @@ int LoadImage(image_t* image, const char* filename) {
 		if (fgetc(file) == 'B' && fgetc(file) == 'M') {
 			printf_s("BM read; bitmap file confirmed.\n");
 			fseek(file, 8, SEEK_CUR);
-			fread(&image_data_address, 4, 1, file);
+			fread(&image_data_address, 4, 1, file);;
 			fseek(file, 4, SEEK_CUR);
 			fread(&width, 4, 1, file);
 			fread(&height, 4, 1, file);
 			fseek(file, 2, SEEK_CUR);
 			fread(&bpp, 4, 1, file);
-
 			image->width = width;
 			image->height = height;
+			fseek(file, 0, SEEK_SET);
+			for (int i = 0;i < 54;i++) {
+				image->header[i] = fgetc(file);
+			}
 		}
 		fclose(file);
 	}
@@ -305,111 +309,68 @@ void imgtrx(pixmat** mtrx, image_t image, char* filename) {
 	return 0;
 }
 
-/*void CreateBMP(char* filename, pixmat* matrix, int height, int width) {
+void CreateBMP(pixmat** matrix, int height, int width, unsigned char* header) {
+	int x = 14, y = 98, j = 0, i = 0,  movratio;
+	FILE* image,* route;
+	fopen_s(&image, BMPCPY, "wb");
+	fopen_s(&route, BEST_TXT, "rt");
 
-	int fileSize = FILE_HEADER_SIZE + INFO_HEADER_SIZE + (height * width);
-	int val,i;
-
-	static unsigned char fileHeader[] = {
-	  'B','M',     /// signature
-	  0,0,0,0, /// image file size in bytes
-	  0,0,0,0, /// reserved
-	  0,0,0,0, /// start of pixel array
-	};
-
-	fileHeader[2] = (unsigned char)(fileSize);
-	fileHeader[3] = (unsigned char)(fileSize >> 8);
-	fileHeader[4] = (unsigned char)(fileSize >> 16);
-	fileHeader[5] = (unsigned char)(fileSize >> 24);
-	fileHeader[10] = (unsigned char)(FILE_HEADER_SIZE + INFO_HEADER_SIZE);
-
-	static unsigned char infoHeader[] = {
-	   0,0,0,0, /// header size
-	   0,0,0,0, /// image width
-	   0,0,0,0, /// image height
-	   0,0,     /// number of color planes
-	   0,0,     /// bits per pixel
-	   0,0,0,0, /// compression
-	   0,0,0,0, /// image size
-	   0,0,0,0, /// horizontal resolution
-	   0,0,0,0, /// vertical resolution
-	   0,0,0,0, /// colors in color table
-	   0,0,0,0, /// important color count
-	};
-
-	infoHeader[0] = (unsigned char)(INFO_HEADER_SIZE);
-	infoHeader[4] = (unsigned char)(width);
-	infoHeader[5] = (unsigned char)(width >> 8);
-	infoHeader[6] = (unsigned char)(width >> 16);
-	infoHeader[7] = (unsigned char)(width >> 24);
-	infoHeader[8] = (unsigned char)(height);
-	infoHeader[9] = (unsigned char)(height >> 8);
-	infoHeader[10] = (unsigned char)(height >> 16);
-	infoHeader[11] = (unsigned char)(height >> 24);
-	infoHeader[12] = (unsigned char)(1);
-	infoHeader[14] = (unsigned char)(3 * 8);
-
-	FILE* image;
-
-	val = fopen_s(&image, BMPCPY, "wb");
-
-	if (val != 0)
-	{
-		fwrite(fileHeader, FILE_HEADER_SIZE, 1, image);
-		fwrite(infoHeader, INFO_HEADER_SIZE, 1, image);
-
-		for ( i = 0; i < height*width; i++)
-		{
-			fwrite(matrix[i].color.b, 1, 1, image);
-			fwrite(matrix[i].color.g, 1, 1, image);
-			fwrite(matrix[i].color.r, 1, 1, image);
+	if (image != 0 && route != 0) {
+		matrix[x][y].color.r = 250; matrix[x][y].color.g = 180; matrix[x][y].color.b = 30; //color pixel at the beggining
+		matrix[width - 1][height - 1].color.r = 250; matrix[width - 1][height - 1].color.g = 180; matrix[width - 1][height - 1].color.b = 30; //color pixel at the end
+		movratio = x / y;
+		if (movratio > 1) {
+			for ( y; y < height; y++)
+			{
+				for (x; (x % movratio != 0) && x < width;x++) {
+					matrix[x][y].color.r = 250; matrix[x][y].color.g = 180; matrix[x][y].color.b = 30;
+				}
+				if ((x % movratio == 0) && x < width) {
+					matrix[x][y].color.r = 250; matrix[x][y].color.g = 180; matrix[x][y].color.b = 30;
+					x++;
+				}
+			}
 		}
-		fclose(image);
+		else if(movratio == 1){
+			for (y; y < height && x < width; y++)
+			{
+				matrix[j][i].color.r = 250; matrix[j][i].color.g = 180; matrix[j][i].color.b = 30;
+				x++;
+			}
+		}
+		else {
+			movratio = y / x;
+			for (x; x < width; x++)
+			{
+				for (y; (y % movratio != 0) && y < height; y++) {
+					matrix[x][y].color.r = 250; matrix[x][y].color.g = 180; matrix[x][y].color.b = 30;
+				}
+				if ((y % movratio == 0) && y < height) {
+					matrix[x][y].color.r = 250; matrix[x][y].color.g = 180; matrix[x][y].color.b = 30;
+					y++;
+				}
+			}
+		}
+		for ( int i = 0; i < 54; i++)
+		{
+			fputc(header[i], image);
+		}
+		fseek(image, 54, SEEK_SET);
+		for (int i = 0; i < height; i++)
+		{
+			for (int j = 0; j < width; j++)
+			{
+				fputc(matrix[j][i].color.b, image);
+				fputc(matrix[j][i].color.g, image);
+				fputc(matrix[j][i].color.r, image);
+			}
+		}
 	}
+	else { return -1; }
+	fclose(image);
+	fclose(route);
+}
 
-
-/*
-	int i, j;
-	int padding, bitmap_size;
-	color_t* wrmat;
-	int t = width * height;
-	wrmat = malloc(sizeof(color_t) * height * width);
-
-
-
-	if (((width * 3) % 4) != 0) {
-		padding = (width * 3) + 1;
-	}
-	else
-	{
-		padding = width * 3;
-	}
-
-	bitmap_size = height * padding * 3;
-
-	char tag[] = { 'B', 'M' };
-	int header[] = {
-		0x3a, 0x00, 0x36,
-		0x28,                // Header Size
-		width, height,       // Image dimensions in pixels
-		0x180001,            // 24 bits/pixel, 1 color plane
-		0,                   // BI_RGB no compression
-		0,                   // Pixel data size in bytes
-		0x002e23, 0x002e23,  // Print resolution
-		0, 0,                // No color palette
-	};
-	header[0] = sizeof(tag) + sizeof(header) + bitmap_size;
-
-	FILE* fp;
-	fopen_s(&fp, filename, "w+");
-	fwrite(&tag, sizeof(tag), 1, fp);
-	fwrite(&header, sizeof(header), 1, fp); //write header to disk
-	fwrite(wrmat, bitmap_size * sizeof(char), 1, fp);
-	fclose(fp);
-
-	fclose(fp);
-	free(wrmat);*/
-//}*/
 
 
 poolList_t* Pools(pixmat** mtrx, image_t image, poolList_t* pools){
