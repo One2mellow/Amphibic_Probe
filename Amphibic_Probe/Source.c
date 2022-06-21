@@ -45,6 +45,13 @@ typedef struct pool { //pools' list extructed of bmp
 	struct pool* next;
 }poolList_t;
 
+typedef struct pools_CoordinatesAndSize {
+	int centerX;
+	int centerY;
+	int poolsize; //the number of pixels that combine the pool
+	struct pools_CoordinatesAndSize* next;
+}printing_t ;
+
 
 int menu();
 
@@ -70,6 +77,7 @@ void deallocpool(poolList_t** root);
 
 void printNsortpools();
 
+printing_t* pools_sortingNinsert(printing_t* head, int coordinate_x, int coordinate_y, int poooolsize);
 
 
 int main() {
@@ -108,7 +116,7 @@ int main() {
 			choice = menu();
 			break;
 		case 2:
-			printNsortpools(	);
+			printNsortpools();
 			choice = menu();
 			break;
 		case 9:
@@ -523,11 +531,14 @@ int segment(pix_t* root, pixmat** mtrx, int** temp, image_t image, int i, int j,
 }
 
 void printNsortpools() {
+	
 	FILE* f;
+	printing_t* head = malloc(sizeof(printing_t));
+	//printing_t* head = NULL;
 	int a = fopen_s(&f, "pools.txt", "rt");
-	int i, j=0; int  count_pools = -3; ; int flag = 0;
-	char chr;
-	char filechar[22];
+	int i; int k = 0; int j = 0; int  count_pools = -3; ; int flag = 0;
+	int coordinate_x, coordinate_y, poooolsize;
+	char filechar[22]; char chr;
 	if (f == NULL ) {
 		printf_s("Problem reading pools.txt file\nList is empty"); //if there is no such a file  //failed to open pools.txt
 		return 0; 
@@ -550,8 +561,7 @@ void printNsortpools() {
 
 			for ( i=0 ; i < count_pools; i++)
 			{
-				char str[21], x[3], y[3], size[4];
-				char* cursor = str;
+				char str[21], x[3], y[3], size[12];
 				fseek(f, 56+i*13, SEEK_SET);
 				fgets(str, 19, f);
 				for ( i = 0; i <= strlen(str); i++)
@@ -573,50 +583,48 @@ void printNsortpools() {
 					if (str[i] == ')') { flag = 2; i++; }
 					if (flag == 2)
 					{
-
-					}
+						size[k] = str[i + 1];
+						k++;
 					}
 				}
-				/*for (j = 0; j <= 17; j++) 
-				{
-					if (( str[j] > 57 || str[j] < 47) && str[j] != '\0')
-					{
-						str[j] = ' ';
-					}
-					if (str[j] == ' ' || str [j+1] == ' ')
-					{
-						while (str[j+1] == ' ')
-						{
-							strcpy_s(&str[j+1], strlen(&str[j]), &str[j+2]);
-						}
-
-					}
-
-				}*/
-				/*for (j = 0; j < strlen(str) ; j++)
-				{
-					cursor = str;
-
-					
-					strcpy_s(&str[j], strlen(&str[j]), &str[j + 2]);
-					cursor = str;
-
-					y = strtol(str, &cursor, 10);
-					strcpy_s(&str[j], strlen(&str[j]), &str[j + 2]);
-					cursor = str;
-
-					size = strtol(str, &cursor, 10);
-					
-				}*/
-				//long int arr[] = { x,y,size };
-				//sscanf_s(str, "&ld&ld&ld", &x, &y, &size);
-				//x = strtol(str, &cursor, 10);
+				poooolsize = (int)atof(size);
+				coordinate_x = (int)atof(x);
+				coordinate_y = (int)atof(y);
+				pools_sortingNinsert(head, coordinate_x, coordinate_y, poooolsize);
+				}
 				
-				//printf_s("%s \n", str);
 			}
 		}
 		fclose(f);
+		free(head);
 }
+
+printing_t * pools_sortingNinsert(printing_t *head, int coordinate_x, int coordinate_y, int poooolsize) {
+
+	printing_t *temp = head;
+	printing_t* root = malloc(sizeof(printing_t));
+	printing_t* newNode = malloc(sizeof(printing_t));
+	newNode->centerX = coordinate_x;
+	newNode->centerY = coordinate_y;
+	newNode->poolsize = poooolsize;
+
+	if (!head) // empty list_t
+		return newNode;
+	if (poooolsize < root->poolsize) {
+		while (root->next && poooolsize < root->next->poolsize)
+			root = root->next;
+		newNode->next = root->next;
+		root->next = newNode;
+	}
+	else { // Place at beginning of list_t
+		newNode->next = head;
+		head = newNode;
+	}
+	printf_s("(%3d,%3d)  \t%d \n", head->centerX, head->centerY, head->poolsize);
+
+	return head;
+}
+
 
 void pix_insert(pix_t** root, co_t coordinate) {
 	pix_t* new_pix = malloc(sizeof(pix_t));
