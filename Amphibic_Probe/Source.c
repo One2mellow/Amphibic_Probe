@@ -76,15 +76,13 @@ void deallocpix(pix_t** root); //deallocating memory of the pixel list
 
 void deallocpool(poolList_t** root); //deallocating memory of the pools list
 
-co_t InputCheck(image_t image); //checking the validity of the starting coordinates
-
 int SpaceMod(int x, int y); //making sure that the correct number of spaces is printed between co. and size in pools.txt
 
 void RoutePainter(pixmat** matrix, int x, int y, int height, int width);
 
 void section_3();
 
-co_t InputCheck2(co_t image); //Proper input test for starting point
+co_t InputCheck(co_t image); //checking the validity of the starting coordinates
 
 void there_a_route(double oil, co_t current_pos, co_t end_coordinate); //All the functions that print to screen and file together
 
@@ -581,60 +579,6 @@ void deallocpool(poolList_t** root) {
 		free(aux);
 	}
 	*root = NULL;
-}
-
-co_t InputCheck(image_t image) {
-	co_t coordinate;
-
-	do
-	{
-		char input[81], * dex;
-		char x[80], y[80];
-		int i, j = 0;
-		int flag = 0;
-
-		printf_s("Please Enter valid x,y start coordinate, bmp width is %d and height is %d\n", image.width, image.height);
-		gets_s(input, 81);
-		dex = strchr(input, ',');
-		while (dex == NULL) {
-			printf_s("Please Enter valid x,y start coordinate, bmp width is %d and height is %d\n", image.width, image.height);
-			gets_s(input, 81);
-			dex = strchr(input, ',');
-		}
-
-		for (i = 0; input[i] != '\0'; i++)
-		{
-			if (input[i] < '0' || input[i] > '9')
-				if (input[i] != ',' && input[i] != ' ')
-				{
-					printf_s("Please Enter valid x,y start coordinate, bmp width is %d and height is %d\n", image.width, image.height);
-					gets_s(input, 81);
-					i = 0;
-				}
-		}
-
-		for (i = 0; input[i] != '\0'; i++)
-		{
-			if (input[i] == ',') {
-				flag = 1;
-				i++;
-			}
-			if (flag == 0)
-			{
-				x[i] = input[i];
-			}
-			else {
-				y[j] = input[i];
-				j++;
-			}
-		}
-
-		coordinate.x = (int)atof(x);
-		coordinate.y = (int)atof(y);
-	} while (coordinate.x > image.width || coordinate.y > image.height);
-
-
-	return coordinate;
 }
 
 int SpaceMod(int x, int y) {
@@ -1264,7 +1208,7 @@ void there_a_route(double oil, co_t current_pos, co_t end_coordinate) {
 	//need to add section 3c!!!
 }
 
-co_t InputCheck2(co_t image) {
+co_t InputCheck(co_t image) {
 	co_t coordinate;
 	do {
 		char input[81], * dex;
@@ -1330,7 +1274,7 @@ void section_3() {
 		}
 		fclose(pools);
 		reset_files();
-		co_t current_pos = InputCheck2(end_coordinate);
+		co_t current_pos = InputCheck(end_coordinate);
 		double oil = oil_input();
 		if (route_finder(current_pos, end_coordinate, oil, 0, pool_size_arr, middle_arr, 0, 0, num_of_pool, 1) != 0) {
 			printf_s("Sorry, could not reach destination with these inputs\n");
