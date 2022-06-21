@@ -621,7 +621,7 @@ int SpaceMod(int x, int y) {
 
 void RoutePainter(pixmat** matrix, int x, int y, int x_final, int y_final, int height, int width) {
 	int  j = 0, i = 0, movratio;
-	//matrix[x][y].color.r = 250; matrix[x][y].color.g = 180; matrix[x][y].color.b = 30; //color pixel at the beggining
+	matrix[x][y].color.r = 250; matrix[x][y].color.g = 180; matrix[x][y].color.b = 30; //color pixel at the beggining
 	matrix[width - 1][height - 1].color.r = 250; matrix[width - 1][height - 1].color.g = 180; matrix[width - 1][height - 1].color.b = 30; //color pixel at the end
 	movratio = x / y;
 	x++;y++;
@@ -637,21 +637,21 @@ void RoutePainter(pixmat** matrix, int x, int y, int x_final, int y_final, int h
 			}
 		}
 	}
-	else if (movratio == 1) {
-		for (y; y < height && x < width && x < x_final && y < y_final; y++)
+	movratio = y / x;
+	if (movratio == 1) {
+		for (y; y < height && x < width && y < y_final; y++)
 		{
 			matrix[x][y].color.r = 100; matrix[x][y].color.g = 30; matrix[x][y].color.b = 232;
 			x++;
 		}
 	}
 	else {
-		movratio = y / x;
 		for (x; x < width && x < x_final; x++)
 		{
 			for (y; (y % movratio != 0) && y < height && y < y_final; y++) {
 				matrix[x][y].color.r = 100; matrix[x][y].color.g = 30; matrix[x][y].color.b = 232;
 			}
-			if ((y % movratio == 0) && y < height) {
+			if ((y % movratio == 0) && y < height && y < y_final) {
 				matrix[x][y].color.r = 100; matrix[x][y].color.g = 30; matrix[x][y].color.b = 232;
 				y++;
 			}
