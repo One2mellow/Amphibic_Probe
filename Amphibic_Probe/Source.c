@@ -7,6 +7,8 @@
 #define BMPCPY "fishpool-copy.bmp"
 #define TXT "pools.txt"
 #define BEST_TXT "best-route.txt"
+#define Special "for-nitai.txt"
+
 
 typedef struct { //bmp file values struct
 	int width;
@@ -68,6 +70,8 @@ void deallocpool(poolList_t** root); //deallocating memory of the pools list
 co_t InputCheck(image_t image); //checking the validity of the starting coordinates
 
 int SpaceMod(int x, int y); //making sure that the correct number of spaces is printed between co. and size in pools.txt
+
+void time2glow(char* filename);
 
 int main() {
 	int i, val, count = 0, choice = 0;
@@ -216,27 +220,6 @@ co_t pool_middle(pix_t* root, int size) {
 }
 
 
-	/* Bitmap file format
-	 *
-	 * SECTION
-	 * Address:Bytes	Name
-	 *
-	 * HEADER:
-	 *	  0:	2		"BM" magic number
-	 *	  2:	4		file size
-	 *	  6:	4		junk
-	 *	 10:	4		Starting address of image data
-	 * BITMAP HEADER:
-	 *	 14:	4		header size
-	 *	 18:	4		width  (signed)
-	 *	 22:	4		height (signed)
-	 *	 26:	2		Number of color planes
-	 *	 28:	2		Bits per pixel
-	 *	[...]
-	 * [OPTIONAL COLOR PALETTE, NOT PRESENT IN 32 BIT BITMAPS]
-	 * BITMAP DATA:
-	 *	138:	X	Pixels
-	 */
 int LoadImage(image_t* image, const char* filename, unsigned char *head) {
 	int return_value = 0;
 	unsigned int image_data_address;
@@ -315,6 +298,8 @@ void CreateBMP(pixmat** matrix, int height, int width, unsigned char* header) {
 	fopen_s(&image, BMPCPY, "wb");
 	fopen_s(&route, BEST_TXT, "rt");
 
+
+	//////////// export to function -> Draw route
 	if (image != 0 && route != 0) {
 		matrix[x][y].color.r = 250; matrix[x][y].color.g = 180; matrix[x][y].color.b = 30; //color pixel at the beggining
 		matrix[width - 1][height - 1].color.r = 250; matrix[width - 1][height - 1].color.g = 180; matrix[width - 1][height - 1].color.b = 30; //color pixel at the end
@@ -367,6 +352,9 @@ void CreateBMP(pixmat** matrix, int height, int width, unsigned char* header) {
 			}
 		}
 	}
+
+	// up to HERE!
+
 	else { return -1; }
 	fclose(image);
 	fclose(route);
@@ -565,12 +553,11 @@ co_t InputCheck(image_t image) {
 		printf_s("Please Enter valid x,y start coordinate, bmp width is %d and height is %d\n", image.width, image.height);
 		gets_s(input, 81);
 		dex = strchr(input, ',');
-		do
-		{
+		while (dex == NULL) {
 			printf_s("Please Enter valid x,y start coordinate, bmp width is %d and height is %d\n", image.width, image.height);
 			gets_s(input, 81);
 			dex = strchr(input, ',');
-		} while (dex == NULL);
+		}
 
 		for (i = 0; input[i] != '\0'; i++)
 		{
@@ -624,4 +611,12 @@ int SpaceMod(int x, int y) {
 	}
 
 	return space;
+}
+
+void time2glow(char* filename) {
+	FILE* file;
+	fopen_s(&file, Special, "rt");
+	if (file != 0) {
+
+	}
 }
