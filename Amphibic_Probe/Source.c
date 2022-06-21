@@ -224,7 +224,7 @@ int main() {
 			break;
 		case 3:
 			putchar('\n');
-			InputCheck(image);
+			section_3();
 			choice = menu();
 			break;
 		case 4:
