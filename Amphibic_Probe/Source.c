@@ -162,7 +162,6 @@ int main() {
 	return 0;
 }
 
-
 int menu() {
 	int choice;
 	printf_s("--------------------------\nME LAB services\n--------------------------");
@@ -215,28 +214,6 @@ co_t pool_middle(pix_t* root, int size) {
 	return middle;
 }
 
-
-	/* Bitmap file format
-	 *
-	 * SECTION
-	 * Address:Bytes	Name
-	 *
-	 * HEADER:
-	 *	  0:	2		"BM" magic number
-	 *	  2:	4		file size
-	 *	  6:	4		junk
-	 *	 10:	4		Starting address of image data
-	 * BITMAP HEADER:
-	 *	 14:	4		header size
-	 *	 18:	4		width  (signed)
-	 *	 22:	4		height (signed)
-	 *	 26:	2		Number of color planes
-	 *	 28:	2		Bits per pixel
-	 *	[...]
-	 * [OPTIONAL COLOR PALETTE, NOT PRESENT IN 32 BIT BITMAPS]
-	 * BITMAP DATA:
-	 *	138:	X	Pixels
-	 */
 int LoadImage(image_t* image, const char* filename, unsigned char *head) {
 	int return_value = 0;
 	unsigned int image_data_address;
@@ -372,8 +349,6 @@ void CreateBMP(pixmat** matrix, int height, int width, unsigned char* header) {
 	fclose(route);
 }
 
-
-
 poolList_t* Pools(pixmat** mtrx, image_t image, poolList_t* pools){
 	int i, j, val;
 	int** temp;
@@ -434,7 +409,6 @@ poolList_t* Pools(pixmat** mtrx, image_t image, poolList_t* pools){
 	return pools;
 }
 
-
 int segment(pix_t* root, pixmat** mtrx, int** temp, image_t image, int i, int j, int* size) {
 
 	//pix_insert(root, mtrx[j][i].cordinate);
@@ -483,7 +457,6 @@ int segment(pix_t* root, pixmat** mtrx, int** temp, image_t image, int i, int j,
 
 	
 }
-
 
 void pix_insert(pix_t** root, co_t coordinate) {
 	pix_t* new_pix = malloc(sizeof(pix_t));
@@ -550,7 +523,6 @@ void deallocpool(poolList_t** root) {
 	}
 	*root = NULL;
 }
-
 
 co_t InputCheck(image_t image) {
 	co_t coordinate;
