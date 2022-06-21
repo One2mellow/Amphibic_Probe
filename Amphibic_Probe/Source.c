@@ -319,14 +319,15 @@ void CreateBMP(pixmat** matrix, int height, int width, unsigned char* header) {
 		matrix[x][y].color.r = 250; matrix[x][y].color.g = 180; matrix[x][y].color.b = 30; //color pixel at the beggining
 		matrix[width - 1][height - 1].color.r = 250; matrix[width - 1][height - 1].color.g = 180; matrix[width - 1][height - 1].color.b = 30; //color pixel at the end
 		movratio = x / y;
+		x++;y++;
 		if (movratio > 1) {
 			for ( y; y < height; y++)
 			{
 				for (x; (x % movratio != 0) && x < width;x++) {
-					matrix[x][y].color.r = 250; matrix[x][y].color.g = 180; matrix[x][y].color.b = 30;
+					matrix[x][y].color.r = 100; matrix[x][y].color.g = 30; matrix[x][y].color.b = 232;
 				}
 				if ((x % movratio == 0) && x < width) {
-					matrix[x][y].color.r = 250; matrix[x][y].color.g = 180; matrix[x][y].color.b = 30;
+					matrix[x][y].color.r = 100; matrix[x][y].color.g = 30; matrix[x][y].color.b = 232;
 					x++;
 				}
 			}
@@ -334,7 +335,7 @@ void CreateBMP(pixmat** matrix, int height, int width, unsigned char* header) {
 		else if(movratio == 1){
 			for (y; y < height && x < width; y++)
 			{
-				matrix[j][i].color.r = 250; matrix[j][i].color.g = 180; matrix[j][i].color.b = 30;
+				matrix[j][i].color.r = 100; matrix[j][i].color.g = 30; matrix[j][i].color.b = 232;
 				x++;
 			}
 		}
@@ -343,10 +344,10 @@ void CreateBMP(pixmat** matrix, int height, int width, unsigned char* header) {
 			for (x; x < width; x++)
 			{
 				for (y; (y % movratio != 0) && y < height; y++) {
-					matrix[x][y].color.r = 250; matrix[x][y].color.g = 180; matrix[x][y].color.b = 30;
+					matrix[x][y].color.r = 100; matrix[x][y].color.g = 30; matrix[x][y].color.b = 232;
 				}
 				if ((y % movratio == 0) && y < height) {
-					matrix[x][y].color.r = 250; matrix[x][y].color.g = 180; matrix[x][y].color.b = 30;
+					matrix[x][y].color.r = 100; matrix[x][y].color.g = 30; matrix[x][y].color.b = 232;
 					y++;
 				}
 			}
