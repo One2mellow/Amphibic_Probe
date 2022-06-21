@@ -71,6 +71,8 @@ co_t InputCheck(image_t image); //checking the validity of the starting coordina
 
 int SpaceMod(int x, int y); //making sure that the correct number of spaces is printed between co. and size in pools.txt
 
+void RoutePainter(pixmat** matrix, int x, int y, int height, int width);
+
 int main() {
 	int i, val, count = 0, choice = 0;
 	poolList_t* pools = NULL;
@@ -289,51 +291,16 @@ void imgtrx(pixmat** mtrx, image_t image, char* filename) {
 }
 
 void CreateBMP(pixmat** matrix, int height, int width, unsigned char* header) {
-	int x = 14, y = 98, j = 0, i = 0,  movratio;
+	int x = 14, y = 98;
 	FILE* image,* route;
 	fopen_s(&image, BMPCPY, "wb");
 	fopen_s(&route, BEST_TXT, "rt");
 
 
 	//////////// export to function -> Draw route
-	if (image != 0 && route != 0) {
-		matrix[x][y].color.r = 250; matrix[x][y].color.g = 180; matrix[x][y].color.b = 30; //color pixel at the beggining
-		matrix[width - 1][height - 1].color.r = 250; matrix[width - 1][height - 1].color.g = 180; matrix[width - 1][height - 1].color.b = 30; //color pixel at the end
-		movratio = x / y;
-		x++;y++;
-		if (movratio > 1) {
-			for ( y; y < height; y++)
-			{
-				for (x; (x % movratio != 0) && x < width;x++) {
-					matrix[x][y].color.r = 100; matrix[x][y].color.g = 30; matrix[x][y].color.b = 232;
-				}
-				if ((x % movratio == 0) && x < width) {
-					matrix[x][y].color.r = 100; matrix[x][y].color.g = 30; matrix[x][y].color.b = 232;
-					x++;
-				}
-			}
-		}
-		else if(movratio == 1){
-			for (y; y < height && x < width; y++)
-			{
-				matrix[j][i].color.r = 100; matrix[j][i].color.g = 30; matrix[j][i].color.b = 232;
-				x++;
-			}
-		}
-		else {
-			movratio = y / x;
-			for (x; x < width; x++)
-			{
-				for (y; (y % movratio != 0) && y < height; y++) {
-					matrix[x][y].color.r = 100; matrix[x][y].color.g = 30; matrix[x][y].color.b = 232;
-				}
-				if ((y % movratio == 0) && y < height) {
-					matrix[x][y].color.r = 100; matrix[x][y].color.g = 30; matrix[x][y].color.b = 232;
-					y++;
-				}
-			}
-		}
-		for ( int i = 0; i < 54; i++)
+	if (image != 0 && route != 0){
+		RoutePainter(matrix, x, y, height, width);
+		for (int i = 0; i < 54; i++)
 		{
 			fputc(header[i], image);
 		}
@@ -602,4 +569,44 @@ int SpaceMod(int x, int y) {
 	}
 
 	return space;
+}
+
+void RoutePainter(pixmat** matrix, int x, int y, int height, int width) {
+	int  j = 0, i = 0, movratio;
+	matrix[x][y].color.r = 250; matrix[x][y].color.g = 180; matrix[x][y].color.b = 30; //color pixel at the beggining
+	matrix[width - 1][height - 1].color.r = 250; matrix[width - 1][height - 1].color.g = 180; matrix[width - 1][height - 1].color.b = 30; //color pixel at the end
+	movratio = x / y;
+	x++;y++;
+	if (movratio > 1) {
+		for (y; y < height; y++)
+		{
+			for (x; (x % movratio != 0) && x < width;x++) {
+				matrix[x][y].color.r = 100; matrix[x][y].color.g = 30; matrix[x][y].color.b = 232;
+			}
+			if ((x % movratio == 0) && x < width) {
+				matrix[x][y].color.r = 100; matrix[x][y].color.g = 30; matrix[x][y].color.b = 232;
+				x++;
+			}
+		}
+	}
+	else if (movratio == 1) {
+		for (y; y < height && x < width; y++)
+		{
+			matrix[j][i].color.r = 100; matrix[j][i].color.g = 30; matrix[j][i].color.b = 232;
+			x++;
+		}
+	}
+	else {
+		movratio = y / x;
+		for (x; x < width; x++)
+		{
+			for (y; (y % movratio != 0) && y < height; y++) {
+				matrix[x][y].color.r = 100; matrix[x][y].color.g = 30; matrix[x][y].color.b = 232;
+			}
+			if ((y % movratio == 0) && y < height) {
+				matrix[x][y].color.r = 100; matrix[x][y].color.g = 30; matrix[x][y].color.b = 232;
+				y++;
+			}
+		}
+	}
 }
