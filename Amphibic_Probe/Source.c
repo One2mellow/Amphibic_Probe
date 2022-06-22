@@ -91,6 +91,8 @@ void RoutePainter(pixmat** matrix, int x, int y, int x_final, int y_final, int h
 
 co_t best_co(FILE* route); //extrcats coordinates from best route file
 
+void NumericReport();
+
 void section_3();
 
 co_t InputCheck(co_t image); //checking the validity of the starting coordinates
@@ -702,6 +704,28 @@ co_t best_co(FILE* route) {
 		coordinate.y = (int)atof(tmpy);
 	}
 	return coordinate;
+}
+
+void NumericReport() {
+
+		const float A = 2.5, dx = 0.1;
+		float n;
+		int fx, i, dt, tf;
+
+		printf_s("Please enter a positive intger as distance display interval:");
+		scanf_s("%d", &dt);
+
+
+		for (i = 0; i < n; i++) {
+
+			distance[i] = i * dt;
+			cx[0] = o;
+			costs[i] cx[i + 1] = (2.5 / (cx[i] + 1) + /*fx* when in notaion when not?*/) * 0.1 + cx[i]
+
+				if (i = 0)
+					distance[0] = 0
+
+		}
 }
 
 ///////////////////////////////////////////function for section 3- START///////////////////////////////////////////
