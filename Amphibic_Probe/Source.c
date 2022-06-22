@@ -629,7 +629,7 @@ void RoutePainter(pixmat** matrix, int x, int y, int x_final, int y_final, int h
 }
 
 void coordinat_insert(cot_list** root, co_t coordinate) {
-	cot_list* new_co = malloc(sizeof(pix_t));
+	cot_list* new_co = malloc(sizeof(cot_list));
 	if (new_co == NULL) {
 		exit(1);
 	}
@@ -642,7 +642,7 @@ void coordinat_insert(cot_list** root, co_t coordinate) {
 		return;
 	}
 
-	pix_t* curr = *root;
+	cot_list* curr = *root;
 	while (curr->next != NULL) {
 		curr = curr->next;
 	}
