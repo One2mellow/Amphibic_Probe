@@ -620,43 +620,19 @@ int SpaceMod(int x, int y) {
 }
 
 void RoutePainter(pixmat** matrix, int x, int y, int x_final, int y_final, int height, int width) {
-	int  j = 0, i = 0, movratio;
+	int  j = 0, i = 0;
+	float movratio, b;
 	matrix[x][y].color.r = 250; matrix[x][y].color.g = 180; matrix[x][y].color.b = 30; //color pixel at the beggining
-	matrix[width - 1][height - 1].color.r = 250; matrix[width - 1][height - 1].color.g = 180; matrix[width - 1][height - 1].color.b = 30; //color pixel at the end
-	movratio = x / y;
+	movratio = ((float)y_final - (float)y) / ((float)x_final - (float)x);
+	b = (float)y - (float)(movratio * x);
 	x++;y++;
-	if (movratio > 1) {
-		for (y; y < height && y < y_final; y++)
-		{
-			for (x; (x % movratio != 0) && x < width && x < x_final;x++) {
-				matrix[x][y].color.r = 100; matrix[x][y].color.g = 30; matrix[x][y].color.b = 232;
-			}
-			if ((x % movratio == 0) && x < width) {
-				matrix[x][y].color.r = 100; matrix[x][y].color.g = 30; matrix[x][y].color.b = 232;
-				x++;
-			}
-		}
+
+	for ( x; x < x_final && x < width && y < y_final && y < height; x++)
+	{
+		y = (int)((x*movratio) + b);
+		matrix[x][y].color.r = 100; matrix[x][y].color.g = 30; matrix[x][y].color.b = 232;
 	}
-	movratio = y / x;
-	if (movratio == 1) {
-		for (y; y < height && x < width && y < y_final; y++)
-		{
-			matrix[x][y].color.r = 100; matrix[x][y].color.g = 30; matrix[x][y].color.b = 232;
-			x++;
-		}
-	}
-	else {
-		for (x; x < width && x < x_final; x++)
-		{
-			for (y; (y % movratio != 0) && y < height && y < y_final; y++) {
-				matrix[x][y].color.r = 100; matrix[x][y].color.g = 30; matrix[x][y].color.b = 232;
-			}
-			if ((y % movratio == 0) && y < height && y < y_final) {
-				matrix[x][y].color.r = 100; matrix[x][y].color.g = 30; matrix[x][y].color.b = 232;
-				y++;
-			}
-		}
-	}
+	matrix[width - 1][height - 1].color.r = 250; matrix[width - 1][height - 1].color.g = 180; matrix[width - 1][height - 1].color.b = 30; //color pixel at the end
 }
 
 void coordinat_insert(cot_list** root , co_t coordinate) {
