@@ -322,13 +322,10 @@ int LoadImage(image_t* image, const char* filename, unsigned char* head) {
 	int height;
 	int bpp;
 
-	printf_s("Loading bitmap file: %s\n", filename);
-
 	FILE* file;
 	return_value = fopen_s(&file, filename, "rb");
 	if (file) {
 		if (fgetc(file) == 'B' && fgetc(file) == 'M') {
-			printf_s("BM read; bitmap file confirmed.\n");
 			fseek(file, 8, SEEK_CUR);
 			fread(&image_data_address, 4, 1, file);;
 			fseek(file, 4, SEEK_CUR);
