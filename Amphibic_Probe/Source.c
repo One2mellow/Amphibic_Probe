@@ -71,7 +71,7 @@ poolList_t* Pools(pixmat** mtrx, image_t image, poolList_t* pools); //Creating l
 
 void CreateBMP(pixmat** matrix, int height, int width, unsigned char* header); //UNFINISHED! creating BMP of best route
 
-int segment(pix_t* root, pixmat** mtrx, int** temp, image_t image, int i, int j, int* size); //using region base image segmentation to detect pools
+void segment(pix_t* root, pixmat** mtrx, int** temp, image_t image, int i, int j, int* size); //using region base image segmentation to detect pools
 
 void pix_insert(pix_t** root, co_t coordinate); //appending new pixel to the end of pixels list
 
@@ -177,8 +177,9 @@ int main() {
 	FILE* tx;
 
 	val = fopen_s(&tx, TXT, "w");
+	if (!tx) return 0;
 
-	if ((LoadImage(&image, BMP, image.header[0])) != 0) {
+	if ((LoadImage(&image, BMP, image.header)) != 0) {
 		printf_s("Failed to load file: \" %s\"", BMP);
 		return -1;
 	}
@@ -235,7 +236,7 @@ int main() {
 		case 3:
 			putchar('\n');
 			section_3();
-			CreateBMP(matrix, image.height, image.width, &image.header);
+			CreateBMP(matrix, image.height, image.width, image.header);
 			choice = menu();
 			break;
 		case 4:
@@ -264,23 +265,25 @@ int main() {
 
 int menu() {
 	int choice;
+	int enter;
 	printf_s("--------------------------\nME LAB services\n--------------------------");
 
 	printf_s("\nMenu:\n1. Scan pools\n2. Print sorted pool list\n3. Select route\n4. Numeric report.\n5. Students addition\n9. Exit\nEnter choice: ");
 
 	scanf_s("%d", &choice);
-	getchar();
+	enter = getchar();
 	return choice;
 }
 
 co_t pool_middle(pix_t* root, int size) {
 
 	int x_max, x_min, y_max, y_min, i;
-	co_t middle;
+	co_t middle = { 0 };
 	pix_t* curr;
 	co_t* pixels;
 
 	pixels = malloc(sizeof(co_t) * size + 1);
+	if (!pixels) return middle;
 
 	i = 0;
 
@@ -354,14 +357,15 @@ int LoadImage(image_t* image, const char* filename, unsigned char* head) {
 void imgtrx(pixmat** mtrx, image_t image, char* filename) {
 	int val, i = 0, j, k = 0;
 	FILE* file;
-
 	k = image.height * image.width;
-
 	val = fopen_s(&file, filename, "rb");
+	if (!file) {
+		printf_s("Error open the fishpool.bmp\n");
+		return;
+	}
 
 	if (file != 0)
 	{
-
 		fseek(file, 54, SEEK_SET);
 		for (i = 0; i < image.height; i++)
 		{
@@ -377,19 +381,14 @@ void imgtrx(pixmat** mtrx, image_t image, char* filename) {
 				}
 			}
 		}
-
 	}
-
-	if (val != 0)
-		fclose(file);
-
-	return 0;
+	fclose(file);
+	return;
 }
 
 void CreateBMP(pixmat** matrix, int height, int width, unsigned char* header) {
 	FILE* image, * route;
 	co_t start, end;
-	cot_list* root;
 	char position;
 	fopen_s(&image, BMPCPY, "wb");
 	fopen_s(&route, BEST_TXT, "rt");
@@ -422,18 +421,17 @@ void CreateBMP(pixmat** matrix, int height, int width, unsigned char* header) {
 		}
 	}
 
-	else { return -1; }
+	else return; 
 	fclose(image);
 	fclose(route);
 }
 
 poolList_t* Pools(pixmat** mtrx, image_t image, poolList_t* pools) {
-	int i, j, val;
+	int i, j;
 	int** temp;
 	int size;
 	pix_t* root = NULL;
 	co_t center;
-	FILE* file;
 
 	temp = malloc(sizeof(int*) * image.width);
 	if (temp)
@@ -456,7 +454,6 @@ poolList_t* Pools(pixmat** mtrx, image_t image, poolList_t* pools) {
 		}
 	}
 
-
 	for (i = 0;i < image.height;i++) {
 		for (j = 0;j < image.width;j++) {
 			if (temp[j][i] == 1)
@@ -464,20 +461,17 @@ poolList_t* Pools(pixmat** mtrx, image_t image, poolList_t* pools) {
 				size = 1;
 				temp[j][i] = 0;
 				pix_insert(&root, mtrx[j][i].cordinate);
-				segment(&root, mtrx, temp, image, i, j, &size);
+				segment(root, mtrx, temp, image, i, j, &size);
 
 				if (size > 10)
 				{
 					center = pool_middle(root, size);
-					pool_insert(&pools, size, center, &root);
+					pool_insert(&pools, size, center, root);
 				}
 			}
 			deallocpix(&root);
 		}
 	}
-
-
-
 
 	for (i = 0;i < image.width;i++) {
 		free(temp[i]);
@@ -487,13 +481,13 @@ poolList_t* Pools(pixmat** mtrx, image_t image, poolList_t* pools) {
 	return pools;
 }
 
-int segment(pix_t* root, pixmat** mtrx, int** temp, image_t image, int i, int j, int* size) {
+void segment(pix_t* root, pixmat** mtrx, int** temp, image_t image, int i, int j, int* size) {
 
 	//pix_insert(root, mtrx[j][i].cordinate);
 
 	if (j > 0) {
 		if (temp[j - 1][i] == 1) {
-			pix_insert(root, mtrx[j - 1][i].cordinate);
+			pix_insert(&root, mtrx[j - 1][i].cordinate);
 			*size += 1;
 			temp[j - 1][i] = 0;
 			segment(root, mtrx, temp, image, i, j - 1, size);
@@ -502,7 +496,7 @@ int segment(pix_t* root, pixmat** mtrx, int** temp, image_t image, int i, int j,
 
 	if (j < image.width - 1) {
 		if (temp[j + 1][i] == 1) {
-			pix_insert(root, mtrx[j + 1][i].cordinate);
+			pix_insert(&root, mtrx[j + 1][i].cordinate);
 			*size += 1;
 			temp[j + 1][i] = 0;
 			segment(root, mtrx, temp, image, i, j + 1, size);
@@ -513,7 +507,7 @@ int segment(pix_t* root, pixmat** mtrx, int** temp, image_t image, int i, int j,
 	if (i > 0)
 	{
 		if (temp[j][i - 1] == 1) {
-			pix_insert(root, mtrx[j][i - 1].cordinate);
+			pix_insert(&root, mtrx[j][i - 1].cordinate);
 			*size += 1;
 			temp[j][i - 1] = 0;
 			segment(root, mtrx, temp, image, i - 1, j, size);
@@ -523,7 +517,7 @@ int segment(pix_t* root, pixmat** mtrx, int** temp, image_t image, int i, int j,
 	if (i < image.height - 1)
 	{
 		if (temp[j][i + 1] == 1) {
-			pix_insert(root, mtrx[j][i + 1].cordinate);
+			pix_insert(&root, mtrx[j][i + 1].cordinate);
 			*size += 1;
 			temp[j][i + 1] = 0;
 			segment(root, mtrx, temp, image, i + 1, j, size);
@@ -671,8 +665,8 @@ void dealloccoordinate(cot_list** root) {
 
 co_t best_co(FILE* route) {
 	int flag = 0, j = 0;
-	char temp[10], tmpx[3], tmpy[3];
-	co_t coordinate;
+	char temp[10], tmpx[3] = { 0 }, tmpy[3] = { 0 };
+	co_t coordinate = { 0 };
 
 	if (route != 0) {
 
