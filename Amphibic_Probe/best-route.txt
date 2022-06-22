@@ -1,0 +1,3 @@
+Best Route	Size
+(  2,  2)	0
+( 11, 15)	0
