@@ -536,7 +536,7 @@ void printNsortpools() {
 	printing_t* head = malloc(sizeof(printing_t));
 	//printing_t* head = NULL;
 	int a = fopen_s(&f, "pools.txt", "rt");
-	int i; int k = 0; int j = 0; int  count_pools = -3; ; int flag = 0;
+	int i; int k = 0; int j = 0; int  count_pools = -3; ; int flag = 0; int l = 0;
 	int coordinate_x, coordinate_y, poooolsize;
 	char filechar[22]; char chr;
 	if (f == NULL ) {
@@ -559,13 +559,24 @@ void printNsortpools() {
 		{
 			printf_s("\nSorted pools by size:\nCoordinate      Size\n==========  \t====\n");
 
-			for ( i=0 ; i < count_pools; i++)
+			for ( l=0 ; l < count_pools; l++)
 			{
-				char str[21], x[3], y[3], size[12];
-				fseek(f, 56+i*13, SEEK_SET);
-				fgets(str, 19, f);
-				for ( i = 0; i <= strlen(str); i++)
+				
+				char str[21] , x[3], y[3], size[21];
+				for (i = 0; i <= strlen(str); i++)
 				{
+					str[i] = 0;
+				}
+				char* strpointer = str;
+				/*fgets(str,1, f);
+				fgets(str, 1, f);
+				fgets(str, 1, f);*/
+				fseek(f, 56+l*13, SEEK_SET);
+				fgets(strpointer, 19, f);
+				j = 0; k = 0;
+				for (  i = 0; i <= strlen(str); i++)
+				{
+					
 					if (str[i] != ',' && flag == 0)
 					{
 						x[i] = str[i+1];
@@ -577,7 +588,7 @@ void printNsortpools() {
 					if (str[i] != ')' && flag == 1)
 					{
 						y[j] = str[i + 1];
-						j++; i++;
+						j++;
 						
 					}		
 					if (str[i] == ')') { flag = 2; i++; }
@@ -587,16 +598,19 @@ void printNsortpools() {
 						k++;
 					}
 				}
+				flag = 0;
+				
 				poooolsize = (int)atof(size);
 				coordinate_x = (int)atof(x);
 				coordinate_y = (int)atof(y);
+
 				pools_sortingNinsert(head, coordinate_x, coordinate_y, poooolsize);
 				}
 				
 			}
 		}
 		fclose(f);
-		free(head);
+		/*free(head);*/
 }
 
 printing_t * pools_sortingNinsert(printing_t *head, int coordinate_x, int coordinate_y, int poooolsize) {
