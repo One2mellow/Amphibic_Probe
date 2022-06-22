@@ -389,7 +389,7 @@ void CreateBMP(pixmat** matrix, int height, int width, unsigned char* header) {
 	co_t start, end;
 	char position;
 	fopen_s(&image, BMPCPY, "wb");
-	fopen_s(&route, "try.txt", "rt");
+	fopen_s(&route, BEST_TXT, "rt");
 
 	if (image != 0 && route != 0) {
 
