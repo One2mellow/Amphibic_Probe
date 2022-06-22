@@ -3,7 +3,7 @@
 #include <string.h>
 #include <math.h>
 
-#define BMP "paintpool-3.bmp"
+#define BMP "4.bmp"
 #define BMPCPY "fishpool-copy.bmp"
 #define TXT "pools.txt"
 #define BEST_TXT "best-route.txt"
@@ -63,7 +63,7 @@ int menu(); //menu function
 
 int LoadImage(image_t* image, const char* filename, unsigned char* head); //loading the BMP image and getting WxH values
 
-co_t pool_middle(pix_t *root, int size); //returning the pool's center coordinates from given coordinate array
+co_t pool_middle(pix_t* root, int size); //returning the pool's center coordinates from given coordinate array
 
 void imgtrx(pixmat** mtrx, image_t image, char* filename); //converting the BMP image to 2d array of type pixmat
 
@@ -176,7 +176,7 @@ int main() {
 
 	val = fopen_s(&tx, TXT, "w");
 
-	if ((LoadImage(&image, BMP,image.header[0])) != 0) {
+	if ((LoadImage(&image, BMP, image.header[0])) != 0) {
 		printf_s("Failed to load file: \" %s\"", BMP);
 		return -1;
 	}
@@ -206,24 +206,23 @@ int main() {
 				break;
 			}
 			printf_s("\nCoordinate x1,y1 of the first discoverd pool (%d,%d)", pools->poolCenter.x, pools->poolCenter.y);
-			printf_s("\nSize %d",pools->size);
-				if (val == 0) {
-					fprintf_s(tx, "%s%dx%d%s", "Image size (", image.width, image.height, ")\nPool Center	Size\n===========	====");
-					for (poolList_t* curr = pools; curr != NULL; curr = curr->next) {
-						fprintf_s(tx, "\n(%d,%d)", curr->poolCenter.x, curr->poolCenter.y);
-						for (i = 0; i < 9 - SpaceMod(curr->poolCenter.x,curr->poolCenter.y); i++)
-							fputc(' ', tx);
-						fprintf_s(tx, "%d", curr->size);
-						count++; //iterating through the pool list, printing size and center
-					}
+			printf_s("\nSize %d", pools->size);
+			if (val == 0) {
+				fprintf_s(tx, "%s%dx%d%s", "Image size (", image.width, image.height, ")\nPool Center	Size\n===========	====");
+				for (poolList_t* curr = pools; curr != NULL; curr = curr->next) {
+					fprintf_s(tx, "\n(%d,%d)", curr->poolCenter.x, curr->poolCenter.y);
+					for (i = 0; i < 9 - SpaceMod(curr->poolCenter.x, curr->poolCenter.y); i++)
+						fputc(' ', tx);
+					fprintf_s(tx, "%d", curr->size);
+					count++; //iterating through the pool list, printing size and center
 				}
-				else
-				{
-					printf_s("ERROR! couldn't open %s", TXT);
-				}
+			}
+			else
+			{
+				printf_s("ERROR! couldn't open %s", TXT);
+			}
 
 			printf_s("\nTotal of %d pools.\n", count);
-			CreateBMP(matrix, image.height, image.width, &image.header);
 			fclose(tx);
 			choice = menu();
 			break;
@@ -234,6 +233,7 @@ int main() {
 		case 3:
 			putchar('\n');
 			section_3();
+			CreateBMP(matrix, image.height, image.width, &image.header);
 			choice = menu();
 			break;
 		case 4:
@@ -254,7 +254,7 @@ int main() {
 	deallocpool(&pools);
 	for (i = 0;i < image.width;i++) {
 		free(matrix[i]);
-	}	
+	}
 	free(matrix);
 
 	return 0;
@@ -278,8 +278,8 @@ co_t pool_middle(pix_t* root, int size) {
 	pix_t* curr;
 	co_t* pixels;
 
-	pixels = malloc(sizeof(co_t) * size+1);
-	
+	pixels = malloc(sizeof(co_t) * size + 1);
+
 	i = 0;
 
 	curr = root;
@@ -312,7 +312,7 @@ co_t pool_middle(pix_t* root, int size) {
 	return middle;
 }
 
-int LoadImage(image_t* image, const char* filename, unsigned char *head) {
+int LoadImage(image_t* image, const char* filename, unsigned char* head) {
 	int return_value = 0;
 	unsigned int image_data_address;
 	int width;
@@ -363,7 +363,7 @@ void imgtrx(pixmat** mtrx, image_t image, char* filename) {
 		fseek(file, 54, SEEK_SET);
 		for (i = 0; i < image.height; i++)
 		{
-			for ( j = 0; j < image.width; j++)
+			for (j = 0; j < image.width; j++)
 			{
 				mtrx[j][i].color.b = fgetc(file);
 				mtrx[j][i].color.g = fgetc(file);
@@ -378,7 +378,7 @@ void imgtrx(pixmat** mtrx, image_t image, char* filename) {
 
 	}
 
-	if (val != 0)
+	if (file != 0)
 		fclose(file);
 
 	return 0;
@@ -425,7 +425,7 @@ void CreateBMP(pixmat** matrix, int height, int width, unsigned char* header) {
 	fclose(route);
 }
 
-poolList_t* Pools(pixmat** mtrx, image_t image, poolList_t* pools){
+poolList_t* Pools(pixmat** mtrx, image_t image, poolList_t* pools) {
 	int i, j, val;
 	int** temp;
 	int size;
@@ -441,7 +441,7 @@ poolList_t* Pools(pixmat** mtrx, image_t image, poolList_t* pools){
 		}
 	}// allocate memory to temp color signed matrix
 
-	for ( i = 0; i < image.height; i++)
+	for (i = 0; i < image.height; i++)
 	{
 		for (j = 0;j < image.width;j++) {
 			if (mtrx[j][i].color.r == 155 && mtrx[j][i].color.g == 190 && mtrx[j][i].color.b == 245)
@@ -478,7 +478,7 @@ poolList_t* Pools(pixmat** mtrx, image_t image, poolList_t* pools){
 
 
 	for (i = 0;i < image.width;i++) {
-			free(temp[i]);
+		free(temp[i]);
 	}
 	free(temp);
 
@@ -491,9 +491,9 @@ int segment(pix_t* root, pixmat** mtrx, int** temp, image_t image, int i, int j,
 
 	if (j > 0) {
 		if (temp[j - 1][i] == 1) {
-			pix_insert(root, mtrx[j-1][i].cordinate);
+			pix_insert(root, mtrx[j - 1][i].cordinate);
 			*size += 1;
-			temp[j-1][i] = 0;
+			temp[j - 1][i] = 0;
 			segment(root, mtrx, temp, image, i, j - 1, size);
 		}
 	}
@@ -513,7 +513,7 @@ int segment(pix_t* root, pixmat** mtrx, int** temp, image_t image, int i, int j,
 		if (temp[j][i - 1] == 1) {
 			pix_insert(root, mtrx[j][i - 1].cordinate);
 			*size += 1;
-			temp[j][i-1] = 0;
+			temp[j][i - 1] = 0;
 			segment(root, mtrx, temp, image, i - 1, j, size);
 		}
 	}
@@ -531,7 +531,7 @@ int segment(pix_t* root, pixmat** mtrx, int** temp, image_t image, int i, int j,
 
 
 
-	
+
 }
 
 void pix_insert(pix_t** root, co_t coordinate) {
@@ -555,8 +555,8 @@ void pix_insert(pix_t** root, co_t coordinate) {
 	curr->next = new_pix;
 }
 
-void pool_insert(poolList_t** root, int size, co_t center, pix_t* pix){
-	
+void pool_insert(poolList_t** root, int size, co_t center, pix_t* pix) {
+
 	poolList_t* new_pool = malloc(sizeof(poolList_t));
 	if (new_pool == NULL) {
 		exit(1);
@@ -577,7 +577,7 @@ void pool_insert(poolList_t** root, int size, co_t center, pix_t* pix){
 		curr = curr->next;
 	}
 	curr->next = new_pool;
-	}
+}
 
 void deallocpix(pix_t** root) {
 	pix_t* curr = *root;
@@ -627,15 +627,15 @@ void RoutePainter(pixmat** matrix, int x, int y, int x_final, int y_final, int h
 	b = (float)y - (float)(movratio * x);
 	x++;y++;
 
-	for ( x; x < x_final && x < width && y < y_final && y < height; x++)
+	for (x; x < x_final && y < y_final; x++)
 	{
-		y = (int)((x*movratio) + b);
+		y = (int)((x * movratio) + b);
 		matrix[x][y].color.r = 100; matrix[x][y].color.g = 30; matrix[x][y].color.b = 232;
 	}
 	matrix[width - 1][height - 1].color.r = 250; matrix[width - 1][height - 1].color.g = 180; matrix[width - 1][height - 1].color.b = 30; //color pixel at the end
 }
 
-void coordinat_insert(cot_list** root , co_t coordinate) {
+void coordinat_insert(cot_list** root, co_t coordinate) {
 	cot_list* new_co = malloc(sizeof(pix_t));
 	if (new_co == NULL) {
 		exit(1);
