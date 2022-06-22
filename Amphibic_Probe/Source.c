@@ -3,7 +3,7 @@
 #include <string.h>
 #include <math.h>
 
-#define BMP "paintpool-3.bmp"
+#define BMP "-3.bmp"
 #define BMPCPY "fishpool-copy.bmp"
 #define TXT "pools.txt"
 #define BEST_TXT "best-route.txt"
@@ -175,13 +175,6 @@ int main() {
 	FILE* tx;
 
 	val = fopen_s(&tx, TXT, "w");
-
-	if ((LoadImage(&image, BMP,image.header[0])) != 0) {
-		printf_s("Failed to load file: \" %s\"", BMP);
-		return -1;
-	}
-
-
 	matrix = malloc(sizeof(pixmat*) * image.width);
 	if (matrix)
 	{
@@ -199,6 +192,10 @@ int main() {
 		switch (choice)
 		{
 		case 1:
+			if (LoadImage(&image, BMP, image.header[0]) != 0) {
+				choice = menu();
+				break;
+			}
 			pools = Pools(matrix, image, pools);
 			if (pools == NULL) {
 				printf_s("\nTotal of 0 pools.\n");
@@ -319,8 +316,6 @@ int LoadImage(image_t* image, const char* filename, unsigned char *head) {
 	int height;
 	int bpp;
 
-	printf_s("Loading bitmap file: %s\n", filename);
-
 	FILE* file;
 	return_value = fopen_s(&file, filename, "rb");
 	if (file) {
@@ -343,8 +338,8 @@ int LoadImage(image_t* image, const char* filename, unsigned char *head) {
 		fclose(file);
 	}
 	else {
-		printf_s("(%s) Failed to open file\n", filename);
-		return_value = 0;
+		printf_s("\nError open the %s\n", filename);
+		return_value = 1;
 	}
 	return return_value;
 }
@@ -376,6 +371,10 @@ void imgtrx(pixmat** mtrx, image_t image, char* filename) {
 			}
 		}
 
+	}
+	else
+	{
+		return 0;
 	}
 
 	if (val != 0)
