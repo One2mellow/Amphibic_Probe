@@ -58,6 +58,12 @@ typedef struct cot_list {
 	struct cot_list* next;
 } cot_list;
 
+typedef struct pools_CoordinatesAndSize {
+	int centerX;
+	int centerY;
+	int poolsize; //the number of pixels that combine the pool
+	struct pools_CoordinatesAndSize* next;
+}printing_t;
 
 int menu(); //menu function
 
@@ -90,6 +96,10 @@ int SpaceMod(int x, int y); //making sure that the correct number of spaces is p
 void RoutePainter(pixmat** matrix, int x, int y, int x_final, int y_final, int height, int width);
 
 co_t best_co(FILE* route); //extrcats coordinates from best route file
+
+void printNsortpools();
+
+printing_t* pools_sortingNinsert(printing_t* head, int coordinate_x, int coordinate_y, int poooolsize);
 
 void section_3();
 
@@ -228,7 +238,7 @@ int main() {
 			choice = menu();
 			break;
 		case 2:
-			printf("Sorted lists\n");
+			printNsortpools();
 			choice = menu();
 			break;
 		case 3:
@@ -695,6 +705,115 @@ co_t best_co(FILE* route) {
 		coordinate.y = (int)atof(tmpy);
 	}
 	return coordinate;
+}
+
+void printNsortpools() {
+
+	FILE* f;
+	printing_t* head = malloc(sizeof(printing_t));
+	//printing_t* head = NULL;
+	int a = fopen_s(&f, "pools.txt", "rt");
+	int i; int k = 0; int j = 0; int  count_pools = -3; ; int flag = 0; int l = 0;
+	int coordinate_x, coordinate_y, poooolsize;
+	char filechar[22]; char chr;
+	if (f == NULL) {
+		printf_s("Problem reading pools.txt file\nList is empty"); //if there is no such a file  //failed to open pools.txt
+		return 0;
+	}
+	if (a == 0) // open successfully
+	{
+		chr = fgetc(f);
+		while (chr != EOF)
+		{
+			if (chr == '\n')
+			{
+				count_pools = count_pools + 1; //counter pools
+			}
+			chr = fgetc(f);
+		}
+		if (count_pools == 0) { printf_s("List is empty"); } //if there are no pools
+		if (count_pools > 0)
+		{
+			printf_s("\nSorted pools by size:\nCoordinate      Size\n==========  \t====\n");
+
+			for (l = 0; l < count_pools; l++)
+			{
+
+				char str[21], x[3], y[3], size[21];
+				for (i = 0; i <= strlen(str); i++)
+				{
+					str[i] = 0;
+				}
+				char* strpointer = str;
+				/*fgets(str,1, f);
+				fgets(str, 1, f);
+				fgets(str, 1, f);*/
+				fseek(f, 56 + l * 13, SEEK_SET);
+				fgets(strpointer, 19, f);
+				j = 0; k = 0;
+				for (i = 0; i <= strlen(str); i++)
+				{
+
+					if (str[i] != ',' && flag == 0)
+					{
+						x[i] = str[i + 1];
+					}
+					if (str[i] == ',')
+					{
+						flag = 1;
+					}
+					if (str[i] != ')' && flag == 1)
+					{
+						y[j] = str[i + 1];
+						j++;
+
+					}
+					if (str[i] == ')') { flag = 2; i++; }
+					if (flag == 2)
+					{
+						size[k] = str[i + 1];
+						k++;
+					}
+				}
+				flag = 0;
+
+				poooolsize = (int)atof(size);
+				coordinate_x = (int)atof(x);
+				coordinate_y = (int)atof(y);
+
+				pools_sortingNinsert(head, coordinate_x, coordinate_y, poooolsize);
+			}
+
+		}
+	}
+	fclose(f);
+	/*free(head);*/
+}
+
+printing_t* pools_sortingNinsert(printing_t* head, int coordinate_x, int coordinate_y, int poooolsize) {
+
+	printing_t* temp = head;
+	printing_t* root = malloc(sizeof(printing_t));
+	printing_t* newNode = malloc(sizeof(printing_t));
+	newNode->centerX = coordinate_x;
+	newNode->centerY = coordinate_y;
+	newNode->poolsize = poooolsize;
+
+	if (!head) // empty list_t
+		return newNode;
+	if (poooolsize < root->poolsize) {
+		while (root->next && poooolsize < root->next->poolsize)
+			root = root->next;
+		newNode->next = root->next;
+		root->next = newNode;
+	}
+	else { // Place at beginning of list_t
+		newNode->next = head;
+		head = newNode;
+	}
+	printf_s("(%3d,%3d)  \t%d \n", head->centerX, head->centerY, head->poolsize);
+
+	return head;
 }
 
 ///////////////////////////////////////////function for section 3- START///////////////////////////////////////////
