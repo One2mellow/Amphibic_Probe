@@ -118,6 +118,8 @@ char storeMenu(int country, double fuel); //prints the store list for each count
 
 void warehouse(link* root, char purchase, int country); //generates link database for items of section 5 store
 
+void NumericReport();
+
 void section_3();
 
 co_t InputCheck(co_t image); //checking the validity of the starting coordinates
@@ -958,6 +960,77 @@ void warehouse(link* root, char purchase, int country) {
 	default:
 		printf_s("No such product\n But I'll tak your fuel anywayyyy\a\n");
 		break;
+	}
+}
+
+
+void NumericReport() {
+	co_t start, end;
+	FILE* route;
+	char position;
+	float* dist, * cx, * costs;
+	const float A = 2.5, dx = 0.1;
+	float distance, df;
+	int n, fx, i, j, dt, tf;
+
+	int x1 = 0, y1 = 0, x2 = 32, y2 = 43, x3 = 53, y3 = 55, x4 = 88, y4 = 100;
+	fopen_s(&route, BEST_TXT, "rt");
+
+
+	if (route != 0) {
+		printf_s("Please enter a positive intger as distance display interval:");
+		scanf_s("%d", &dt);
+		position = fgetc(route);
+		fseek(route, 14, SEEK_SET);
+		start = best_co(route);
+		do {
+			position = fgetc(route);
+			fseek(route, 2, SEEK_CUR);
+			end = best_co(route);
+			distance = sqrt(pow((start.x - end.x), 2) + pow((start.y - end.y), 2));
+			n = distance / dt;
+			dist = malloc(sizeof(float) * (n + 1));
+			dist[0] = 0;
+			cx = malloc(sizeof(float) * (n + 1));
+			costs = malloc(sizeof(float) * (n + 1));
+			cx[0] = 0;
+			costs[0] = 0;
+
+
+			for (i = 0; i <= n; i++) {
+				for (j = 0; j <= n; j++) {
+					if (distance = dist[j]) {
+						fx = 20;
+						dist[j] = 0;
+						j = j - n;
+						fx = 1;
+						dist[j] = j * dt;
+
+
+					}
+
+
+				}
+
+				cx[i + 1] = (A / (cx[i] + 1) + fx) * 0.1 + cx[i];
+				cx[i] =
+					df = (cx[i + 1] - cx[i]);
+				df = (A / (cx[i] + 1 + fx)) * dx;
+				costs[i] = df / dx;
+			}
+			if (i = n + 1)
+				dist[i] = distance - dist[i - 1];
+			costs[i] = df / dx;
+
+			start = end;
+		} while (end.x != 5 && end.y != 5);// not sure....
+
+
+		fclose(route);
+	}
+	else
+	{
+		printf_s("\ncan't open file");
 	}
 }
 
