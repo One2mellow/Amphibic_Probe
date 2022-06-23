@@ -66,6 +66,14 @@ typedef struct pools_CoordinatesAndSize {
 	struct pools_CoordinatesAndSize* next;
 }printing_t;
 
+typedef struct countryLink { // struct to store link to all store products in option 5
+	char* A;
+	char* B;
+	char* C;
+	char* D;
+	char* E;
+}link;
+
 int menu(); //menu function
 
 int LoadImage(image_t* image, const char* filename, unsigned char* head); //loading the BMP image and getting WxH values
@@ -106,7 +114,9 @@ void time2glow(char* filename, pixmat** matrix, image_t image, int width_flag); 
 
 void fuelStore(double fuel); //store genertor for section 5
 
-void storeMenu(char purchase); //prints the store list for each country
+char storeMenu(int country, double fuel); //prints the store list for each country
+
+void warehouse(link* root, char purchase, int country); //generates link database for items of section 5 store
 
 void section_3();
 
@@ -874,49 +884,79 @@ void time2glow(char* filename, pixmat** matrix, image_t image, int width_flag) {
 void fuelStore(double fuel) {
 	int country;
 	char purchase;
+	link root[5];
 	printf_s("\a\ncongratulations YOU HAVE MADE IT TO THE END!\nWelcome to your new plant, we have exausted our natural resorces and fuel is our only currency!\n\nyou have %.2lf fuel left in the tank\n", fuel);
 	printf_s("\a\nthere is our store, you can buy anything here right away!\n (provided you have anough fuel...)\n");
 	if (fuel < 4)
 		printf("With this amount you can buy only a bottle of water..\n");
 	else {
-		printf_s("\nPlease select the country you want to buy from:\n 1) Israel\n 2) USA\n 3) China\n 4) Russia\n 5) Turkey\n Your Choice:");
-		scanf_s("%d%c", &country,& purchase,1);
-		switch (country){
-		case 1:
-			printf_s("A: Bottle of Wine (Mid-Range) %.2lf $\nB: Meal, Inexpensive Restaurant %.2lf $\nC: Monthly Pass (Regular Price) %.2lf $\nD: Meal for 2 People, Mid-range Restaurant, Three-course %.2lf $\nE: Parking in Rotschild st. in Tel Aviv %.2lf $\n",(fuel) / 5, (fuel) / 4, (fuel) / 3, (fuel) / 2, fuel);
-			printf_s("What will you would like to buy? : ");
-			purchase = getchar();
-			break;
-		case 2:
-			printf_s("A: Bottle of Wine (Mid-Range) %.2lf $\nB: 6 Domestic Beer (0.5 liter draught) %.2lf $\nC: 1 Pair of Jeans %.2lf $\nD: 1 Pair of Nike Running Shoes %.2lf $\nE: A tour in NASA space Station %.2lf $\n", (fuel) / 5, (fuel) / 4, (fuel) / 3, (fuel) / 2, fuel);
-			printf_s("What will you would like to buy? : ");
-			purchase = getchar();
-			break;
-		case 3:
-			printf_s("A: Beef Round (1kg) %.2lf $\nB: Meal for 2 People, Mid-range Restaurant, Three-course %.2lf $\nC: 1 Summer Dress in a Chain Store %.2lf $\nD: 1 Pair of Men Leather Business Shoes %.2lf $\nE: A Kung-Fu lesson with Shaolin munk %.2lf $\n", (fuel) / 5, (fuel) / 4, (fuel) / 3, (fuel) / 2, fuel);
-			printf_s("What will you would like to buy? : ");
-			purchase = getchar();
-			break;
-		case 4:
-			printf_s("A: Beef Round (1kg) %.2lf $\nB: 2 Bottles of Wine (Mid-Range) %.2lf $\nC: Monthly Pass (Regular Price) %.2lf $\nD: Meal for 2 People, Mid-range Restaurant, Three-course %.2lf $\nE: Horseback riding with the one and only Vladimir Putin %.2lf $\n", (fuel) / 5, (fuel) / 4, (fuel) / 3, (fuel) / 2, fuel);
-			printf_s("What will you would like to buy? : ");
-			purchase = getchar();
-			break;
-		case 5:
-			printf_s("A: 3 Meals, Inexpensive Restaurant %.2lf $\nB: 1 Pair of Nike Running Shoes(Fake ones) %.2lf $\nC: A couple retreat to Istanbul's best Spa & Turkish bath %.2lf $\nD: A picture infront the palace (without getting arrested) %.2lf $\nE: Starring in your own Soap Opera %.2lf $\n", (fuel) / 5, (fuel) / 4, (fuel) / 3, (fuel) / 2, fuel);
-			printf_s("What will you would like to buy? : ");
-			purchase = getchar();
-			break;
-		default:
-			break;
-		}
+		printf_s("\nPlease select the country you want to buy from:\n\n 1) Israel\n 2) USA\n 3) China\n 4) Russia\n 5) Turkey\n\n Your Choice : ");
+		scanf_s("%d%c", &country, &purchase, 1);
+		purchase = storeMenu(country, fuel);
+		warehouse(&root, purchase, country);
+		printf("\nAnd as a bonus we printed out for you a map with the route you've taken so others could learn how to save on fuel!\nlook for \"%s\" image in the folder\n", Most_Fuel);
 	}
 }
 
-void storeMenu(char purchase) {
+char storeMenu(int country, double fuel) {
+	char purchase;
+	switch (country) {
+	case 1:
+		printf_s("\nA: Bottle of Wine (Mid-Range) %.2lf $\nB: Meal, Inexpensive Restaurant %.2lf $\nC: Monthly Pass (Regular Price) %.2lf $\nD: Meal for 2 People, Mid-range Restaurant, Three-course %.2lf $\nE: Parking in Rotschild st. in Tel Aviv %.2lf $\n", (fuel) / 5, (fuel) / 4, (fuel) / 3 + rand() % 2, (fuel) / 2 + rand() % 4, fuel + rand() % 10);
+		printf_s("What will you would like to buy? : ");
+		purchase = getchar();
+		break;
+	case 2:
+		printf_s("\nA: Bottle of Wine (Mid-Range) %.2lf $\nB: 6 Domestic Beer (0.5 liter draught) %.2lf $\nC: 1 Pair of Jeans %.2lf $\nD: 1 Pair of Nike Running Shoes %.2lf $\nE: A tour in NASA space Station %.2lf $\n", (fuel) / 5, (fuel) / 4, (fuel) / 3 + rand() % 2, (fuel) / 2 + rand() % 4, fuel + rand() % 10);
+		printf_s("What will you would like to buy? : ");
+		purchase = getchar();
+		break;
+	case 3:
+		printf_s("\nA: Beef Round (1kg) %.2lf $\nB: Meal for 2 People, Mid-range Restaurant, Three-course %.2lf $\nC: 1 Summer Dress in a Chain Store %.2lf $\nD: 1 Pair of Men Leather Business Shoes %.2lf $\nE: A Kung-Fu lesson with Shaolin munk %.2lf $\n", (fuel) / 5, (fuel) / 4, (fuel) / 3 + rand() % 2, (fuel) / 2 + rand() % 4, fuel + rand() % 10);
+		printf_s("What will you would like to buy? : ");
+		purchase = getchar();
+		break;
+	case 4:
+		printf_s("\nA: Beef Round (1kg) %.2lf $\nB: 2 Bottles of Wine (Mid-Range) %.2lf $\nC: Monthly Pass (Regular Price) %.2lf $\nD: Meal for 2 People, Mid-range Restaurant, Three-course %.2lf $\nE: Horseback riding with the one and only Vladimir Putin %.2lf $\n", (fuel) / 5, (fuel) / 4, (fuel) / 3 + rand() % 2, (fuel) / 2 + rand() % 4, fuel + rand() % 10);
+		printf_s("What will you would like to buy? : ");
+		purchase = getchar();
+		break;
+	case 5:
+		printf_s("\nA: 3 Meals, Inexpensive Restaurant %.2lf $\nB: 1 Pair of Nike Running Shoes(Fake ones) %.2lf $\nC: A couple retreat to Istanbul's best Spa & Turkish bath %.2lf $\nD: A picture infront the palace (without getting arrested) %.2lf $\nE: Starring in your own Soap Opera %.2lf $\n", (fuel) / 5, (fuel) / 4, (fuel) / 3 + rand() % 2, (fuel) / 2 + rand() % 4, fuel + rand() % 10);
+		printf_s("What will you would like to buy? : ");
+		purchase = getchar();
+		break;
+	default:
+		purchase = 'F';
+		break;
+	} return purchase;
+}
+
+void warehouse(link* root, char purchase, int country) {
+		root[0].A = "https://images.app.goo.gl/ywD6DBAA7VYeydC7A"; root[0].B = "https://images.app.goo.gl/tHh1p6ZpRtVyAU3QA"; root[0].C = "https://images.app.goo.gl/8EYuGorXd3i1Zm4S8"; root[0].D = "https://images.app.goo.gl/7EBnM4NXzPVeMVBZ6"; root[0].E = "https://images.app.goo.gl/gft2hhyj6tL16T3J6";
+		root[1].A = *root[0].A; root[1].B = "https://images.app.goo.gl/j4dE3DmupwjMrsmM7"; root[1].C = "https://images.app.goo.gl/iAV8FFF2Puq8jBVt5"; root[1].D = "https://images.app.goo.gl/agoj1a1cBfMntM179"; root[1].E = "https://images.app.goo.gl/jL7L1ap2dS6P5XRP7";
+		root[2].A = "https://images.app.goo.gl/jZoXAhupeoL3vAvU7";root[2].B = "https://images.app.goo.gl/Qep3v3heo9oKAh9w9"; root[2].C = "https://images.app.goo.gl/mMEkYzUGVQ4N3ps27"; root[2].D = "https://images.app.goo.gl/WypDRjnJvUjRAddM8"; root[2].E = "https://images.app.goo.gl/fNQQReVSpatNh4Tv5";
+		root[3].A = root[2].A; root[3].B = root[1].A; root[3].C = root[0].C; root[3].D = "https://images.app.goo.gl/H23qyGT3Co3Z6ZL29"; root[3].E = "https://images.app.goo.gl/UTKJsDncjcbXrFZ79";
+		root[4].A = "https://images.app.goo.gl/rmXDTxquFaJ5wkW59"; root[4].B = "https://images.app.goo.gl/kgHje9Cg7ezoQwBT7"; root[4].C = "https://images.app.goo.gl/rUfouppXL9rt3o1o9"; root[4].D = "https://images.app.goo.gl/Wz2qRQ8Do6bD66pZ8"; root[4].E = "https://images.app.goo.gl/VxPKtzbjnmnaNpe89";
 	switch (purchase)
 	{
+	case 'A':
+		printf_s("Copy the link to your browser to get your product\n\n ----  %s  ----", root[country - 1].A);
+		break;
+	case 'B':
+		printf_s("Copy the link to your browser to get your product\n\n ----  %s  ----", root[country - 1].B);
+		break;
+	case 'C':
+		printf_s("Copy the link to your browser to get your product\n\n ----  %s  ----", root[country - 1].C);
+		break;
+	case 'D':
+		printf_s("Copy the link to your browser to get your product\n\n ----  %s  ----", root[country - 1].D);
+		break;
+	case 'E':
+		printf_s("Copy the link to your browser to get your product\n\n ----  %s  ----", root[country - 1].E);
+		break;
 	default:
+		printf_s("No such product\n But I'll tak your fuel anywayyyy\a\n");
 		break;
 	}
 }
