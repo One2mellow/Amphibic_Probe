@@ -91,7 +91,7 @@ void RoutePainter(pixmat** matrix, int x, int y, int x_final, int y_final, int h
 
 co_t best_co(FILE* route); //extrcats coordinates from best route file
 
-void time2glow(char* filename);
+void time2glow(char* filename, pixmat** matrix, image_t image);
 
 void section_3();
 
@@ -243,7 +243,7 @@ int main() {
 			//Naama
 			break;
 		case 5:
-			time2glow(Special);
+			time2glow(Special, matrix, image);
 			choice = menu();
 			break;
 		case 9:
@@ -704,7 +704,7 @@ co_t best_co(FILE* route) {
 }
 
 
-void time2glow(char* filename) {
+void time2glow(char* filename, pixmat** matrix, image_t image) {
 	FILE* file;
 	list_t* root = NULL;
 	char pos;
@@ -722,6 +722,10 @@ void time2glow(char* filename) {
 			pos = fgetc(file);
 			for (i ; pos != '>' && pos != EOF; i++)
 				pos = fgetc(file);
+		}
+		
+		//iterating through the list
+		for (list_t* curr = root; curr != NULL; curr = curr->next) {	
 		}
 
 		freeList(root);
