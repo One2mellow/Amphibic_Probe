@@ -69,7 +69,7 @@ void imgtrx(pixmat** mtrx, image_t image, char* filename); //converting the BMP 
 
 poolList_t* Pools(pixmat** mtrx, image_t image, poolList_t* pools); //Creating list of pools which contain size and center co. for each pool
 
-void CreateBMP(pixmat** matrix, int height, int width, unsigned char* header); //UNFINISHED! creating BMP of best route
+void CreateBMP(char* filename, pixmat** matrix, int height, int width, unsigned char* header); //UNFINISHED! creating BMP of best route
 
 void segment(pix_t* root, pixmat** mtrx, int** temp, image_t image, int i, int j, int* size); //using region base image segmentation to detect pools
 
@@ -236,7 +236,7 @@ int main() {
 		case 3:
 			putchar('\n');
 			section_3();
-			CreateBMP(matrix, image.height, image.width, image.header);
+			CreateBMP(BMPCPY, matrix, image.height, image.width, image.header);
 			choice = menu();
 			break;
 		case 4:
@@ -387,11 +387,11 @@ void imgtrx(pixmat** mtrx, image_t image, char* filename) {
 	return;
 }
 
-void CreateBMP(pixmat** matrix, int height, int width, unsigned char* header) {
+void CreateBMP(char* filename, pixmat** matrix, int height, int width, unsigned char* header) {
 	FILE* image, * route;
 	co_t start, end;
 	char position;
-	fopen_s(&image, BMPCPY, "wb");
+	fopen_s(&image, filename, "wb");
 	fopen_s(&route, BEST_TXT, "rt");
 
 	if (image != 0 && route != 0) {
