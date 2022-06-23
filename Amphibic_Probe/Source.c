@@ -195,9 +195,10 @@ int main() {
 	}
 
 	if (image.width % 4 != 0) // making sure width is divsible by 4 due to bmp regulations
-	{
-		width_flag = 1;
+	{ 
+		width_flag = image.width;
 		image.width = image.width + 4 - (image.width % 4);
+		width_flag = image.width - width_flag;
 	}
 
 	matrix = malloc(sizeof(pixmat*) * image.width);
@@ -640,7 +641,7 @@ void RoutePainter(pixmat** matrix, int x, int y, int x_final, int y_final, int h
 	x++;y++;
 
 	if (width_flag != 0)
-		width = width_flag;
+		width = width - width_flag;
 	
 
 	for (x; x < x_final && x < width && y < y_final && y < height; x++)
