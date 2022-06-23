@@ -384,16 +384,16 @@ void imgtrx(pixmat** mtrx, image_t image, char* filename, int width_flag) {
 		fseek(file, 54, SEEK_SET);
 		for (i = 0; i < image.height; i++)
 		{
-			for (j = 0; j < width_flag; j++)
+			for (j = 0; j < image.width; j++)
 			{
 				mtrx[j][i].color.b = fgetc(file);
 				mtrx[j][i].color.g = fgetc(file);
 				mtrx[j][i].color.r = fgetc(file);
 				mtrx[j][i].cordinate.x = j;
 				mtrx[j][i].cordinate.y = i;
-				if (mtrx[j][i].color.b == 0 || mtrx[j][i].color.g == 0 || mtrx[j][i].color.r == 0) {
+				/*if (mtrx[j][i].color.b == 0 || mtrx[j][i].color.g == 0 || mtrx[j][i].color.r == 0) {
 					j--;
-				}
+				}*/
 			}
 		}
 	}
@@ -429,7 +429,7 @@ void CreateBMP(char* filename, char* txt, pixmat** matrix, int height, int width
 		}
 		for (i = 0; i < height; i++)
 		{
-			for (j = 0; j < width - 2; j++)
+			for (j = 0; j < width; j++)
 			{
 				fputc(matrix[j][i].color.b, image);
 				fputc(matrix[j][i].color.g, image);
