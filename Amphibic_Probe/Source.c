@@ -102,9 +102,11 @@ void printNsortpools();
 
 printing_t* pools_sortingNinsert(printing_t* head, int coordinate_x, int coordinate_y, int poooolsize);
 
-void time2glow(char* filename, pixmat** matrix, image_t image, int width_flag);
+void time2glow(char* filename, pixmat** matrix, image_t image, int width_flag); //for setion 5
 
-void fuelStore(double fuel);
+void fuelStore(double fuel); //store genertor for section 5
+
+void storeMenu(char purchase); //prints the store list for each country
 
 void section_3();
 
@@ -908,6 +910,14 @@ void fuelStore(double fuel) {
 		default:
 			break;
 		}
+	}
+}
+
+void storeMenu(char purchase) {
+	switch (purchase)
+	{
+	default:
+		break;
 	}
 }
 
