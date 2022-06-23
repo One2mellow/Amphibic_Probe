@@ -844,7 +844,7 @@ void time2glow(char* filename, pixmat** matrix, image_t image) {
 
 		//iterating through the list
 		for (list_t* curr = root; curr != NULL; curr = curr->next) {
-			CreateBMP("Most_fuel.bmp", matrix, image.height, image.width, image.header);
+			CreateBMP("Most_fuel.bmp","Most_fuel.txt", matrix, image.height, image.width, image.header);
 		}
 
 		freeList(root);
