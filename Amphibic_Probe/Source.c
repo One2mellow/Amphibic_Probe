@@ -3,7 +3,7 @@
 #include <string.h>
 #include <math.h>
 
-#define BMP "un4.bmp"
+#define BMP "fishpool-another-ex1.bmp"
 #define BMPCPY "fishpool-copy.bmp"
 #define TXT "pools.txt"
 #define BEST_TXT "best-route.txt"
@@ -442,6 +442,7 @@ void CreateBMP(char* filename, char* txt, pixmat** matrix, int height, int width
 		{
 			fputc(header[i], image);
 		}
+
 		for (i = 0; i < height; i++)
 		{
 			for (j = 0; j < width; j++)
@@ -451,11 +452,11 @@ void CreateBMP(char* filename, char* txt, pixmat** matrix, int height, int width
 				fputc(matrix[j][i].color.r, image);
 			}
 		}
+		fclose(image);
+		fclose(route);
 	}
 
 	else return;
-	fclose(image);
-	fclose(route);
 }
 
 poolList_t* Pools(pixmat** mtrx, image_t image, poolList_t* pools) {
@@ -651,14 +652,14 @@ void RoutePainter(pixmat** matrix, int x, int y, int x_final, int y_final, int h
 	int  j = 0, i = 0;
 	float movratio, b;
 	matrix[x][y].color.r = 250; matrix[x][y].color.g = 180; matrix[x][y].color.b = 30; //color pixel at the beggining
-	movratio = ((float)y_final - (float)y) / ((float)x_final - (float)x);
-	b = (float)y - (float)(movratio * x);
-	x++;y++;
-
+	
 	if (width_flag != 0) {
 		width = width_flag;
 		x_final = width_flag;
 	}
+	movratio = ((float)y_final - (float)y) / ((float)x_final - (float)x);
+	b = (float)y - (float)(movratio * x);
+	x++;y++;
 
 	for (x; x < x_final && x < width && y < y_final && y < height; x++)
 	{
