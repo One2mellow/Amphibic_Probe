@@ -71,7 +71,7 @@ int LoadImage(image_t* image, const char* filename, unsigned char* head); //load
 
 co_t pool_middle(pix_t* root, int size); //returning the pool's center coordinates from given coordinate array
 
-void imgtrx(pixmat** mtrx, image_t image, char* filename); //converting the BMP image to 2d array of type pixmat
+void imgtrx(pixmat** mtrx, image_t image, char* filename, int width_flag); //converting the BMP image to 2d array of type pixmat
 
 poolList_t* Pools(pixmat** mtrx, image_t image, poolList_t* pools); //Creating list of pools which contain size and center co. for each pool
 
@@ -196,7 +196,7 @@ int main() {
 
 	if (image.width % 4 != 0) // making sure width is divsible by 4 due to bmp regulations
 	{
-		width_flag = 1;
+		width_flag = image.width;
 		image.width = image.width + 4 - (image.width % 4);
 	}
 
@@ -208,7 +208,7 @@ int main() {
 		}
 	}// allocate memory to image pixel matrix
 
-	imgtrx(matrix, image, BMP);
+	imgtrx(matrix, image, BMP, width_flag);
 
 	choice = menu();
 
@@ -370,7 +370,7 @@ int LoadImage(image_t* image, const char* filename, unsigned char* head) {
 	return return_value;
 }
 
-void imgtrx(pixmat** mtrx, image_t image, char* filename) {
+void imgtrx(pixmat** mtrx, image_t image, char* filename, int width_flag) {
 	int val, i = 0, j;
 	FILE* file;
 	val = fopen_s(&file, filename, "rb");
@@ -384,16 +384,16 @@ void imgtrx(pixmat** mtrx, image_t image, char* filename) {
 		fseek(file, 54, SEEK_SET);
 		for (i = 0; i < image.height; i++)
 		{
-			for (j = 0; j < image.width; j++)
+			for (j = 0; j < width_flag; j++)
 			{
 				mtrx[j][i].color.b = fgetc(file);
 				mtrx[j][i].color.g = fgetc(file);
 				mtrx[j][i].color.r = fgetc(file);
 				mtrx[j][i].cordinate.x = j;
 				mtrx[j][i].cordinate.y = i;
-				/*if (mtrx[j][i].color.b == 0 || mtrx[j][i].color.g == 0 || mtrx[j][i].color.r == 0) {
+				if (mtrx[j][i].color.b == 0 || mtrx[j][i].color.g == 0 || mtrx[j][i].color.r == 0) {
 					j--;
-				}*/
+				}
 			}
 		}
 	}
@@ -405,6 +405,7 @@ void CreateBMP(char* filename, char* txt, pixmat** matrix, int height, int width
 	FILE* image, * route;
 	co_t start, end;
 	char position;
+	int i, j;
 	fopen_s(&image, filename, "wb");
 	fopen_s(&route, txt, "rt");
 
@@ -426,9 +427,9 @@ void CreateBMP(char* filename, char* txt, pixmat** matrix, int height, int width
 		{
 			fputc(header[i], image);
 		}
-		for (int i = 0; i < height; i++)
+		for (i = 0; i < height; i++)
 		{
-			for (int j = 0; j < width; j++)
+			for (j = 0; j < width - 2; j++)
 			{
 				fputc(matrix[j][i].color.b, image);
 				fputc(matrix[j][i].color.g, image);
@@ -639,9 +640,10 @@ void RoutePainter(pixmat** matrix, int x, int y, int x_final, int y_final, int h
 	b = (float)y - (float)(movratio * x);
 	x++;y++;
 
-	if (width_flag != 0)
+	if (width_flag != 0) {
 		width = width_flag;
-	
+		x_final = width_flag;
+	}
 
 	for (x; x < x_final && x < width && y < y_final && y < height; x++)
 	{
