@@ -91,6 +91,8 @@ void RoutePainter(pixmat** matrix, int x, int y, int x_final, int y_final, int h
 
 co_t best_co(FILE* route); //extrcats coordinates from best route file
 
+void time2glow(char* filename);
+
 void section_3();
 
 co_t InputCheck(co_t image); //checking the validity of the starting coordinates
@@ -239,6 +241,10 @@ int main() {
 			break;
 		case 4:
 			//Naama
+			break;
+		case 5:
+			time2glow(Special);
+			choice = menu();
 			break;
 		case 9:
 			return 0;
@@ -695,6 +701,31 @@ co_t best_co(FILE* route) {
 		coordinate.y = (int)atof(tmpy);
 	}
 	return coordinate;
+}
+
+
+void time2glow(char* filename) {
+	FILE* file;
+	list_t* root = NULL;
+	char pos;
+	float time, fuel;
+	int size, x, y, i = 0;
+	fopen_s(&file, Special, "rt");
+
+	if (file != 0)
+	{
+		pos = fgetc(file);
+		fseek(file, 0, SEEK_SET);
+		while (pos != EOF) {
+			fscanf_s(file, "%f %f %d %d %d", &time, &fuel, &size, &x, &y);
+			add((double)time, (double)fuel, size, x, y, root);
+			pos = fgetc(file);
+			for (i ; pos != '>' && pos != EOF; i++)
+				pos = fgetc(file);
+		}
+
+		freeList(root);
+	}
 }
 
 ///////////////////////////////////////////function for section 3- START///////////////////////////////////////////
