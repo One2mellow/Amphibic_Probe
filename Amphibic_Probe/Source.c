@@ -925,14 +925,14 @@ void storeMenu(char purchase) {
 }
 
 void NumericReport() {
-	co_t start, end;//start 
+	co_t start, end; 
 	FILE* route;
 	char position;
 	const float dx = 0.1, a = 2.5;
 	float* dist, * cx, * costs;
 	const float A = 2.5, dx = 0.1;
 	float distance, df;
-	int n, fx, i, dt, tf, naama;
+	int n, fx, i, dt, tf;
 
 	int x1 = 0, y1 = 0, x2 = 32, y2 = 43, x3 = 53, y3 = 55, x4 = 88, y4 = 100;
 	fopen_s(&route, BEST_TXT, "rt");
