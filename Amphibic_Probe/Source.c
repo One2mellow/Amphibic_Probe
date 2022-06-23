@@ -3,7 +3,7 @@
 #include <string.h>
 #include <math.h>
 
-#define BMP "paintpool-3.bmp"
+#define BMP "fishpool-another-ex1.bmp"
 #define BMPCPY "fishpool-copy.bmp"
 #define TXT "pools.txt"
 #define BEST_TXT "best-route.txt"
@@ -75,7 +75,7 @@ void imgtrx(pixmat** mtrx, image_t image, char* filename); //converting the BMP 
 
 poolList_t* Pools(pixmat** mtrx, image_t image, poolList_t* pools); //Creating list of pools which contain size and center co. for each pool
 
-void CreateBMP(char* filename,char* txt, pixmat** matrix, int height, int width, unsigned char* header); // Print the route on the bmp copy
+void CreateBMP(char* filename,char* txt, pixmat** matrix, int height, int width, unsigned char* header, int width_flag); // Print the route on the bmp copy
 
 void segment(pix_t* root, pixmat** mtrx, int** temp, image_t image, int i, int j, int* size); //using region base image segmentation to detect pools
 
@@ -93,7 +93,7 @@ void dealloccoordinate(cot_list** root);
 
 int SpaceMod(int x, int y); //making sure that the correct number of spaces is printed between co. and size in pools.txt
 
-void RoutePainter(pixmat** matrix, int x, int y, int x_final, int y_final, int height, int width);
+void RoutePainter(pixmat** matrix, int x, int y, int x_final, int y_final, int height, int width, int width_flag);
 
 co_t best_co(FILE* route); //extrcats coordinates from best route file
 
@@ -180,7 +180,7 @@ double distance(co_t a, co_t b); //find distance between to cordinates
 
 
 int main() {
-	int i, val, count = 0, choice = 0;
+	int i, val, count = 0, choice = 0, width_flag = 0;
 	poolList_t* pools = NULL;
 	pixmat** matrix;
 	static image_t image;
@@ -194,6 +194,11 @@ int main() {
 		return -1;
 	}
 
+	if (image.width % 4 != 0) // making sure width is divsible by 4 due to bmp regulations
+	{
+		width_flag = 1;
+		image.width = image.width + 4 - (image.width % 4);
+	}
 
 	matrix = malloc(sizeof(pixmat*) * image.width);
 	if (matrix)
@@ -246,7 +251,7 @@ int main() {
 		case 3:
 			putchar('\n');
 			section_3();
-			CreateBMP(BMPCPY, BEST_TXT , matrix, image.height, image.width, image.header);
+			CreateBMP(BMPCPY, BEST_TXT , matrix, image.height, image.width, image.header, width_flag);
 			choice = menu();
 			break;
 		case 4:
@@ -366,9 +371,8 @@ int LoadImage(image_t* image, const char* filename, unsigned char* head) {
 }
 
 void imgtrx(pixmat** mtrx, image_t image, char* filename) {
-	int val, i = 0, j, k = 0;
+	int val, i = 0, j;
 	FILE* file;
-	k = image.height * image.width;
 	val = fopen_s(&file, filename, "rb");
 	if (!file) {
 		printf_s("Error open the fishpool.bmp\n");
@@ -387,9 +391,9 @@ void imgtrx(pixmat** mtrx, image_t image, char* filename) {
 				mtrx[j][i].color.r = fgetc(file);
 				mtrx[j][i].cordinate.x = j;
 				mtrx[j][i].cordinate.y = i;
-				if (mtrx[j][i].color.b == 0 || mtrx[j][i].color.g == 0 || mtrx[j][i].color.r == 0) {
+				/*if (mtrx[j][i].color.b == 0 || mtrx[j][i].color.g == 0 || mtrx[j][i].color.r == 0) {
 					j--;
-				}
+				}*/
 			}
 		}
 	}
@@ -397,7 +401,7 @@ void imgtrx(pixmat** mtrx, image_t image, char* filename) {
 	return;
 }
 
-void CreateBMP(char* filename, char* txt, pixmat** matrix, int height, int width, unsigned char* header) {
+void CreateBMP(char* filename, char* txt, pixmat** matrix, int height, int width, unsigned char* header, int width_flag) {
 	FILE* image, * route;
 	co_t start, end;
 	char position;
@@ -415,14 +419,13 @@ void CreateBMP(char* filename, char* txt, pixmat** matrix, int height, int width
 				position = fgetc(route);
 			fseek(route, -1, SEEK_CUR);
 			end = best_co(route);
-			RoutePainter(matrix, start.x, start.y, end.x, end.y, height, width);
+			RoutePainter(matrix, start.x, start.y, end.x, end.y, height, width, width_flag);
 			start = end;
 		} while (end.x != width && end.y != height);
 		for (int i = 0; i < 54; i++)
 		{
 			fputc(header[i], image);
 		}
-		fseek(image, 54, SEEK_SET);
 		for (int i = 0; i < height; i++)
 		{
 			for (int j = 0; j < width; j++)
@@ -628,13 +631,17 @@ int SpaceMod(int x, int y) {
 	return space;
 }
 
-void RoutePainter(pixmat** matrix, int x, int y, int x_final, int y_final, int height, int width) {
+void RoutePainter(pixmat** matrix, int x, int y, int x_final, int y_final, int height, int width, int width_flag) {
 	int  j = 0, i = 0;
 	float movratio, b;
 	matrix[x][y].color.r = 250; matrix[x][y].color.g = 180; matrix[x][y].color.b = 30; //color pixel at the beggining
 	movratio = ((float)y_final - (float)y) / ((float)x_final - (float)x);
 	b = (float)y - (float)(movratio * x);
 	x++;y++;
+
+	if (width_flag != 0)
+		width = width_flag;
+	
 
 	for (x; x < x_final && x < width && y < y_final && y < height; x++)
 	{
@@ -844,7 +851,7 @@ void time2glow(char* filename, pixmat** matrix, image_t image) {
 
 		//iterating through the list
 		for (list_t* curr = root; curr != NULL; curr = curr->next) {
-			CreateBMP("Most_fuel.bmp","Most_fuel.txt", matrix, image.height, image.width, image.header);
+			//CreateBMP("Most_fuel.bmp","Most_fuel.txt", matrix, image.height, image.width, image.header);
 		}
 
 		freeList(root);
