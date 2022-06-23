@@ -53,7 +53,7 @@ typedef struct lists {//route data
 	struct lists* next;
 } list_t;
 
-typedef struct cot_list {
+typedef struct cot_list { //list of coordinate sequence (moving path)
 	co_t coordinate;
 	struct cot_list* next;
 } cot_list;
