@@ -8,7 +8,8 @@
 #define TXT "pools.txt"
 #define BEST_TXT "best-route.txt"
 #define Special "for-nitai.txt"
-
+#define FUEL_TXT "most_fuel.txt"
+#define Most_Fuel "MostFuel.bmp"
 
 typedef struct { //bmp file values struct
 	int width;
@@ -101,7 +102,7 @@ void printNsortpools();
 
 printing_t* pools_sortingNinsert(printing_t* head, int coordinate_x, int coordinate_y, int poooolsize);
 
-void time2glow(char* filename, pixmat** matrix, image_t image);
+void time2glow(char* filename, pixmat** matrix, image_t image, int width_flag);
 
 void section_3();
 
@@ -258,7 +259,7 @@ int main() {
 			//Naama
 			break;
 		case 5:
-			time2glow(Special, matrix, image);
+			time2glow(Special, matrix, image, width_flag);
 			choice = menu();
 			break;
 		case 9:
@@ -416,7 +417,7 @@ void CreateBMP(char* filename, char* txt, pixmat** matrix, int height, int width
 		start = best_co(route);
 		do {
 			position = fgetc(route);
-			while (position != '(')
+			while (position != '(' && position != EOF)
 				position = fgetc(route);
 			fseek(route, -1, SEEK_CUR);
 			end = best_co(route);
@@ -831,31 +832,34 @@ printing_t* pools_sortingNinsert(printing_t* head, int coordinate_x, int coordin
 	return head;
 }
 
-void time2glow(char* filename, pixmat** matrix, image_t image) {
-	FILE* file;
+void time2glow(char* filename, pixmat** matrix, image_t image, int width_flag) {
+	FILE* file, *txt;
 	list_t* root = NULL;
 	char pos;
 	float time, fuel;
 	int size, x, y, i = 0;
 	fopen_s(&file, Special, "rt");
-
-	if (file != 0)
+	fopen_s(&txt, FUEL_TXT, "wt");
+	if (file != 0 && txt != 0)
 	{
 		pos = fgetc(file);
 		fseek(file, 0, SEEK_SET);
 		while (pos != EOF) {
 			fscanf_s(file, "%f %f %d %d %d", &time, &fuel, &size, &x, &y);
-			add((double)time, (double)fuel, size, x, y, root);
+			root = add((double)time, (double)fuel, size, x, y, root);
 			pos = fgetc(file);
 			for (i; pos != '>' && pos != EOF; i++)
 				pos = fgetc(file);
 		}
 
+		fseek(txt, 15, SEEK_SET);
 		//iterating through the list
 		for (list_t* curr = root; curr != NULL; curr = curr->next) {
-			//CreateBMP("Most_fuel.bmp","Most_fuel.txt", matrix, image.height, image.width, image.header);
+			fprintf_s(txt, "(%3d,%3d)\t%d\n", curr->x, curr->y, curr->size); //need to reverse list first
 		}
-
+		fclose(file);
+		fclose(txt);
+		CreateBMP(Most_Fuel,FUEL_TXT, matrix, image.height, image.width, image.header, width_flag);
 		freeList(root);
 	}
 }
