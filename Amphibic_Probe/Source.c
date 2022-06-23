@@ -928,11 +928,10 @@ void NumericReport() {
 	co_t start, end; 
 	FILE* route;
 	char position;
-	const float dx = 0.1, a = 2.5;
 	float* dist, * cx, * costs;
 	const float A = 2.5, dx = 0.1;
 	float distance, df;
-	int n, fx, i, dt, tf;
+	int n, fx, i,j, dt, tf;
 
 	int x1 = 0, y1 = 0, x2 = 32, y2 = 43, x3 = 53, y3 = 55, x4 = 88, y4 = 100;
 	fopen_s(&route, BEST_TXT, "rt");
@@ -964,19 +963,19 @@ void NumericReport() {
 						fx = 20;
 						dist[j] = 0;
 						j = j - n;
-					else fx = 1;
+					fx = 1;
 					dist[j] = j * dt;
-	else fx = 1;
+	 
 
 					}
 
 
 				}
 
-				cx[i + 1] = (a / (cx[i] + 1) + fx) * 0.1 + cx[i];
+				cx[i + 1] = (A / (cx[i] + 1) + fx) * 0.1 + cx[i];
 				cx[i] =
 					df = (cx[i + 1] - cx[i]);
-				df = (a / (cx[i] + 1 + fx)) * dx;
+				df = (A / (cx[i] + 1 + fx)) * dx;
 				costs[i] = df / dx;
 			}
 			if (i = n + 1)
@@ -984,7 +983,7 @@ void NumericReport() {
 			costs[i] = df / dx;
 
 			start = end;
-		} while (end.x != width && end.y != height);
+		} while (end.x != 5 && end.y != 5);// not sure....
 
 
 		fclose(route);
