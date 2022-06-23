@@ -53,7 +53,7 @@ typedef struct lists {//route data
 	struct lists* next;
 } list_t;
 
-typedef struct cot_list {
+typedef struct cot_list { //list of coordinate sequence (moving path)
 	co_t coordinate;
 	struct cot_list* next;
 } cot_list;
@@ -75,7 +75,7 @@ void imgtrx(pixmat** mtrx, image_t image, char* filename); //converting the BMP 
 
 poolList_t* Pools(pixmat** mtrx, image_t image, poolList_t* pools); //Creating list of pools which contain size and center co. for each pool
 
-void CreateBMP(pixmat** matrix, int height, int width, unsigned char* header); //UNFINISHED! creating BMP of best route
+void CreateBMP(char* filename, pixmat** matrix, int height, int width, unsigned char* header); // Print the route on the bmp copy
 
 void segment(pix_t* root, pixmat** mtrx, int** temp, image_t image, int i, int j, int* size); //using region base image segmentation to detect pools
 
@@ -100,6 +100,8 @@ co_t best_co(FILE* route); //extrcats coordinates from best route file
 void printNsortpools();
 
 printing_t* pools_sortingNinsert(printing_t* head, int coordinate_x, int coordinate_y, int poooolsize);
+
+void time2glow(char* filename, pixmat** matrix, image_t image);
 
 void section_3();
 
@@ -244,11 +246,15 @@ int main() {
 		case 3:
 			putchar('\n');
 			section_3();
-			CreateBMP(matrix, image.height, image.width, image.header);
+			CreateBMP(BMPCPY, matrix, image.height, image.width, image.header);
 			choice = menu();
 			break;
 		case 4:
 			//Naama
+			break;
+		case 5:
+			time2glow(Special, matrix, image);
+			choice = menu();
 			break;
 		case 9:
 			return 0;
@@ -391,11 +397,11 @@ void imgtrx(pixmat** mtrx, image_t image, char* filename) {
 	return;
 }
 
-void CreateBMP(pixmat** matrix, int height, int width, unsigned char* header) {
+void CreateBMP(char* filename, pixmat** matrix, int height, int width, unsigned char* header) {
 	FILE* image, * route;
 	co_t start, end;
 	char position;
-	fopen_s(&image, BMPCPY, "wb");
+	fopen_s(&image, filename, "wb");
 	fopen_s(&route, BEST_TXT, "rt");
 
 	if (image != 0 && route != 0) {
@@ -814,6 +820,34 @@ printing_t* pools_sortingNinsert(printing_t* head, int coordinate_x, int coordin
 	printf_s("(%3d,%3d)  \t%d \n", head->centerX, head->centerY, head->poolsize);
 
 	return head;
+}
+
+void time2glow(char* filename, pixmat** matrix, image_t image) {
+	FILE* file;
+	list_t* root = NULL;
+	char pos;
+	float time, fuel;
+	int size, x, y, i = 0;
+	fopen_s(&file, Special, "rt");
+
+	if (file != 0)
+	{
+		pos = fgetc(file);
+		fseek(file, 0, SEEK_SET);
+		while (pos != EOF) {
+			fscanf_s(file, "%f %f %d %d %d", &time, &fuel, &size, &x, &y);
+			add((double)time, (double)fuel, size, x, y, root);
+			pos = fgetc(file);
+			for (i; pos != '>' && pos != EOF; i++)
+				pos = fgetc(file);
+		}
+
+		//iterating through the list
+		for (list_t* curr = root; curr != NULL; curr = curr->next) {
+		}
+
+		freeList(root);
+	}
 }
 
 ///////////////////////////////////////////function for section 3- START///////////////////////////////////////////
