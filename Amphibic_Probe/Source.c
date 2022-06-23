@@ -104,6 +104,8 @@ printing_t* pools_sortingNinsert(printing_t* head, int coordinate_x, int coordin
 
 void time2glow(char* filename, pixmat** matrix, image_t image, int width_flag);
 
+void fuelStore(double fuel);
+
 void section_3();
 
 co_t InputCheck(co_t image); //checking the validity of the starting coordinates
@@ -834,7 +836,7 @@ printing_t* pools_sortingNinsert(printing_t* head, int coordinate_x, int coordin
 
 void time2glow(char* filename, pixmat** matrix, image_t image, int width_flag) {
 	FILE* file, *txt;
-	list_t* root = NULL;
+	list_t* curr, *root = NULL;
 	char pos;
 	float time, fuel;
 	int size, x, y, i = 0;
@@ -854,13 +856,58 @@ void time2glow(char* filename, pixmat** matrix, image_t image, int width_flag) {
 
 		fseek(txt, 15, SEEK_SET);
 		//iterating through the list
-		for (list_t* curr = root; curr != NULL; curr = curr->next) {
+		for (curr = root; curr != NULL; curr = curr->next) {
 			fprintf_s(txt, "(%3d,%3d)\t%d\n", curr->x, curr->y, curr->size); //need to reverse list first
+			if (curr->next == NULL)
+				fuelStore(curr->oil);
 		}
+		
 		fclose(file);
 		fclose(txt);
-		CreateBMP(Most_Fuel,FUEL_TXT, matrix, image.height, image.width, image.header, width_flag);
+		//CreateBMP(Most_Fuel,FUEL_TXT, matrix, image.height, image.width, image.header, width_flag);
 		freeList(root);
+	}
+}
+
+void fuelStore(double fuel) {
+	int country;
+	char purchase;
+	printf_s("\a\ncongratulations YOU HAVE MADE IT TO THE END!\nWelcome to your new plant, we have exausted our natural resorces and fuel is our only currency!\n\nyou have %.2lf fuel left in the tank\n", fuel);
+	printf_s("\a\nthere is our store, you can buy anything here right away!\n (provided you have anough fuel...)\n");
+	if (fuel < 4)
+		printf("With this amount you can buy only a bottle of water..\n");
+	else {
+		printf_s("\nPlease select the country you want to buy from:\n 1) Israel\n 2) USA\n 3) China\n 4) Russia\n 5) Turkey\n Your Choice:");
+		scanf_s("%d%c", &country,& purchase,1);
+		switch (country){
+		case 1:
+			printf_s("A: Bottle of Wine (Mid-Range) %.2lf $\nB: Meal, Inexpensive Restaurant %.2lf $\nC: Monthly Pass (Regular Price) %.2lf $\nD: Meal for 2 People, Mid-range Restaurant, Three-course %.2lf $\nE: Parking in Rotschild st. in Tel Aviv %.2lf $\n",(fuel) / 5, (fuel) / 4, (fuel) / 3, (fuel) / 2, fuel);
+			printf_s("What will you would like to buy? : ");
+			purchase = getchar();
+			break;
+		case 2:
+			printf_s("A: Bottle of Wine (Mid-Range) %.2lf $\nB: 6 Domestic Beer (0.5 liter draught) %.2lf $\nC: 1 Pair of Jeans %.2lf $\nD: 1 Pair of Nike Running Shoes %.2lf $\nE: A tour in NASA space Station %.2lf $\n", (fuel) / 5, (fuel) / 4, (fuel) / 3, (fuel) / 2, fuel);
+			printf_s("What will you would like to buy? : ");
+			purchase = getchar();
+			break;
+		case 3:
+			printf_s("A: Beef Round (1kg) %.2lf $\nB: Meal for 2 People, Mid-range Restaurant, Three-course %.2lf $\nC: 1 Summer Dress in a Chain Store %.2lf $\nD: 1 Pair of Men Leather Business Shoes %.2lf $\nE: A Kung-Fu lesson with Shaolin munk %.2lf $\n", (fuel) / 5, (fuel) / 4, (fuel) / 3, (fuel) / 2, fuel);
+			printf_s("What will you would like to buy? : ");
+			purchase = getchar();
+			break;
+		case 4:
+			printf_s("A: Beef Round (1kg) %.2lf $\nB: 2 Bottles of Wine (Mid-Range) %.2lf $\nC: Monthly Pass (Regular Price) %.2lf $\nD: Meal for 2 People, Mid-range Restaurant, Three-course %.2lf $\nE: Horseback riding with the one and only Vladimir Putin %.2lf $\n", (fuel) / 5, (fuel) / 4, (fuel) / 3, (fuel) / 2, fuel);
+			printf_s("What will you would like to buy? : ");
+			purchase = getchar();
+			break;
+		case 5:
+			printf_s("A: 3 Meals, Inexpensive Restaurant %.2lf $\nB: 1 Pair of Nike Running Shoes(Fake ones) %.2lf $\nC: A couple retreat to Istanbul's best Spa & Turkish bath %.2lf $\nD: A picture infront the palace (without getting arrested) %.2lf $\nE: Starring in your own Soap Opera %.2lf $\n", (fuel) / 5, (fuel) / 4, (fuel) / 3, (fuel) / 2, fuel);
+			printf_s("What will you would like to buy? : ");
+			purchase = getchar();
+			break;
+		default:
+			break;
+		}
 	}
 }
 
