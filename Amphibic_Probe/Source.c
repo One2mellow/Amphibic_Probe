@@ -3,7 +3,7 @@
 #include <string.h>
 #include <math.h>
 
-#define BMP "fishpool-another-ex1.bmp"
+#define BMP "not4.bmp"
 #define BMPCPY "fishpool-copy.bmp"
 #define TXT "pools.txt"
 #define BEST_TXT "best-route.txt"
@@ -194,11 +194,11 @@ int main() {
 		return -1;
 	}
 
-	if (image.width % 4 != 0) // making sure width is divsible by 4 due to bmp regulations
-	{
-		width_flag = 1;
-		image.width = image.width + 4 - (image.width % 4);
-	}
+	//if (image.width % 4 != 0) // making sure width is divsible by 4 due to bmp regulations
+	//{
+	//	width_flag = 1;
+	//	image.width = image.width + 4 - (image.width % 4);
+	//}
 
 	matrix = malloc(sizeof(pixmat*) * image.width);
 	if (matrix)
@@ -391,9 +391,9 @@ void imgtrx(pixmat** mtrx, image_t image, char* filename) {
 				mtrx[j][i].color.r = fgetc(file);
 				mtrx[j][i].cordinate.x = j;
 				mtrx[j][i].cordinate.y = i;
-				/*if (mtrx[j][i].color.b == 0 || mtrx[j][i].color.g == 0 || mtrx[j][i].color.r == 0) {
+				if (mtrx[j][i].color.b == 0 || mtrx[j][i].color.g == 0 || mtrx[j][i].color.r == 0) {
 					j--;
-				}*/
+				}
 			}
 		}
 	}
@@ -479,7 +479,7 @@ poolList_t* Pools(pixmat** mtrx, image_t image, poolList_t* pools) {
 				pix_insert(&root, mtrx[j][i].cordinate);
 				segment(root, mtrx, temp, image, i, j, &size);
 
-				if (size > 10)
+				if (size > 9)
 				{
 					center = pool_middle(root, size);
 					pool_insert(&pools, size, center, root);
