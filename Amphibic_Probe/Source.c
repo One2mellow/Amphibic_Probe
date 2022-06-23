@@ -75,7 +75,7 @@ void imgtrx(pixmat** mtrx, image_t image, char* filename); //converting the BMP 
 
 poolList_t* Pools(pixmat** mtrx, image_t image, poolList_t* pools); //Creating list of pools which contain size and center co. for each pool
 
-void CreateBMP(char* filename, pixmat** matrix, int height, int width, unsigned char* header); // Print the route on the bmp copy
+void CreateBMP(char* filename,char* txt, pixmat** matrix, int height, int width, unsigned char* header); // Print the route on the bmp copy
 
 void segment(pix_t* root, pixmat** mtrx, int** temp, image_t image, int i, int j, int* size); //using region base image segmentation to detect pools
 
@@ -246,7 +246,7 @@ int main() {
 		case 3:
 			putchar('\n');
 			section_3();
-			CreateBMP(BMPCPY, matrix, image.height, image.width, image.header);
+			CreateBMP(BMPCPY, BEST_TXT , matrix, image.height, image.width, image.header);
 			choice = menu();
 			break;
 		case 4:
@@ -397,12 +397,12 @@ void imgtrx(pixmat** mtrx, image_t image, char* filename) {
 	return;
 }
 
-void CreateBMP(char* filename, pixmat** matrix, int height, int width, unsigned char* header) {
+void CreateBMP(char* filename, char* txt, pixmat** matrix, int height, int width, unsigned char* header) {
 	FILE* image, * route;
 	co_t start, end;
 	char position;
 	fopen_s(&image, filename, "wb");
-	fopen_s(&route, BEST_TXT, "rt");
+	fopen_s(&route, txt, "rt");
 
 	if (image != 0 && route != 0) {
 
@@ -844,6 +844,7 @@ void time2glow(char* filename, pixmat** matrix, image_t image) {
 
 		//iterating through the list
 		for (list_t* curr = root; curr != NULL; curr = curr->next) {
+			CreateBMP("Most_fuel.bmp","Most_fuel.txt", matrix, image.height, image.width, image.header);
 		}
 
 		freeList(root);
