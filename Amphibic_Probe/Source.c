@@ -108,6 +108,8 @@ void fuelStore(double fuel); //store genertor for section 5
 
 void storeMenu(char purchase); //prints the store list for each country
 
+void NumericReport();
+
 void section_3();
 
 co_t InputCheck(co_t image); //checking the validity of the starting coordinates
@@ -260,7 +262,8 @@ int main() {
 			choice = menu();
 			break;
 		case 4:
-			//Naama
+			NumericReport();
+			choice = menun();
 			break;
 		case 5:
 			time2glow(Special, matrix, image, width_flag);
@@ -918,6 +921,77 @@ void storeMenu(char purchase) {
 	{
 	default:
 		break;
+	}
+}
+
+void NumericReport() {
+	co_t start, end;//start 
+	FILE* route;
+	char position;
+	const float dx = 0.1, a = 2.5;
+	float* dist, * cx, * costs;
+	const float A = 2.5, dx = 0.1;
+	float distance, df;
+	int n, fx, i, dt, tf, naama;
+
+	int x1 = 0, y1 = 0, x2 = 32, y2 = 43, x3 = 53, y3 = 55, x4 = 88, y4 = 100;
+	fopen_s(&route, BEST_TXT, "rt");
+
+
+	if (route != 0) {
+		printf_s("Please enter a positive intger as distance display interval:");
+		scanf_s("%d", &dt);
+		position = fgetc(route);
+		fseek(route, 14, SEEK_SET);
+		start = best_co(route);
+		do {
+			position = fgetc(route);
+			fseek(route, 2, SEEK_CUR);
+			end = best_co(route);
+			distance = sqrt(pow((start.x - end.x), 2) + pow((start.y - end.y), 2));
+			n = distance / dt;
+			dist = malloc(sizeof(float) * (n + 1));
+			dist[0] = 0;
+			cx = malloc(sizeof(float) * (n + 1));
+			costs = malloc(sizeof(float) * (n + 1));
+			cx[0] = 0;
+			costs[0] = 0;
+
+
+			for (i = 0; i <= n; i++) {
+				for (j = 0; j <= n; j++) {
+					if (distance = dist[j]) {
+						fx = 20;
+						dist[j] = 0;
+						j = j - n;
+					else fx = 1;
+					dist[j] = j * dt;
+	else fx = 1;
+
+					}
+
+
+				}
+
+				cx[i + 1] = (a / (cx[i] + 1) + fx) * 0.1 + cx[i];
+				cx[i] =
+					df = (cx[i + 1] - cx[i]);
+				df = (a / (cx[i] + 1 + fx)) * dx;
+				costs[i] = df / dx;
+			}
+			if (i = n + 1)
+				dist[i] = distance - dist[i - 1];
+			costs[i] = df / dx;
+
+			start = end;
+		} while (end.x != width && end.y != height);
+
+
+		fclose(route);
+	}
+	else
+	{
+		printf_s("\ncan't open file");
 	}
 }
 
