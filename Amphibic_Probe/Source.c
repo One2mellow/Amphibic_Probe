@@ -3,7 +3,7 @@
 #include <string.h>
 #include <math.h>
 
-#define BMP "fishpool-another-ex1.bmp"
+#define BMP "not4.bmp"
 #define BMPCPY "fishpool-copy.bmp"
 #define TXT "pools.txt"
 #define BEST_TXT "best-route.txt"
@@ -480,7 +480,7 @@ poolList_t* Pools(pixmat** mtrx, image_t image, poolList_t* pools) {
 				pix_insert(&root, mtrx[j][i].cordinate);
 				segment(root, mtrx, temp, image, i, j, &size);
 
-				if (size > 10)
+				if (size > 9)
 				{
 					center = pool_middle(root, size);
 					pool_insert(&pools, size, center, root);
