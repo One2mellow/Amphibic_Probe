@@ -1534,7 +1534,7 @@ co_t input_check(co_t image) {
 			dex = strchr(input, ',');
 		}
 		for (i = 0; input[i] != '\0'; i++) {
-			if (input[i] < '0' || input[i] > '9')
+			if (input[i] < '1' || input[i] > '9')
 				if (input[i] != ',' && input[i] != ' ') {
 					printf_s("Please Enter valid x,y start coordinate, bmp width is %d and height is %d\n", image.x, image.y);
 					gets_s(input, 81);
@@ -1554,8 +1554,8 @@ co_t input_check(co_t image) {
 				j++;
 			}
 		}
-		coordinate.x = (int)atof(x);
-		coordinate.y = (int)atof(y);
+		coordinate.x = (int)atof(x) - 1; //we set the matrix from 0,0 in order to answer the demend of bottom left coordinate is 1,1 we subtract 1 from the input
+		coordinate.y = (int)atof(y) - 1;
 	} while (coordinate.x > image.x || coordinate.y > image.y);
 	return coordinate;
 }
