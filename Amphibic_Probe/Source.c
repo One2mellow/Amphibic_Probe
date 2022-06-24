@@ -424,6 +424,7 @@ void create_bmp(char* filename, char* txt, pixmat** matrix, int height, int widt
 	co_t start, end;
 	char position;
 	int i, j;
+	remove(filename); // making sure that the image is not overwritten and is created from scratch
 	fopen_s(&image, filename, "wb");
 	fopen_s(&route, txt, "rt");
 
