@@ -1,4 +1,4 @@
-Image size (184x200)
+Image size (183x200)
 Pool Center	Size
 ===========	====
 (116,55)    52
