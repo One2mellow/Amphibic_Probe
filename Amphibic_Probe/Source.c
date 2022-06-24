@@ -3,7 +3,7 @@
 #include <string.h>
 #include <math.h>
 
-#define BMP "un4.bmp"
+#define BMP "not4.bmp"
 #define BMPCPY "fishpool-copy.bmp"
 #define TXT "pools.txt"
 #define BEST_TXT "best-route.txt"
@@ -117,6 +117,8 @@ void fuel_store(double fuel); //store genertor for section 5
 char store_menu(int country, double fuel); //prints the store list for each country
 
 void warehouse(link* root, char purchase, int country); //generates link database for items of section 5 store
+
+list_t* interReverseLL(list_t* root); //revesrs the linked list order of type list_t
 
 void section_3();
 
@@ -658,7 +660,7 @@ void route_painter(pixmat** matrix, int x, int y, int x_final, int y_final, int 
 
 	for (x; x < x_final && x < width && y < y_final && y < height; x++)
 	{
-		if (movratio != 1)
+		if (movratio > 1)
 		{
 			dif = y;
 			y = (int)((x * movratio) + b);
@@ -671,7 +673,7 @@ void route_painter(pixmat** matrix, int x, int y, int x_final, int y_final, int 
 				}
 			}
 		}
-		else {
+		else  {
 			y = (int)((x * movratio) + b);
 			matrix[x][y].color.r = 100; matrix[x][y].color.g = 30; matrix[x][y].color.b = 232;
 		}
@@ -836,6 +838,7 @@ void time2glow(char* filename, pixmat** matrix, image_t image, int width_flag) {
 		while (pos != EOF) {
 			fscanf_s(file, "%f %f %d %d %d", &time, &fuel, &size, &x, &y);
 			root = add((double)time, (double)fuel, size, x, y, root);
+			root = interReverseLL(root);
 			pos = fgetc(file);
 			for (i; pos != '>' && pos != EOF; i++)
 				pos = fgetc(file);
@@ -851,7 +854,7 @@ void time2glow(char* filename, pixmat** matrix, image_t image, int width_flag) {
 		
 		fclose(file);
 		fclose(txt);
-		//CreateBMP(Most_Fuel,FUEL_TXT, matrix, image.height, image.width, image.header, width_flag);
+		create_bmp(MOST_FUEL, FUEL_TXT, matrix, image.height, image.width, image.header, width_flag);
 		free_list(root);
 	}
 }
@@ -934,6 +937,19 @@ void warehouse(link* root, char purchase, int country) {
 		printf_s("No such product\n But I'll tak your fuel anywayyyy\a\n");
 		break;
 	}
+}
+
+list_t* interReverseLL(list_t* root) {
+	list_t* current = root;
+	list_t* prev = NULL, * after = NULL;
+	while (current != NULL) {
+		after = current->next;
+		current->next = prev;
+		prev = current;
+		current = after;
+	}
+	root = prev;
+
 }
 
 ///////////////////////////////////////////function for section 3- START///////////////////////////////////////////
