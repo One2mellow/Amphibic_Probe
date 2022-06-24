@@ -114,9 +114,11 @@ void time2glow(char* filename, pixmat** matrix, image_t image, int width_flag); 
 
 void fuel_store(double fuel); //store genertor for section 5
 
-char store_menu(int country, double fuel); //prints the store list for each country
+char store_menu(int country, double fuel, int random); //prints the store list for each country
 
 void warehouse(link* root, char purchase, int country); //generates link database for items of section 5 store
+
+char cashier(char purchase, double fuel, int random);
 
 list_t* interReverseLL(list_t* root); //revesrs the linked list order of type list_t
 
@@ -830,7 +832,7 @@ void time2glow(char* filename, pixmat** matrix, image_t image, int width_flag) {
 	char pos;
 	float time, fuel;
 	int size, x, y, i = 0;
-	fopen_s(&file, SPECIAL, "rt");
+	fopen_s(&file, filename, "rt");
 	fopen_s(&txt, FUEL_TXT, "wt");
 	if (file != 0 && txt != 0)
 	{
@@ -861,7 +863,8 @@ void time2glow(char* filename, pixmat** matrix, image_t image, int width_flag) {
 }
 
 void fuel_store(double fuel) {
-	int country;
+	srand(time(NULL)); //initiating randomize function
+	int country, random = rand();
 	char purchase;
 	link root[5];
 	printf_s("\a\ncongratulations YOU HAVE MADE IT TO THE END!\nWelcome to your new plant, we have exausted our natural resorces and fuel is our only currency!\n\nyou have %.2lf fuel left in the tank\n", fuel);
@@ -871,39 +874,39 @@ void fuel_store(double fuel) {
 	else {
 		printf_s("\nPlease select the country you want to buy from:\n\n 1) Israel\n 2) USA\n 3) China\n 4) Russia\n 5) Turkey\n\n Your Choice : ");
 		scanf_s("%d%c", &country, &purchase, 1);
-		purchase = store_menu(country, fuel);
+		purchase = store_menu(country, fuel, random);
 		warehouse(root, purchase, country);
 		printf("\nAnd as a bonus we printed out for you a map with the route you've taken so others could learn how to save on fuel!\nlook for \"%s\" image in the folder\n", MOST_FUEL);
 	}
 }
 
-char store_menu(int country, double fuel) {
+char store_menu(int country, double fuel, int random) {
 	char purchase;
 	switch (country) {
 	case 1:
-		printf_s("\nA: Bottle of Wine (Mid-Range) %.2lf $\nB: Meal, Inexpensive Restaurant %.2lf $\nC: Monthly Pass (Regular Price) %.2lf $\nD: Meal for 2 People, Mid-range Restaurant, Three-course %.2lf $\nE: Parking in Rotschild st. in Tel Aviv %.2lf $\n", (fuel) / 5, (fuel) / 4, (fuel) / 3 + rand() % 2, (fuel) / 2 + rand() % 4, fuel + rand() % 10);
+		printf_s("\nA: Bottle of Wine (Mid-Range) %.2lf $\nB: Meal, Inexpensive Restaurant %.2lf $\nC: Monthly Pass (Regular Price) %.2lf $\nD: Meal for 2 People, Mid-range Restaurant, Three-course %.2lf $\nE: Parking in Rotschild st. in Tel Aviv %.2lf $\n", (fuel) / 5, (fuel) / 4, (fuel) / 3 + random % 2, (fuel) / 2 + random % 4, fuel + random % 10);
 		printf_s("What will you would like to buy? : ");
-		purchase = getchar();
+		purchase = cashier(getchar(),fuel,random);
 		break;
 	case 2:
-		printf_s("\nA: Bottle of Wine (Mid-Range) %.2lf $\nB: 6 Domestic Beer (0.5 liter draught) %.2lf $\nC: 1 Pair of Jeans %.2lf $\nD: 1 Pair of Nike Running Shoes %.2lf $\nE: A tour in NASA space Station %.2lf $\n", (fuel) / 5, (fuel) / 4, (fuel) / 3 + rand() % 2, (fuel) / 2 + rand() % 4, fuel + rand() % 10);
+		printf_s("\nA: Bottle of Wine (Mid-Range) %.2lf $\nB: 6 Domestic Beer (0.5 liter draught) %.2lf $\nC: 1 Pair of Jeans %.2lf $\nD: 1 Pair of Nike Running Shoes %.2lf $\nE: A tour in NASA space Station %.2lf $\n", (fuel) / 5, (fuel) / 4, (fuel) / 3 + random % 2, (fuel) / 2 + random % 4, fuel + random % 10);
 		printf_s("What will you would like to buy? : ");
-		purchase = getchar();
+		purchase = cashier(getchar(), fuel, random);
 		break;
 	case 3:
-		printf_s("\nA: Beef Round (1kg) %.2lf $\nB: Meal for 2 People, Mid-range Restaurant, Three-course %.2lf $\nC: 1 Summer Dress in a Chain Store %.2lf $\nD: 1 Pair of Men Leather Business Shoes %.2lf $\nE: A Kung-Fu lesson with Shaolin munk %.2lf $\n", (fuel) / 5, (fuel) / 4, (fuel) / 3 + rand() % 2, (fuel) / 2 + rand() % 4, fuel + rand() % 10);
+		printf_s("\nA: Beef Round (1kg) %.2lf $\nB: Meal for 2 People, Mid-range Restaurant, Three-course %.2lf $\nC: 1 Summer Dress in a Chain Store %.2lf $\nD: 1 Pair of Men Leather Business Shoes %.2lf $\nE: A Kung-Fu lesson with Shaolin munk %.2lf $\n", (fuel) / 5, (fuel) / 4, (fuel) / 3 + random % 2, (fuel) / 2 + random % 4, fuel + random % 10);
 		printf_s("What will you would like to buy? : ");
-		purchase = getchar();
+		purchase = cashier(getchar(), fuel, random);
 		break;
 	case 4:
-		printf_s("\nA: Beef Round (1kg) %.2lf $\nB: 2 Bottles of Wine (Mid-Range) %.2lf $\nC: Monthly Pass (Regular Price) %.2lf $\nD: Meal for 2 People, Mid-range Restaurant, Three-course %.2lf $\nE: Horseback riding with the one and only Vladimir Putin %.2lf $\n", (fuel) / 5, (fuel) / 4, (fuel) / 3 + rand() % 2, (fuel) / 2 + rand() % 4, fuel + rand() % 10);
+		printf_s("\nA: Beef Round (1kg) %.2lf $\nB: 2 Bottles of Wine (Mid-Range) %.2lf $\nC: Monthly Pass (Regular Price) %.2lf $\nD: Meal for 2 People, Mid-range Restaurant, Three-course %.2lf $\nE: Horseback riding with the one and only Vladimir Putin %.2lf $\n", (fuel) / 5, (fuel) / 4, (fuel) / 3 + random % 2, (fuel) / 2 + random % 4, fuel + random % 10);
 		printf_s("What will you would like to buy? : ");
-		purchase = getchar();
+		purchase = cashier(getchar(), fuel, random);
 		break;
 	case 5:
-		printf_s("\nA: 3 Meals, Inexpensive Restaurant %.2lf $\nB: 1 Pair of Nike Running Shoes(Fake ones) %.2lf $\nC: A couple retreat to Istanbul's best Spa & Turkish bath %.2lf $\nD: A picture infront the palace (without getting arrested) %.2lf $\nE: Starring in your own Soap Opera %.2lf $\n", (fuel) / 5, (fuel) / 4, (fuel) / 3 + rand() % 2, (fuel) / 2 + rand() % 4, fuel + rand() % 10);
+		printf_s("\nA: 3 Meals, Inexpensive Restaurant %.2lf $\nB: 1 Pair of Nike Running Shoes(Fake ones) %.2lf $\nC: A couple retreat to Istanbul's best Spa & Turkish bath %.2lf $\nD: A picture infront the palace (without getting arrested) %.2lf $\nE: Starring in your own Soap Opera %.2lf $\n", (fuel) / 5, (fuel) / 4, (fuel) / 3 + random % 2, (fuel) / 2 + random % 4, fuel + random % 10);
 		printf_s("What will you would like to buy? : ");
-		purchase = getchar();
+		purchase = cashier(getchar(), fuel, random);
 		break;
 	default:
 		purchase = 'F';
@@ -935,7 +938,40 @@ void warehouse(link* root, char purchase, int country) {
 		printf_s("Copy the link to your browser to get your product\n\n ----  %s  ----", root[country - 1].e);
 		break;
 	default:
-		printf_s("No such product\n But I'll tak your fuel anywayyyy\a\n");
+		break;
+	}
+}
+
+
+char cashier(char purchase, double fuel, int random) {
+	switch (purchase)
+	{
+	case 'A':
+		return 'A';
+		break;
+	case 'B':
+		return 'B';
+		break;
+	case 'C':
+		if (fuel - (fuel / 3 + random % 2) >= 0)
+			return purchase;
+		else
+			return 'Z';
+		break;
+	case 'D':
+		if (fuel - (fuel / 2 + random % 4) >= 0)
+			return purchase;
+		else
+			return 'Z';
+		break;
+	case 'E':
+		if (fuel - (fuel + random % 10) >= 0)
+			return purchase;
+		else
+			return 'Z';
+		break;
+	default:
+		printf_s("No such product\n But I'll take your fuel anywayyyy\a\n");
 		break;
 	}
 }
