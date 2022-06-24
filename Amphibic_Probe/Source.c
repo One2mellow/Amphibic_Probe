@@ -82,7 +82,7 @@ co_t pool_middle(pix_t* root, int size); //returning the pool's center coordinat
 
 void imgtrx(pixmat** mtrx, image_t image, char* filename, int width_flag); //converting the BMP image to 2d array of type pixmat
 
-poolList_t* pools_f(pixmat** mtrx, image_t image, poolList_t* pools); //Creating list of pools which contain size and center co. for each pool
+poolList_t* pools_f(pixmat** mtrx, image_t image, poolList_t* pools, int width_flag); //Creating list of pools which contain size and center co. for each pool
 
 void create_bmp(char* filename,char* txt, pixmat** matrix, int height, int width, unsigned char* header, int width_flag); // Print the route on the bmp copy
 
@@ -209,16 +209,16 @@ int main() {
 		return -1;
 	}
 
+	width_flag = image.width;
 	if (image.width % 4 != 0) // making sure width is divsible by 4 due to bmp regulations
 	{
-		width_flag = image.width;
-		image.width = image.width + 4 - (image.width % 4);
+		width_flag = image.width + 4 - (image.width % 4);
 	}
 
-	matrix = malloc(sizeof(pixmat*) * image.width);
+	matrix = malloc(sizeof(pixmat*) * width_flag);
 	if (matrix)
 	{
-		for (i = 0;i < image.width;i++) {
+		for (i = 0;i < width_flag;i++) {
 			matrix[i] = malloc(sizeof(pixmat) * image.height);
 		}
 	}// allocate memory to image pixel matrix
@@ -232,7 +232,7 @@ int main() {
 		switch (choice)
 		{
 		case 1:
-			pools = pools_f(matrix, image, pools);
+			pools = pools_f(matrix, image, pools, width_flag);
 			if (pools == NULL) {
 				printf_s("\nTotal of 0 pools.\n");
 				menu();
@@ -400,7 +400,7 @@ void imgtrx(pixmat** mtrx, image_t image, char* filename, int width_flag) {
 		fseek(file, 54, SEEK_SET);
 		for (i = 0; i < image.height; i++)
 		{
-			for (j = 0; j < image.width; j++)
+			for (j = 0; j < width_flag; j++)
 			{
 				mtrx[j][i].color.b = fgetc(file);
 				mtrx[j][i].color.g = fgetc(file);
@@ -438,45 +438,45 @@ void create_bmp(char* filename, char* txt, pixmat** matrix, int height, int widt
 			end = best_co(route);
 			route_painter(matrix, start.x, start.y, end.x, end.y, height, width, width_flag);
 			start = end;
-		} while (end.x != width && end.y != height);
+		} while (end.x != width_flag && end.y != height);
 		for (int i = 0; i < 54; i++)
 		{
 			fputc(header[i], image);
 		}
 		for (i = 0; i < height; i++)
 		{
-			for (j = 0; j < width; j++)
+			for (j = 0; j < width_flag; j++)
 			{
 				fputc(matrix[j][i].color.b, image);
 				fputc(matrix[j][i].color.g, image);
 				fputc(matrix[j][i].color.r, image);
 			}
 		}
+		fclose(image);
+		fclose(route);
 	}
 
 	else return;
-	fclose(image);
-	fclose(route);
 }
 
-poolList_t* pools_f(pixmat** mtrx, image_t image, poolList_t* pools) {
+poolList_t* pools_f(pixmat** mtrx, image_t image, poolList_t* pools, int width_flag) {
 	int i, j;
 	int** temp;
 	int size;
 	pix_t* root = NULL;
 	co_t center;
 
-	temp = malloc(sizeof(int*) * image.width);
+	temp = malloc(sizeof(int*) * width_flag);
 	if (temp)
 	{
-		for (i = 0;i < image.width;i++) {
+		for (i = 0;i < width_flag;i++) {
 			temp[i] = malloc(sizeof(int) * image.height);
 		}
 	}// allocate memory to temp color signed matrix
 
 	for (i = 0; i < image.height; i++)
 	{
-		for (j = 0;j < image.width;j++) {
+		for (j = 0;j < width_flag;j++) {
 			if (mtrx[j][i].color.r == 155 && mtrx[j][i].color.g == 190 && mtrx[j][i].color.b == 245)
 			{
 				temp[j][i] = 1;
@@ -488,7 +488,7 @@ poolList_t* pools_f(pixmat** mtrx, image_t image, poolList_t* pools) {
 	}
 
 	for (i = 0;i < image.height;i++) {
-		for (j = 0;j < image.width;j++) {
+		for (j = 0;j < width_flag;j++) {
 			if (temp[j][i] == 1)
 			{
 				size = 1;
@@ -506,7 +506,7 @@ poolList_t* pools_f(pixmat** mtrx, image_t image, poolList_t* pools) {
 		}
 	}
 
-	for (i = 0; i < image.width;i++) {
+	for (i = 0;i < width_flag;i++) {
 		free(temp[i]);
 	}
 	free(temp);
@@ -649,22 +649,32 @@ int space_mod(int x, int y) {
 }
 
 void route_painter(pixmat** matrix, int x, int y, int x_final, int y_final, int height, int width, int width_flag) {
-	int  j = 0, i = 0;
+	int  j = 0, i = 0, dif;
 	float movratio, b;
 	matrix[x][y].color.r = 250; matrix[x][y].color.g = 180; matrix[x][y].color.b = 30; //color pixel at the beggining
 	movratio = ((float)y_final - (float)y) / ((float)x_final - (float)x);
 	b = (float)y - (float)(movratio * x);
 	x++;y++;
 
-	if (width_flag != 0) {
-		width = width_flag;
-		x_final = width_flag;
-	}
-
 	for (x; x < x_final && x < width && y < y_final && y < height; x++)
 	{
-		y = (int)((x * movratio) + b);
-		matrix[x][y].color.r = 100; matrix[x][y].color.g = 30; matrix[x][y].color.b = 232;
+		if (movratio != 1)
+		{
+			dif = y;
+			y = (int)((x * movratio) + b);
+			for (dif; dif < y && dif < y_final; dif++) {
+				matrix[x][dif].color.r = 100; matrix[x][dif].color.g = 30; matrix[x][dif].color.b = 232;
+				if (x == x_final - 1)
+				{
+					for (y;y < y_final - 1;y++);
+					matrix[x][y].color.r = 100; matrix[x][y].color.g = 30; matrix[x][y].color.b = 232;
+				}
+			}
+		}
+		else {
+			y = (int)((x * movratio) + b);
+			matrix[x][y].color.r = 100; matrix[x][y].color.g = 30; matrix[x][y].color.b = 232;
+		}
 	}
 	matrix[width - 1][height - 1].color.r = 250; matrix[width - 1][height - 1].color.g = 180; matrix[width - 1][height - 1].color.b = 30; //color pixel at the end
 }
