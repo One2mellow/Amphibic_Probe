@@ -800,6 +800,7 @@ void printnsortpools() {
 	free(middle_arr);
 }
 
+
 void free_list_printing(printing_t* head) {
 	printing_t* tmp;
 	while (head != NULL) {
@@ -816,38 +817,27 @@ void print_list(printing_t* head) {
 	}
 }
 
-
 printing_t* pools_sorting_ninsert(printing_t* head, int coordinate_x, int coordinate_y, int poooolsize) {
 
-	printing_t* temp = head;
-	printing_t* root = malloc(sizeof(printing_t));
-	if (!root) {
-		head = NULL;
-		return head;
-	}
-	printing_t* new_node = malloc(sizeof(printing_t));
-	if (!new_node) {
-		head = NULL;
-		return head;
-	}
-	new_node->center_x = coordinate_x;
-	new_node->center_y = coordinate_y;
-	new_node->poolsize = poooolsize;
 
+	printing_t* ptr = head;
+	printing_t* newNode = malloc(sizeof(printing_t));
+	newNode->center_x = coordinate_x;
+	newNode->center_y = coordinate_y;
+	newNode->poolsize = poooolsize;
+	newNode->next = NULL;
 	if (!head) // empty list_t
-		return new_node;
-	if (poooolsize < root->poolsize) {
-		while (root->next && poooolsize < root->next->poolsize)
-			root = root->next;
-		new_node->next = root->next;
-		root->next = new_node;
+		return newNode;
+	if (poooolsize < ptr->poolsize) {
+		while (ptr->next && poooolsize < ptr->next->poolsize)
+			ptr = ptr->next;
+		newNode->next = ptr->next;
+		ptr->next = newNode;
 	}
 	else { // Place at beginning of list_t
-		new_node->next = head;
-		head = new_node;
+		newNode->next = head;
+		head = newNode;
 	}
-	printf_s("(%3d,%3d)  \t%d \n", head->center_x, head->center_y, head->poolsize);
-
 	return head;
 }
 
