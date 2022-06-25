@@ -3,7 +3,7 @@
 #include <string.h>
 #include <math.h>
 
-#define BMP "un4.bmp"
+#define BMP "ALLBLUE.bmp"
 #define BMPCPY "fishpool-copy.bmp"
 #define TXT "pools.txt"
 #define BEST_TXT "best-route.txt"
