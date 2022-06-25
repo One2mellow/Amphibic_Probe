@@ -665,8 +665,7 @@ void route_painter(pixmat** matrix, int x, int y, int x_final, int y_final, int 
 	movratio = ((float)y_final - (float)y) / ((float)x_final - (float)x);
 	b = (float)y - (float)(movratio * x);
 	x++;y++;
-
-	for (x; x < x_final && x < width && y < y_final && y < height; x++)
+		for (x; x < x_final && x < width && y < y_final && y < height; x++)
 	{
 		if (movratio > 1)
 		{
@@ -685,11 +684,16 @@ void route_painter(pixmat** matrix, int x, int y, int x_final, int y_final, int 
 				}
 			}
 		}
-		else {
+		else if (movratio < 1) {
+		
+		}
+		else
+		{
 			y = (int)((x * movratio) + b);
 			matrix[x][y].color.r = 100; matrix[x][y].color.g = 30; matrix[x][y].color.b = 232;
 		}
 	}
+
 	matrix[width - 1][height - 1].color.r = 250; matrix[width - 1][height - 1].color.g = 180; matrix[width - 1][height - 1].color.b = 30; //color pixel at the end
 }
 
