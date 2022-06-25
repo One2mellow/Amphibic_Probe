@@ -871,8 +871,8 @@ void fuel_store(double fuel) {
 	int country;
 	char purchase;
 	link root[5];
-	printf_s("\a\ncongratulations YOU HAVE MADE IT TO THE END!\nWelcome to your new plant, we have exausted our natural resorces and fuel is our only currency!\n\nyou have %.2lf fuel left in the tank\n", fuel);
-	printf_s("\a\nthere is our store, you can buy anything here right away!\n (provided you have anough fuel...)\n");
+	printf_s("\a\nCONGRATULATIONS! YOU HAVE MADE IT TO THE END!\nWelcome to your new planet, we have exhausted our natural resources and fuel is our only currency!\n\nyou have %.2lf $ fuel left in the tank\n", fuel);
+	printf_s("\a\nThis is our store, you can buy anything here right away!\n (provided you have anough fuel...)\n");
 	if (fuel < 4)
 		printf("With this amount you can buy only a bottle of water..\n");
 	else {
@@ -880,7 +880,7 @@ void fuel_store(double fuel) {
 		scanf_s("%d%c", &country, &purchase, 1);
 		purchase = store_menu(country, fuel);
 		warehouse(root, purchase, country);
-		printf("\nAnd as a bonus we printed out for you a map with the route you've taken so others could learn how to save on fuel!\nlook for \"%s\" image in the folder\n", MOST_FUEL);
+		printf("\n\nAnd as a bonus we printed out for you a map with the route you've taken so others could learn how to save on fuel!\nlook for \"%s\" image in the folder\n", MOST_FUEL);
 	}
 }
 
