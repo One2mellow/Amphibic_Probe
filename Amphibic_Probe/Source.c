@@ -445,7 +445,7 @@ void create_bmp(char* filename, char* origin, char* txt, pixmat** matrix, image_
 				position = fgetc(route);
 			fseek(route, -1, SEEK_CUR);
 			end = best_co(route);
-			route_painter(matrix, start.x, start.y, end.x, end.y, pic.height, pic.width, width_flag);
+			route_painter(matrix, start.x--, start.y--, end.x, end.y, pic.height, pic.width, width_flag);
 			start = end;
 		} while (end.x != width_flag && end.y != pic.height);
 		for (int i = 0; i < 54; i++)
@@ -660,6 +660,7 @@ int space_mod(int x, int y) {
 void route_painter(pixmat** matrix, int x, int y, int x_final, int y_final, int height, int width, int width_flag) {
 	int  j = 0, i = 0, s_f = 1, dif;
 	float movratio, b;
+	x--;y--; //compensating for starting point which must be 1,1
 	matrix[x][y].color.r = 250; matrix[x][y].color.g = 180; matrix[x][y].color.b = 30; //color pixel at the beggining
 	movratio = ((float)y_final - (float)y) / ((float)x_final - (float)x);
 	b = (float)y - (float)(movratio * x);
@@ -1612,7 +1613,6 @@ co_t input_check(co_t image) {
 		if (coordinate.x == 0 || coordinate.y == 0)
 			input_check(image);
 	} while (coordinate.x > image.x || coordinate.y > image.y);
-	coordinate.x--;coordinate.y--;
 	return coordinate;
 }
 
