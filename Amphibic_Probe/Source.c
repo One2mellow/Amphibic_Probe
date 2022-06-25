@@ -84,7 +84,7 @@ void imgtrx(pixmat** mtrx, image_t image, char* filename, int width_flag); //con
 
 poolList_t* pools_f(pixmat** mtrx, image_t image, poolList_t* pools, int width_flag); //Creating list of pools which contain size and center co. for each pool
 
-void create_bmp(char* filename,char* txt, pixmat** matrix, int height, int width, unsigned char* header, int width_flag); // Print the route on the bmp copy
+void create_bmp(char* filename, char* origin,char* txt, pixmat** matrix, image_t pic, unsigned char* header, int width_flag); // Print the route on the bmp copy
 
 void segment(pix_t* root, pixmat** mtrx, int** temp, image_t image, int i, int j, int* size); //using region base image segmentation to detect pools
 
@@ -270,7 +270,7 @@ int main() {
 		case 3:
 			putchar('\n');
 			section_3();
-			create_bmp(BMPCPY, BEST_TXT , matrix, image.height, image.width, image.header, width_flag);
+			create_bmp(BMPCPY, BMP, BEST_TXT , matrix, image, image.header, width_flag);
 			choice = menu();
 			break;
 		case 4:
@@ -421,12 +421,12 @@ void imgtrx(pixmat** mtrx, image_t image, char* filename, int width_flag) {
 	return;
 }
 
-void create_bmp(char* filename, char* txt, pixmat** matrix, int height, int width, unsigned char* header, int width_flag) {
+void create_bmp(char* filename, char* origin,char* txt, pixmat** matrix, image_t pic, unsigned char* header, int width_flag) {
 	FILE* image, * route;
 	co_t start, end;
 	char position;
 	int i, j;
-	remove(filename); // making sure that the image is not overwritten and is created from scratch
+	imgtrx(matrix, pic, BMP, width_flag); //resetting the image matrix before painting a route
 	fopen_s(&image, filename, "wb");
 	fopen_s(&route, txt, "rt");
 
@@ -441,14 +441,14 @@ void create_bmp(char* filename, char* txt, pixmat** matrix, int height, int widt
 				position = fgetc(route);
 			fseek(route, -1, SEEK_CUR);
 			end = best_co(route);
-			route_painter(matrix, start.x, start.y, end.x, end.y, height, width, width_flag);
+			route_painter(matrix, start.x, start.y, end.x, end.y, pic.height, pic.width, width_flag);
 			start = end;
-		} while (end.x != width_flag && end.y != height);
+		} while (end.x != width_flag && end.y != pic.height);
 		for (int i = 0; i < 54; i++)
 		{
 			fputc(header[i], image);
 		}
-		for (i = 0; i < height; i++)
+		for (i = 0; i < pic.height; i++)
 		{
 			for (j = 0; j < width_flag; j++)
 			{
@@ -654,7 +654,7 @@ int space_mod(int x, int y) {
 }
 
 void route_painter(pixmat** matrix, int x, int y, int x_final, int y_final, int height, int width, int width_flag) {
-	int  j = 0, i = 0, dif;
+	int  j = 0, i = 0, s_f = 1, dif;
 	float movratio, b;
 	matrix[x][y].color.r = 250; matrix[x][y].color.g = 180; matrix[x][y].color.b = 30; //color pixel at the beggining
 	movratio = ((float)y_final - (float)y) / ((float)x_final - (float)x);
@@ -667,6 +667,10 @@ void route_painter(pixmat** matrix, int x, int y, int x_final, int y_final, int 
 		{
 			dif = y;
 			y = (int)((x * movratio) + b);
+			if (dif == y && s_f != 0) {
+				matrix[x][dif].color.r = 100; matrix[x][dif].color.g = 30; matrix[x][dif].color.b = 232;
+				s_f = 0;
+			}
 			for (dif; dif < y && dif < y_final; dif++) {
 				matrix[x][dif].color.r = 100; matrix[x][dif].color.g = 30; matrix[x][dif].color.b = 232;
 				if (x == x_final - 1)
@@ -857,7 +861,7 @@ void time2glow(char* filename, pixmat** matrix, image_t image, int width_flag) {
 		
 		fclose(file);
 		fclose(txt);
-		create_bmp(MOST_FUEL, FUEL_TXT, matrix, image.height, image.width, image.header, width_flag);
+		create_bmp(MOST_FUEL, BMP, FUEL_TXT, matrix, image, image.header, width_flag);
 		free_list(root);
 	}
 }
@@ -867,7 +871,7 @@ void fuel_store(double fuel) {
 	int country, random = rand();
 	char purchase;
 	link root[5];
-	printf_s("\a\ncongratulations YOU HAVE MADE IT TO THE END!\nWelcome to your new plant, we have exausted our natural resorces and fuel is our only currency!\n\nyou have %.2lf fuel left in the tank\n", fuel);
+	printf_s("\a\ncongratulations YOU HAVE MADE IT TO THE END!\nWelcome to your new plant, we have exausted our natural resorces and fuel is our only currency!\n\nyou have %.2lf $ worth fuel left in the tank\n", fuel);
 	printf_s("\a\nthere is our store, you can buy anything here right away!\n (provided you have anough fuel...)\n");
 	if (fuel < 4)
 		printf("With this amount you can buy only a bottle of water..\n");
@@ -923,21 +927,22 @@ void warehouse(link* root, char purchase, int country) {
 	switch (purchase)
 	{
 	case 'A':
-		printf_s("Copy the link to your browser to get your product\n\n ----  %s  ----", root[country - 1].a);
+		printf_s("Copy the link to your browser to get your product\n\n ----  %s  ----\n", root[country - 1].a);
 		break;
 	case 'B':
-		printf_s("Copy the link to your browser to get your product\n\n ----  %s  ----", root[country - 1].b);
+		printf_s("Copy the link to your browser to get your product\n\n ----  %s  ----\n", root[country - 1].b);
 		break;
 	case 'C':
-		printf_s("Copy the link to your browser to get your product\n\n ----  %s  ----", root[country - 1].c);
+		printf_s("Copy the link to your browser to get your product\n\n ----  %s  ----\n", root[country - 1].c);
 		break;
 	case 'D':
-		printf_s("Copy the link to your browser to get your product\n\n ----  %s  ----", root[country - 1].d);
+		printf_s("Copy the link to your browser to get your product\n\n ----  %s  ----\n", root[country - 1].d);
 		break;
 	case 'E':
-		printf_s("Copy the link to your browser to get your product\n\n ----  %s  ----", root[country - 1].e);
+		printf_s("Copy the link to your browser to get your product\n\n ----  %s  ----\n", root[country - 1].e);
 		break;
 	default:
+		printf_s("\nSorry, you don't have enough currency for this item\nBut... I'll take your fuel anyway, TNX! \n");
 		break;
 	}
 }
@@ -1571,7 +1576,7 @@ co_t input_check(co_t image) {
 			dex = strchr(input, ',');
 		}
 		for (i = 0; input[i] != '\0'; i++) {
-			if (input[i] < '1' || input[i] > '9')
+			if (input[i] < '0' || input[i] > '9')
 				if (input[i] != ',' && input[i] != ' ') {
 					printf_s("Please Enter valid x,y start coordinate, bmp width is %d and height is %d\n", image.x, image.y);
 					gets_s(input, 81);
@@ -1591,9 +1596,12 @@ co_t input_check(co_t image) {
 				j++;
 			}
 		}
-		coordinate.x = (int)atof(x) - 1; //we set the matrix from 0,0 in order to answer the demend of bottom left coordinate is 1,1 we subtract 1 from the input
-		coordinate.y = (int)atof(y) - 1;
+		coordinate.x = (int)atof(x); //we set the matrix from 0,0 in order to answer the demend of bottom left coordinate is 1,1 we subtract 1 from the input
+		coordinate.y = (int)atof(y);
+		if (coordinate.x == 0 || coordinate.y == 0)
+			input_check(image);
 	} while (coordinate.x > image.x || coordinate.y > image.y);
+	coordinate.x--;coordinate.y--;
 	return coordinate;
 }
 
