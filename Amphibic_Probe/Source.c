@@ -3,7 +3,7 @@
 #include <string.h>
 #include <math.h>
 
-#define BMP "paintpool-3.bmp"
+#define BMP "fishpool.bmp"
 #define BMPCPY "fishpool-copy.bmp"
 #define TXT "pools.txt"
 #define BEST_TXT "best-route.txt"
@@ -676,7 +676,7 @@ void route_painter(pixmat** matrix, int x, int y, int x_final, int y_final, int 
 				matrix[x][dif].color.r = 100; matrix[x][dif].color.g = 30; matrix[x][dif].color.b = 232;
 				s_f = 0;
 			}
-			for (dif; dif < y && dif < y_final; dif++) {
+			for (dif; dif < y && dif < y_final; dif++) {// compensating for the y change for high slopes
 				matrix[x][dif].color.r = 100; matrix[x][dif].color.g = 30; matrix[x][dif].color.b = 232;
 				if (x == x_final - 1)
 				{
