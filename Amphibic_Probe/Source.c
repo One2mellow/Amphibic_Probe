@@ -76,6 +76,10 @@ typedef struct country_link { // struct to store link to all store products in o
 
 int menu(); //menu function
 
+void print_list(printing_t* head);
+
+void free_list_printing(printing_t* head);
+
 int load_image(image_t* image, const char* filename, unsigned char* head); //loading the BMP image and getting WxH values
 
 co_t pool_middle(pix_t* root, int size); //returning the pool's center coordinates from given coordinate array
@@ -84,7 +88,7 @@ void imgtrx(pixmat** mtrx, image_t image, char* filename, int width_flag); //con
 
 poolList_t* pools_f(pixmat** mtrx, image_t image, poolList_t* pools, int width_flag); //Creating list of pools which contain size and center co. for each pool
 
-void create_bmp(char* filename, char* origin, char* txt, pixmat** matrix, image_t pic, unsigned char* header, int width_flag); // Print the route on the bmp copy
+void create_bmp(char* filename, char* txt, pixmat** matrix, int height, int width, unsigned char* header, int width_flag); // Print the route on the bmp copy
 
 void segment(pix_t* root, pixmat** mtrx, int** temp, image_t image, int i, int j, int* size); //using region base image segmentation to detect pools
 
@@ -108,23 +112,15 @@ co_t best_co(FILE* route); //extrcats coordinates from best route file
 
 void printnsortpools();
 
-void free_list_printing(printing_t* head);
-
-void print_list(printing_t* head);
-
 printing_t* pools_sorting_ninsert(printing_t* head, int coordinate_x, int coordinate_y, int poooolsize);
 
 void time2glow(char* filename, pixmat** matrix, image_t image, int width_flag); //for setion 5
 
 void fuel_store(double fuel); //store genertor for section 5
 
-char store_menu(int country, double fuel, int random); //prints the store list for each country
+char store_menu(int country, double fuel); //prints the store list for each country
 
 void warehouse(link* root, char purchase, int country); //generates link database for items of section 5 store
-
-char cashier(char purchase, double fuel, int random);
-
-list_t* interReverseLL(list_t* root); //revesrs the linked list order of type list_t
 
 void section_3();
 
@@ -274,7 +270,7 @@ int main() {
 		case 3:
 			putchar('\n');
 			section_3();
-			create_bmp(BMPCPY, BMP, BEST_TXT, matrix, image, image.header, width_flag);
+			create_bmp(BMPCPY, BEST_TXT, matrix, image.height, image.width, image.header, width_flag);
 			choice = menu();
 			break;
 		case 4:
@@ -310,7 +306,7 @@ int menu() {
 	int enter;
 	printf_s("--------------------------\nME LAB services\n--------------------------");
 
-	printf_s("\nMenu:\n1. Scan pools\n2. Print sorted pool list\n3. Select route\n4. Numeric report.\n5. Students addition\n9. Exit\nEnter choice: ");
+	printf_s("\nMenu:\n1. Scan pools\n2. Print sorted pool list\n3. Select route\n4. Numeric report.\n5. Students addition\n9. Exit.\nEnter choice: ");
 
 	scanf_s("%d", &choice);
 	enter = getchar();
@@ -425,12 +421,11 @@ void imgtrx(pixmat** mtrx, image_t image, char* filename, int width_flag) {
 	return;
 }
 
-void create_bmp(char* filename, char* origin, char* txt, pixmat** matrix, image_t pic, unsigned char* header, int width_flag) {
+void create_bmp(char* filename, char* txt, pixmat** matrix, int height, int width, unsigned char* header, int width_flag) {
 	FILE* image, * route;
 	co_t start, end;
 	char position;
 	int i, j;
-	imgtrx(matrix, pic, BMP, width_flag); //resetting the image matrix before painting a route
 	fopen_s(&image, filename, "wb");
 	fopen_s(&route, txt, "rt");
 
@@ -445,14 +440,14 @@ void create_bmp(char* filename, char* origin, char* txt, pixmat** matrix, image_
 				position = fgetc(route);
 			fseek(route, -1, SEEK_CUR);
 			end = best_co(route);
-			route_painter(matrix, start.x, start.y, end.x, end.y, pic.height, pic.width, width_flag);
+			route_painter(matrix, start.x, start.y, end.x, end.y, height, width, width_flag);
 			start = end;
-		} while (end.x != width_flag && end.y != pic.height);
+		} while (end.x != width_flag && end.y != height);
 		for (int i = 0; i < 54; i++)
 		{
 			fputc(header[i], image);
 		}
-		for (i = 0; i < pic.height; i++)
+		for (i = 0; i < height; i++)
 		{
 			for (j = 0; j < width_flag; j++)
 			{
@@ -658,7 +653,7 @@ int space_mod(int x, int y) {
 }
 
 void route_painter(pixmat** matrix, int x, int y, int x_final, int y_final, int height, int width, int width_flag) {
-	int  j = 0, i = 0, s_f = 1, dif;
+	int  j = 0, i = 0, dif;
 	float movratio, b;
 	matrix[x][y].color.r = 250; matrix[x][y].color.g = 180; matrix[x][y].color.b = 30; //color pixel at the beggining
 	movratio = ((float)y_final - (float)y) / ((float)x_final - (float)x);
@@ -667,14 +662,10 @@ void route_painter(pixmat** matrix, int x, int y, int x_final, int y_final, int 
 
 	for (x; x < x_final && x < width && y < y_final && y < height; x++)
 	{
-		if (movratio > 1)
+		if (movratio != 1)
 		{
 			dif = y;
 			y = (int)((x * movratio) + b);
-			if (dif == y && s_f != 0) {
-				matrix[x][dif].color.r = 100; matrix[x][dif].color.g = 30; matrix[x][dif].color.b = 232;
-				s_f = 0;
-			}
 			for (dif; dif < y && dif < y_final; dif++) {
 				matrix[x][dif].color.r = 100; matrix[x][dif].color.g = 30; matrix[x][dif].color.b = 232;
 				if (x == x_final - 1)
@@ -800,6 +791,7 @@ void printnsortpools() {
 	free(middle_arr);
 }
 
+
 void free_list_printing(printing_t* head) {
 	printing_t* tmp;
 	while (head != NULL) {
@@ -816,38 +808,27 @@ void print_list(printing_t* head) {
 	}
 }
 
-
 printing_t* pools_sorting_ninsert(printing_t* head, int coordinate_x, int coordinate_y, int poooolsize) {
 
-	printing_t* temp = head;
-	printing_t* root = malloc(sizeof(printing_t));
-	if (!root) {
-		head = NULL;
-		return head;
-	}
-	printing_t* new_node = malloc(sizeof(printing_t));
-	if (!new_node) {
-		head = NULL;
-		return head;
-	}
-	new_node->center_x = coordinate_x;
-	new_node->center_y = coordinate_y;
-	new_node->poolsize = poooolsize;
 
+	printing_t* ptr = head;
+	printing_t* newNode = malloc(sizeof(printing_t));
+	newNode->center_x = coordinate_x;
+	newNode->center_y = coordinate_y;
+	newNode->poolsize = poooolsize;
+	newNode->next = NULL;
 	if (!head) // empty list_t
-		return new_node;
-	if (poooolsize < root->poolsize) {
-		while (root->next && poooolsize < root->next->poolsize)
-			root = root->next;
-		new_node->next = root->next;
-		root->next = new_node;
+		return newNode;
+	if (poooolsize < ptr->poolsize) {
+		while (ptr->next && poooolsize < ptr->next->poolsize)
+			ptr = ptr->next;
+		newNode->next = ptr->next;
+		ptr->next = newNode;
 	}
 	else { // Place at beginning of list_t
-		new_node->next = head;
-		head = new_node;
+		newNode->next = head;
+		head = newNode;
 	}
-	printf_s("(%3d,%3d)  \t%d \n", head->center_x, head->center_y, head->poolsize);
-
 	return head;
 }
 
@@ -857,7 +838,7 @@ void time2glow(char* filename, pixmat** matrix, image_t image, int width_flag) {
 	char pos;
 	float time, fuel;
 	int size, x, y, i = 0;
-	fopen_s(&file, filename, "rt");
+	fopen_s(&file, SPECIAL, "rt");
 	fopen_s(&txt, FUEL_TXT, "wt");
 	if (file != 0 && txt != 0)
 	{
@@ -866,7 +847,6 @@ void time2glow(char* filename, pixmat** matrix, image_t image, int width_flag) {
 		while (pos != EOF) {
 			fscanf_s(file, "%f %f %d %d %d", &time, &fuel, &size, &x, &y);
 			root = add((double)time, (double)fuel, size, x, y, root);
-			root = interReverseLL(root);
 			pos = fgetc(file);
 			for (i; pos != '>' && pos != EOF; i++)
 				pos = fgetc(file);
@@ -882,56 +862,55 @@ void time2glow(char* filename, pixmat** matrix, image_t image, int width_flag) {
 
 		fclose(file);
 		fclose(txt);
-		create_bmp(MOST_FUEL, BMP, FUEL_TXT, matrix, image, image.header, width_flag);
+		//CreateBMP(Most_Fuel,FUEL_TXT, matrix, image.height, image.width, image.header, width_flag);
 		free_list(root);
 	}
 }
 
 void fuel_store(double fuel) {
-	srand(time(NULL)); //initiating randomize function
-	int country, random = rand();
+	int country;
 	char purchase;
 	link root[5];
-	printf_s("\a\ncongratulations YOU HAVE MADE IT TO THE END!\nWelcome to your new plant, we have exausted our natural resorces and fuel is our only currency!\n\nyou have %.2lf $ worth fuel left in the tank\n", fuel);
+	printf_s("\a\ncongratulations YOU HAVE MADE IT TO THE END!\nWelcome to your new plant, we have exausted our natural resorces and fuel is our only currency!\n\nyou have %.2lf fuel left in the tank\n", fuel);
 	printf_s("\a\nthere is our store, you can buy anything here right away!\n (provided you have anough fuel...)\n");
 	if (fuel < 4)
 		printf("With this amount you can buy only a bottle of water..\n");
 	else {
 		printf_s("\nPlease select the country you want to buy from:\n\n 1) Israel\n 2) USA\n 3) China\n 4) Russia\n 5) Turkey\n\n Your Choice : ");
 		scanf_s("%d%c", &country, &purchase, 1);
-		purchase = store_menu(country, fuel, random);
+		purchase = store_menu(country, fuel);
 		warehouse(root, purchase, country);
 		printf("\nAnd as a bonus we printed out for you a map with the route you've taken so others could learn how to save on fuel!\nlook for \"%s\" image in the folder\n", MOST_FUEL);
 	}
 }
 
-char store_menu(int country, double fuel, int random) {
+char store_menu(int country, double fuel) {
 	char purchase;
 	switch (country) {
 	case 1:
-		printf_s("\nA: Bottle of Wine (Mid-Range) %.2lf $\nB: Meal, Inexpensive Restaurant %.2lf $\nC: Monthly Pass (Regular Price) %.2lf $\nD: Meal for 2 People, Mid-range Restaurant, Three-course %.2lf $\nE: Parking in Rotschild st. in Tel Aviv %.2lf $\n", (fuel) / 5, (fuel) / 4, (fuel) / 3 + random % 2, (fuel) / 2 + random % 4, fuel + random % 10);
+		printf_s("\nA: Bottle of Wine (Mid-Range) %.2lf $\nB: Meal, Inexpensive Restaurant %.2lf $\nC: Monthly Pass (Regular Price) %.2lf $\nD: Meal for 2 People, Mid-range Restaurant, Three-course %.2lf $\nE: Parking in Rotschild st. in Tel Aviv %.2lf $\n", (fuel) / 5, (fuel) / 4, (fuel) / 3 + rand() % 2, (fuel) / 2 + rand() % 4, fuel + rand() % 10);
 		printf_s("What will you would like to buy? : ");
-		purchase = cashier(getchar(), fuel, random);
+		purchase = getchar();
 		break;
 	case 2:
-		printf_s("\nA: Bottle of Wine (Mid-Range) %.2lf $\nB: 6 Domestic Beer (0.5 liter draught) %.2lf $\nC: 1 Pair of Jeans %.2lf $\nD: 1 Pair of Nike Running Shoes %.2lf $\nE: A tour in NASA space Station %.2lf $\n", (fuel) / 5, (fuel) / 4, (fuel) / 3 + random % 2, (fuel) / 2 + random % 4, fuel + random % 10);
+		printf_s("\nA: Bottle of Wine (Mid-Range) %.2lf $\nB: 6 Domestic Beer (0.5 liter draught) %.2lf $\nC: 1 Pair of Jeans %.2lf $\nD: 1 Pair of Nike Running Shoes %.2lf $\nE: A tour in NASA space Station %.2lf $\n", (fuel) / 5, (fuel) / 4, (fuel) / 3 + rand() % 2, (fuel) / 2 + rand() % 4, fuel + rand() % 10);
 		printf_s("What will you would like to buy? : ");
-		purchase = cashier(getchar(), fuel, random);
+		purchase = getchar();
 		break;
 	case 3:
-		printf_s("\nA: Beef Round (1kg) %.2lf $\nB: Meal for 2 People, Mid-range Restaurant, Three-course %.2lf $\nC: 1 Summer Dress in a Chain Store %.2lf $\nD: 1 Pair of Men Leather Business Shoes %.2lf $\nE: A Kung-Fu lesson with Shaolin munk %.2lf $\n", (fuel) / 5, (fuel) / 4, (fuel) / 3 + random % 2, (fuel) / 2 + random % 4, fuel + random % 10);
+		printf_s("\nA: Beef Round (1kg) %.2lf $\nB: Meal for 2 People, Mid-range Restaurant, Three-course %.2lf $\nC: 1 Summer Dress in a Chain Store %.2lf $\nD: 1 Pair of Men Leather Business Shoes %.2lf $\nE: A Kung-Fu lesson with Shaolin munk %.2lf $\n", (fuel) / 5, (fuel) / 4, (fuel) / 3 + rand() % 2, (fuel) / 2 + rand() % 4, fuel + rand() % 10);
 		printf_s("What will you would like to buy? : ");
-		purchase = cashier(getchar(), fuel, random);
+		purchase = getchar();
 		break;
 	case 4:
-		printf_s("\nA: Beef Round (1kg) %.2lf $\nB: 2 Bottles of Wine (Mid-Range) %.2lf $\nC: Monthly Pass (Regular Price) %.2lf $\nD: Meal for 2 People, Mid-range Restaurant, Three-course %.2lf $\nE: Horseback riding with the one and only Vladimir Putin %.2lf $\n", (fuel) / 5, (fuel) / 4, (fuel) / 3 + random % 2, (fuel) / 2 + random % 4, fuel + random % 10);
+		printf_s("\nA: Beef Round (1kg) %.2lf $\nB: 2 Bottles of Wine (Mid-Range) %.2lf $\nC: Monthly Pass (Regular Price) %.2lf $\nD: Meal for 2 People, Mid-range Restaurant, Three-course %.2lf $\nE: Horseback riding with the one and only Vladimir Putin %.2lf $\n", (fuel) / 5, (fuel) / 4, (fuel) / 3 + rand() % 2, (fuel) / 2 + rand() % 4, fuel + rand() % 10);
 		printf_s("What will you would like to buy? : ");
-		purchase = cashier(getchar(), fuel, random);
+		purchase = getchar();
 		break;
 	case 5:
-		printf_s("\nA: 3 Meals, Inexpensive Restaurant %.2lf $\nB: 1 Pair of Nike Running Shoes(Fake ones) %.2lf $\nC: A couple retreat to Istanbul's best Spa & Turkish bath %.2lf $\nD: A picture infront the palace (without getting arrested) %.2lf $\nE: Starring in your own Soap Opera %.2lf $\n", (fuel) / 5, (fuel) / 4, (fuel) / 3 + random % 2, (fuel) / 2 + random % 4, fuel + random % 10);
+		printf_s("\nA: 3 Meals, Inexpensive Restaurant %.2lf $\nB: 1 Pair of Nike Running Shoes(Fake ones) %.2lf $\nC: A couple retreat to Istanbul's best Spa & Turkish bath %.2lf $\nD: A picture infront the palace (without getting arrested) %.2lf $\nE: Starring in your own Soap Opera %.2lf $\n", (fuel) / 5, (fuel) / 4, (fuel) / 3 + rand() % 2, (fuel) / 2 + rand() % 4, fuel + rand() % 10);
 		printf_s("What will you would like to buy? : ");
-		purchase = cashier(getchar(), fuel, random);
+		purchase = getchar();
 		break;
 	default:
 		purchase = 'F';
@@ -948,71 +927,24 @@ void warehouse(link* root, char purchase, int country) {
 	switch (purchase)
 	{
 	case 'A':
-		printf_s("Copy the link to your browser to get your product\n\n ----  %s  ----\n", root[country - 1].a);
+		printf_s("Copy the link to your browser to get your product\n\n ----  %s  ----", root[country - 1].a);
 		break;
 	case 'B':
-		printf_s("Copy the link to your browser to get your product\n\n ----  %s  ----\n", root[country - 1].b);
+		printf_s("Copy the link to your browser to get your product\n\n ----  %s  ----", root[country - 1].b);
 		break;
 	case 'C':
-		printf_s("Copy the link to your browser to get your product\n\n ----  %s  ----\n", root[country - 1].c);
+		printf_s("Copy the link to your browser to get your product\n\n ----  %s  ----", root[country - 1].c);
 		break;
 	case 'D':
-		printf_s("Copy the link to your browser to get your product\n\n ----  %s  ----\n", root[country - 1].d);
+		printf_s("Copy the link to your browser to get your product\n\n ----  %s  ----", root[country - 1].d);
 		break;
 	case 'E':
-		printf_s("Copy the link to your browser to get your product\n\n ----  %s  ----\n", root[country - 1].e);
+		printf_s("Copy the link to your browser to get your product\n\n ----  %s  ----", root[country - 1].e);
 		break;
 	default:
-		printf_s("\nSorry, you don't have enough currency for this item\nBut... I'll take your fuel anyway, TNX! \n");
+		printf_s("No such product\n But I'll tak your fuel anywayyyy\a\n");
 		break;
 	}
-}
-
-
-char cashier(char purchase, double fuel, int random) {
-	switch (purchase)
-	{
-	case 'A':
-		return 'A';
-		break;
-	case 'B':
-		return 'B';
-		break;
-	case 'C':
-		if (fuel - (fuel / 3 + random % 2) >= 0)
-			return purchase;
-		else
-			return 'Z';
-		break;
-	case 'D':
-		if (fuel - (fuel / 2 + random % 4) >= 0)
-			return purchase;
-		else
-			return 'Z';
-		break;
-	case 'E':
-		if (fuel - (fuel + random % 10) >= 0)
-			return purchase;
-		else
-			return 'Z';
-		break;
-	default:
-		printf_s("No such product\n But I'll take your fuel anywayyyy\a\n");
-		break;
-	}
-}
-
-list_t* interReverseLL(list_t* root) {
-	list_t* current = root;
-	list_t* prev = NULL, * after = NULL;
-	while (current != NULL) {
-		after = current->next;
-		current->next = prev;
-		prev = current;
-		current = after;
-	}
-	root = prev;
-
 }
 
 ///////////////////////////////////////////function for section 3- START///////////////////////////////////////////
@@ -1617,12 +1549,9 @@ co_t input_check(co_t image) {
 				j++;
 			}
 		}
-		coordinate.x = (int)atof(x); //we set the matrix from 0,0 in order to answer the demend of bottom left coordinate is 1,1 we subtract 1 from the input
+		coordinate.x = (int)atof(x);
 		coordinate.y = (int)atof(y);
-		if (coordinate.x == 0 || coordinate.y == 0)
-			input_check(image);
 	} while (coordinate.x > image.x || coordinate.y > image.y);
-	coordinate.x--;coordinate.y--;
 	return coordinate;
 }
 
