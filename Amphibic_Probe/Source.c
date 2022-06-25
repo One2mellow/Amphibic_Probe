@@ -3,7 +3,7 @@
 #include <string.h>
 #include <math.h>
 
-#define BMP "not4.bmp"
+#define BMP "un4.bmp"
 #define BMPCPY "fishpool-copy.bmp"
 #define TXT "pools.txt"
 #define BEST_TXT "best-route.txt"
@@ -107,6 +107,10 @@ void route_painter(pixmat** matrix, int x, int y, int x_final, int y_final, int 
 co_t best_co(FILE* route); //extrcats coordinates from best route file
 
 void printnsortpools();
+
+void free_list_printing(printing_t* head);
+
+void print_list(printing_t* head);
 
 printing_t* pools_sorting_ninsert(printing_t* head, int coordinate_x, int coordinate_y, int poooolsize);
 
@@ -794,6 +798,22 @@ void printnsortpools() {
 	free_list_printing(head);
 	free(pool_size_arr);
 	free(middle_arr);
+}
+
+void free_list_printing(printing_t* head) {
+	printing_t* tmp;
+	while (head != NULL) {
+		tmp = head;
+		head = head->next;
+		free(tmp);
+	}
+}
+
+void print_list(printing_t* head) {
+	while (head != NULL) {
+		printf_s("(%3d,%3d)  \t%d \n", head->center_x, head->center_y, head->poolsize);
+		head = head->next;
+	}
 }
 
 
