@@ -758,8 +758,7 @@ co_t best_co(FILE* route) {
 }
 
 void printnsortpools() {
-	printing_t* head = malloc(sizeof(printing_t));
-	if (!head) return;
+	printing_t* head = NULL;
 	FILE* pools;
 	char trash;
 	co_t end_coordinate = { 0 };
@@ -783,18 +782,20 @@ void printnsortpools() {
 				fscanf_s(pools, "%d %c %d", &coordinate_x, &trash, 1, &coordinate_y);
 				fseek(pools, 1, SEEK_CUR);
 				fscanf_s(pools, "%d %c ", &poooolsize, &trash, 1);
-				pools_sorting_ninsert(head, coordinate_x, coordinate_y, poooolsize);
+
+				head = pools_sorting_ninsert(head, coordinate_x, coordinate_y, poooolsize);
+
 			}
 		}
 		fclose(pools);
-	}
 
+	}
+	print_list(head);
+	free_list_printing(head);
 	free(pool_size_arr);
 	free(middle_arr);
-
-	free(head);
-
 }
+
 
 printing_t* pools_sorting_ninsert(printing_t* head, int coordinate_x, int coordinate_y, int poooolsize) {
 
