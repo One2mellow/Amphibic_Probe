@@ -664,7 +664,7 @@ void route_painter(pixmat** matrix, int x, int y, int x_final, int y_final, int 
 	matrix[x][y].color.r = 18; matrix[x][y].color.g = 180; matrix[x][y].color.b = 30; //color pixel at the beggining
 	movratio = ((float)y_final - (float)y) / ((float)x_final - (float)x);
 	b = y - (int)(movratio * x);
-	if (movratio == 1 /*|| movratio < 1*/) //covering cases for the starting pixel color
+	if (movratio == 1 || movratio < 1) //covering cases for the starting pixel color
 		x++;
 	for (x; x < x_final && x < width && y < y_final && y < height; x++)
 	{
