@@ -661,7 +661,7 @@ void route_painter(pixmat** matrix, int x, int y, int x_final, int y_final, int 
 	int  j = 0, i = 0, s_f = 1, dif;
 	float movratio, b;
 	x--;y--; //compensating for starting point which must be 1,1
-	matrix[x][y].color.r = 250; matrix[x][y].color.g = 180; matrix[x][y].color.b = 30; //color pixel at the beggining
+	matrix[x][y].color.r = 18; matrix[x][y].color.g = 180; matrix[x][y].color.b = 30; //color pixel at the beggining
 	movratio = ((float)y_final - (float)y) / ((float)x_final - (float)x);
 	b = (float)y - (float)(movratio * x);
 	x++;y++;
@@ -676,14 +676,24 @@ void route_painter(pixmat** matrix, int x, int y, int x_final, int y_final, int 
 				matrix[x][dif].color.r = 100; matrix[x][dif].color.g = 30; matrix[x][dif].color.b = 232;
 				s_f = 0;
 			}
-			for (dif; dif < y && dif < y_final; dif++) {// compensating for the y change for high slopes
-				matrix[x][dif].color.r = 100; matrix[x][dif].color.g = 30; matrix[x][dif].color.b = 232;
-				if (x == x_final - 1)
-				{
-					for (y;y < y_final - 1;y++);
-					matrix[x][y].color.r = 100; matrix[x][y].color.g = 30; matrix[x][y].color.b = 232;
+			if (y - dif > 1)
+			{
+				for (dif; y - dif > 1;) {
+					dif++;
+					matrix[x][dif].color.r = 100; matrix[x][dif].color.g = 30; matrix[x][dif].color.b = 232;
+
 				}
 			}
+				matrix[x][y].color.r = 100; matrix[x][y].color.g = 30; matrix[x][y].color.b = 232;
+
+			//for (dif; dif - y != 0 && dif < y_final; dif++) {// compensating for the y change for high slopes
+			//	matrix[x][dif].color.r = 100; matrix[x][dif].color.g = 30; matrix[x][dif].color.b = 232;
+			//	if (x == x_final - 1)
+			//	{
+			//		for (y;y < y_final - 1;y++);
+			//		matrix[x][y].color.r = 100; matrix[x][y].color.g = 30; matrix[x][y].color.b = 232;
+			//	}
+			//}
 		}
 		else {
 			y = (int)((x * movratio) + b);
