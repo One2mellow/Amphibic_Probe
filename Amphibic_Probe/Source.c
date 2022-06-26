@@ -664,7 +664,7 @@ void route_painter(pixmat** matrix, int x, int y, int x_final, int y_final, int 
 	matrix[x][y].color.r = 18; matrix[x][y].color.g = 180; matrix[x][y].color.b = 30; //color pixel at the beggining
 	movratio = ((float)y_final - (float)y) / ((float)x_final - (float)x);
 	b = y - (int)(movratio * x);
-	if (movratio == 1 || movratio < 1) //covering cases for the starting pixel color
+	if (movratio == 1 /*|| movratio < 1*/) //covering cases for the starting pixel color
 		x++;
 	for (x; x < x_final && x < width && y < y_final && y < height; x++)
 	{
@@ -995,7 +995,8 @@ char cashier(char purchase, double fuel, int random) {
 			return 'Z';
 		break;
 	default:
-		printf_s("No such product\n But I'll take your fuel anywayyyy\a\n");
+		printf_s("No such product\n But I'll take your fuel anywayyyy\a\nJust kidding, try again, enter only capital letters A-E, make sure you have enough currency:\t");
+		cashier(getchar(), fuel, random);
 		break;
 	}
 }
@@ -1611,6 +1612,10 @@ co_t input_check(co_t image) {
 				x[i] = input[i];
 			}
 			else {
+				if (input[i] < '0' || input[i] > '9')
+				{
+					input_check(image);
+				}
 				y[j] = input[i];
 				j++;
 			}
