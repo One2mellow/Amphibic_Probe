@@ -310,7 +310,7 @@ int menu() {
 	int enter;
 	printf_s("--------------------------\nME LAB services\n--------------------------");
 
-	printf_s("\nMenu:\n1. Scan pools\n2. Print sorted pool list\n3. Select route\n4. Numeric report.\n5. Students addition\n9. Exit\nEnter choice: ");
+	printf_s("\nMenu:\n1. Scan pools\n2. Print sorted pool list\n3. Select route\n4. Numeric report.\n5. Students addition\n9. Exit.\nEnter choice: ");
 
 	scanf_s("%d", &choice);
 	enter = getchar();
