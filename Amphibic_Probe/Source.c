@@ -3,7 +3,7 @@
 #include <string.h>
 #include <math.h>
 
-#define BMP "fishpool.bmp"
+#define BMP "paintpool-3.bmp"
 #define BMPCPY "fishpool-copy.bmp"
 #define TXT "pools.txt"
 #define BEST_TXT "best-route.txt"
@@ -658,20 +658,26 @@ int space_mod(int x, int y) {
 }
 
 void route_painter(pixmat** matrix, int x, int y, int x_final, int y_final, int height, int width, int width_flag) {
-	int  j = 0, i = 0, s_f = 1, dif;
-	float movratio, b;
+	int  b, j = 0, i = 0, s_f = 1, dif;
+	float movratio;
 	x--;y--; //compensating for starting point which must be 1,1
 	matrix[x][y].color.r = 18; matrix[x][y].color.g = 180; matrix[x][y].color.b = 30; //color pixel at the beggining
 	movratio = ((float)y_final - (float)y) / ((float)x_final - (float)x);
-	b = (float)y - (float)(movratio * x);
-	x++;y++;
-
+	b = y - (int)(movratio * x);
+	if (movratio == 1 || movratio < 1) //covering cases for the starting pixel color
+		x++;
 	for (x; x < x_final && x < width && y < y_final && y < height; x++)
 	{
-		if (movratio > 1)
+		if (movratio != 1)
 		{
 			dif = y;
-			y = (int)((x * movratio) + b);
+			if ((int)((x * movratio) + b) == 0) {
+				y++;
+				matrix[x][y].color.r = 100; matrix[x][y].color.g = 30; matrix[x][y].color.b = 232;
+				y = (int)(((x + 1) * movratio) + b);
+			}
+			else
+				y = (int)(((x + 1) * movratio) + b); //adding 1 to x in order to reah to next coordinate
 			if (dif == y && s_f != 0) {
 				matrix[x][dif].color.r = 100; matrix[x][dif].color.g = 30; matrix[x][dif].color.b = 232;
 				s_f = 0;
@@ -685,15 +691,6 @@ void route_painter(pixmat** matrix, int x, int y, int x_final, int y_final, int 
 				}
 			}
 				matrix[x][y].color.r = 100; matrix[x][y].color.g = 30; matrix[x][y].color.b = 232;
-
-			//for (dif; dif - y != 0 && dif < y_final; dif++) {// compensating for the y change for high slopes
-			//	matrix[x][dif].color.r = 100; matrix[x][dif].color.g = 30; matrix[x][dif].color.b = 232;
-			//	if (x == x_final - 1)
-			//	{
-			//		for (y;y < y_final - 1;y++);
-			//		matrix[x][y].color.r = 100; matrix[x][y].color.g = 30; matrix[x][y].color.b = 232;
-			//	}
-			//}
 		}
 		else {
 			y = (int)((x * movratio) + b);
