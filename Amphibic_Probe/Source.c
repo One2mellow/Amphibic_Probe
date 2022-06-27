@@ -762,8 +762,8 @@ co_t best_co(FILE* route) {
 				}
 			}
 		}
-		coordinate.x = (int)atof(tmpx);
-		coordinate.y = (int)atof(tmpy);
+		coordinate.x = atoi(tmpx);
+		coordinate.y = atoi(tmpy);
 	}
 	return coordinate;
 }
