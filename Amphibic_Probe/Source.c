@@ -3,7 +3,7 @@
 #include <string.h>
 #include <math.h>
 
-#define BMP "fishpool.bmp"
+#define BMP "ALLBLUE.bmp"
 #define BMPCPY "fishpool-copy.bmp"
 #define TXT "pools.txt"
 #define BEST_TXT "best-route.txt"
@@ -80,7 +80,7 @@ int load_image(image_t* image, const char* filename, unsigned char* head); //loa
 
 co_t pool_middle(pix_t* root, int size); //returning the pool's center coordinates from given coordinate array
 
-void imgtrx(pixmat** mtrx, image_t image, char* filename, int width_flag); //converting the BMP image to 2d array of type pixmat
+int imgtrx(pixmat** mtrx, image_t image, char* filename, int width_flag); //converting the BMP image to 2d array of type pixmat
 
 poolList_t* pools_f(pixmat** mtrx, image_t image, poolList_t* pools, int width_flag); //Creating list of pools which contain size and center co. for each pool
 
@@ -213,7 +213,6 @@ int main() {
 	if (!tx) return 0;
 
 	if ((load_image(&image, BMP, image.header)) != 0) {
-		printf_s("Failed to load file: \" %s\"", BMP);
 		return -1;
 	}
 
@@ -231,8 +230,6 @@ int main() {
 		}
 	}// allocate memory to image pixel matrix
 
-	imgtrx(matrix, image, BMP, width_flag);
-
 	choice = menu();
 
 	while (choice != 9)
@@ -240,31 +237,34 @@ int main() {
 		switch (choice)
 		{
 		case 1:
-			pools = pools_f(matrix, image, pools, width_flag);
-			if (pools == NULL) {
-				printf_s("\nTotal of 0 pools.\n");
-				menu();
-				break;
-			}
-			printf_s("\nCoordinate x1,y1 of the first discoverd pool (%d,%d)", pools->pool_center.x, pools->pool_center.y);
-			printf_s("\nSize %d", pools->size);
-			if (val == 0) {
-				fprintf_s(tx, "%s%dx%d%s", "Image size (", image.width, image.height, ")\nPool Center	Size\n===========	====");
-				for (poolList_t* curr = pools; curr != NULL; curr = curr->next) {
-					fprintf_s(tx, "\n(%d,%d)", curr->pool_center.x, curr->pool_center.y);
-					for (i = 0; i < 9 - space_mod(curr->pool_center.x, curr->pool_center.y); i++)
-						fputc(' ', tx);
-					fprintf_s(tx, "%d", curr->size);
-					count++; //iterating through the pool list, printing size and center
-				}
-			}
-			else
+			if (imgtrx(matrix, image, BMP, width_flag) != -1)
 			{
-				printf_s("ERROR! couldn't open %s", TXT);
-			}
+				pools = pools_f(matrix, image, pools, width_flag);
+				if (pools == NULL) {
+					printf_s("\nTotal of 0 pools.\n", BMP);
+					choice = menu();
+					break;
+				}
+				printf_s("\nCoordinate x1,y1 of the first discoverd pool (%d,%d)", pools->pool_center.x, pools->pool_center.y);
+				printf_s("\nSize %d", pools->size);
+				if (val == 0) {
+					fprintf_s(tx, "%s%dx%d%s", "Image size (", image.width, image.height, ")\nPool Center	Size\n===========	====");
+					for (poolList_t* curr = pools; curr != NULL; curr = curr->next) {
+						fprintf_s(tx, "\n(%d,%d)", curr->pool_center.x, curr->pool_center.y);
+						for (i = 0; i < 9 - space_mod(curr->pool_center.x, curr->pool_center.y); i++)
+							fputc(' ', tx);
+						fprintf_s(tx, "%d", curr->size);
+						count++; //iterating through the pool list, printing size and center
+					}
+				}
+				else
+				{
+					printf_s("ERROR! couldn't open %s", TXT);
+				}
 
-			printf_s("\nTotal of %d pools.\n", count);
-			fclose(tx);
+				printf_s("\nTotal of %d pools.\n", count);
+				fclose(tx);
+			}
 			choice = menu();
 			break;
 		case 2:
@@ -388,19 +388,18 @@ int load_image(image_t* image, const char* filename, unsigned char* head) {
 		fclose(file);
 	}
 	else {
-		printf_s("(%s) Failed to open file\n", filename);
 		return_value = 0;
 	}
 	return return_value;
 }
 
-void imgtrx(pixmat** mtrx, image_t image, char* filename, int width_flag) {
+int imgtrx(pixmat** mtrx, image_t image, char* filename, int width_flag) {
 	int val, i = 0, j;
 	FILE* file;
 	val = fopen_s(&file, filename, "rb");
 	if (!file) {
-		printf_s("Error open the fishpool.bmp\n");
-		return;
+		printf_s("\nError open the %s\n", filename);
+		return -1;
 	}
 
 	if (file != 0)
@@ -422,7 +421,7 @@ void imgtrx(pixmat** mtrx, image_t image, char* filename, int width_flag) {
 		}
 	}
 	fclose(file);
-	return;
+	return 0;
 }
 
 void create_bmp(char* filename, char* origin, char* txt, pixmat** matrix, image_t pic, unsigned char* header, int width_flag) {
