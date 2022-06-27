@@ -3,7 +3,7 @@
 #include <string.h>
 #include <math.h>
 
-#define BMP "paintpool-3.bmp"
+#define BMP "fishpool.bmp"
 #define BMPCPY "fishpool-copy.bmp"
 #define TXT "pools.txt"
 #define BEST_TXT "best-route.txt"
@@ -446,7 +446,7 @@ void create_bmp(char* filename, char* origin, char* txt, pixmat** matrix, image_
 			fseek(route, -1, SEEK_CUR);
 			end = best_co(route);
 			route_painter(matrix, start.x--, start.y--, end.x, end.y, pic.height, pic.width, width_flag);
-			start = end;
+			start.x = end.x;start.y = end.y + 1;
 		} while (end.x != width_flag && end.y != pic.height);
 		for (int i = 0; i < 54; i++)
 		{
@@ -684,12 +684,12 @@ void route_painter(pixmat** matrix, int x, int y, int x_final, int y_final, int 
 			}
 			if (y - dif > 1)
 			{
-				for (dif; y - dif > 1;) {
+				for (dif; y - dif >= 1;) {
 					dif++;
 					matrix[x][dif].color.r = 100; matrix[x][dif].color.g = 30; matrix[x][dif].color.b = 232;
 
 				}
-			}
+			}else
 				matrix[x][y].color.r = 100; matrix[x][y].color.g = 30; matrix[x][y].color.b = 232;
 		}
 		else {
