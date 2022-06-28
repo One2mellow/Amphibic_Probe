@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <time.h>//	lecture #6
 
 #define BMP "ALLBLUE.bmp"
 #define BMPCPY "fishpool-copy.bmp"
@@ -241,7 +242,7 @@ int main() {
 			{
 				pools = pools_f(matrix, image, pools, width_flag);
 				if (pools == NULL) {
-					printf_s("\nTotal of 0 pools.\n", BMP);
+					printf_s("\nTotal of 0 pools.\n");
 					choice = menu();
 					break;
 				}
@@ -998,6 +999,7 @@ char cashier(char purchase, double fuel, int random) {
 		cashier(getchar(), fuel, random);
 		break;
 	}
+	return '0';
 }
 
 list_t* interReverseLL(list_t* root) {
@@ -1010,7 +1012,7 @@ list_t* interReverseLL(list_t* root) {
 		current = after;
 	}
 	root = prev;
-
+	return root;
 }
 
 ///////////////////////////////////////////function for section 3- START///////////////////////////////////////////
