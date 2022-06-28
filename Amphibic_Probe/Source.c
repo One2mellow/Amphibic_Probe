@@ -295,6 +295,7 @@ int main() {
 			break;
 		case 4:
 			NumericReport(image);
+			choice = menu();
 			break;
 		case 5:
 			time2glow(SPECIAL, matrix, image, width_flag);
