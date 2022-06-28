@@ -292,7 +292,8 @@ int main() {
 		}
 	}
 	deallocpool(&pools);
-	for (i = 0;i < image.width;i++) {
+
+	for (i = 0;i < width_flag;i++) {
 		free(matrix[i]);
 	}
 	free(matrix);
