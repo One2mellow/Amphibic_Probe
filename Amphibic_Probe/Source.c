@@ -123,7 +123,7 @@ char cashier(char purchase, double fuel, int random);
 
 list_t* interReverseLL(list_t* root); //revesrs the linked list order of type list_t
 
-void section_3();
+int section_3();
 
 co_t input_check(co_t image); //checking the validity of the starting coordinates
 
@@ -239,6 +239,7 @@ int main() {
 				pools = pools_f(matrix, image, pools, width_flag);
 				if (pools == NULL) {
 					printf_s("\nTotal of 0 pools.\n");
+					fprintf_s(tx, "%s%dx%d%s", "Image size (", image.width, image.height, ")\nPool Center	Size\n===========	====");
 					choice = menu();
 					break;
 				}
@@ -270,7 +271,8 @@ int main() {
 			break;
 		case 3:
 			putchar('\n');
-			section_3();
+			if (section_3() != -1)
+				break;
 			create_bmp(BMPCPY, BMP, BEST_TXT, matrix, image, image.header, width_flag);
 			choice = menu();
 			break;
@@ -290,9 +292,6 @@ int main() {
 			break;
 		}
 	}
-
-
-
 	deallocpool(&pools);
 	for (i = 0;i < image.width;i++) {
 		free(matrix[i]);
@@ -426,7 +425,7 @@ void create_bmp(char* filename, char* origin, char* txt, pixmat** matrix, image_
 				position = fgetc(route);
 			fseek(route, -1, SEEK_CUR);
 			end = best_co(route); //fetching coordinate values from the file
-			route_painter(matrix, start.x--, start.y--, end.x, end.y, pic.height, pic.width, width_flag); //painting teh movemnt route on the map for given coordinates
+			route_painter(matrix, start.x, start.y, end.x, end.y, pic.height, pic.width, width_flag); //painting teh movemnt route on the map for given coordinates
 			start = end; //next movement starts from the last end point
 		} while (end.x != width_flag && end.y != pic.height); //making sure we haven't reach to the edge of the map (top-right corner) 
 		for (int i = 0; i < 54; i++)
@@ -723,7 +722,7 @@ void printnsortpools() {
 	int poooolsize = 0, coordinate_x = 0, coordinate_y = 0;
 	int* pool_size_arr = pool_size_arr_malloc(num_of_pool);
 	co_t* middle_arr = middle_arr_malloc(num_of_pool);
-	fopen_s(&pools, "pools.txt", "rt");
+	fopen_s(&pools, TXT, "rt");
 	if (!pools) {
 		printf_s("Problem reading pools.txt file\nList is empty"); //if there is no such a file  //failed to open pools.txt
 		return;
@@ -1576,17 +1575,17 @@ co_t input_check(co_t image) {
 
 /*Section 3 -
 Shows the fastest route from a certain point on the map to the end point considering the amount of oil*/
-void section_3() {
+int section_3() {
 	FILE* pools;
 	char trash;
 	co_t end_coordinate = { 0 };
 	int num_of_pool = pool_counter();
 	int* pool_size_arr = pool_size_arr_malloc(num_of_pool);
 	co_t* middle_arr = middle_arr_malloc(num_of_pool);
-	fopen_s(&pools, "pools.txt", "rt");
+	fopen_s(&pools, TXT, "rt");
 	if (!pools) {
-		printf_s("Error open the pools.txt");
-		return;
+		printf_s("Error open the %s\n", TXT);
+		return -1;
 	}
 	else {
 		fseek(pools, 12, SEEK_SET);
@@ -1612,4 +1611,5 @@ void section_3() {
 	}
 	free(pool_size_arr);
 	free(middle_arr);
+	return 0;
 }
