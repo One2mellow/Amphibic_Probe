@@ -37,10 +37,10 @@ void NumericReport(image_t image) {
 	co_t start, end;
 	FILE* route;
 	char position;
-	double dist, dt//dt is the input user
+	double dist, dt;//dt is the input user
 
 
-		fopen_s(&route, BEST_TXT, "rt");
+	fopen_s(&route, BEST_TXT, "rt");
 	if (!route) {
 		printf_s("Problem with file best-route.txt, or it might be empty.\n");
 	}
