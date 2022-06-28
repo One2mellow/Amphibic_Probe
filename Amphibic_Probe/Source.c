@@ -4,7 +4,7 @@
 #include <math.h>
 #include <time.h>//	lecture #6
 
-#define BMP "1.bmp"
+#define BMP "fishpool.bmp"
 #define BMPCPY "fishpool-copy.bmp"
 #define TXT "pools.txt"
 #define BEST_TXT "best-route.txt"
@@ -266,6 +266,7 @@ int main() {
 			choice = menu();
 			break;
 		case 2:
+			fclose(tx);
 			printnsortpools();
 			choice = menu();
 			break;
@@ -721,13 +722,13 @@ void printnsortpools() {
 	int poooolsize = 0, coordinate_x = 0, coordinate_y = 0;
 	int* pool_size_arr = pool_size_arr_malloc(num_of_pool);
 	co_t* middle_arr = middle_arr_malloc(num_of_pool);
-	fopen_s(&pools, TXT, "rt");
+	fopen_s(&pools, "pools.txt", "rt");
 	if (!pools) {
-		printf_s("Problem reading pools.txt file\nList is empty"); //if there is no such a file  //failed to open pools.txt
+		printf_s("\nProblem reading pools.txt file\nList is empty\n"); //if there is no such a file  //failed to open pools.txt
 		return;
 	}
 	else {
-		if (num_of_pool <= 0) { printf_s("List is empty"); } //if there are no pools)
+		if (num_of_pool <= 0) { printf_s("List is empty\n"); } //if there are no pools)
 		else {
 			printf_s("\nSorted pools by size:\nCoordinate      Size\n==========  \t====\n");
 			fseek(pools, 12, SEEK_SET);
@@ -769,7 +770,6 @@ void print_list(printing_t* head) {
 }
 
 printing_t* pools_sorting_ninsert(printing_t* head, int coordinate_x, int coordinate_y, int poooolsize) {
-
 
 	printing_t* ptr = head;
 	printing_t* newNode = malloc(sizeof(printing_t));
@@ -1071,7 +1071,7 @@ int pool_counter() {
 	char pointer = 0;
 	int num_of_pool = 0;
 	FILE* pools;
-	fopen_s(&pools, "pools.txt", "rt");
+	fopen_s(&pools, TXT, "rt");
 	if (!pools) return 0;
 	fseek(pools, 40, SEEK_CUR);
 	for (pointer = getc(pools); pointer != EOF; pointer = getc(pools)) {
