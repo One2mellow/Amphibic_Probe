@@ -4,7 +4,7 @@
 #include <math.h>
 #include <time.h>//	lecture #6
 
-#define BMP "ALLBLUE.bmp"
+#define BMP "fishpool.bmp"
 #define BMPCPY "fishpool-copy.bmp"
 #define TXT "pools.txt"
 #define BEST_TXT "best-route.txt"
@@ -218,7 +218,7 @@ int main() {
 	}
 
 	width_flag = image.width;
-	if (image.width % 4 != 0) // making sure width is divsible by 4 due to bmp regulations
+	if (image.width % 4 != 0) // making sure width is divsible by 4 due to BMP format regulations
 	{
 		width_flag = image.width + 4 - (image.width % 4);
 	}
@@ -307,19 +307,18 @@ int main() {
 }
 
 int menu() {
-	int choice;
+	int choice; //item seection from the menu
 	int enter;
 	printf_s("--------------------------\nME LAB services\n--------------------------");
 
 	printf_s("\nMenu:\n1. Scan pools\n2. Print sorted pool list\n3. Select route\n4. Numeric report.\n5. Students addition\n9. Exit.\nEnter choice: ");
 
 	scanf_s("%d", &choice);
-	enter = getchar();
+	enter = getchar(); //dealing with the enter being saved in cartridge and getting put in the next char scanning
 	return choice;
 }
 
 co_t pool_middle(pix_t* root, int size) {
-
 	int x_max, x_min, y_max, y_min, i;
 	co_t middle = { 0 };
 	pix_t* curr;
@@ -327,10 +326,7 @@ co_t pool_middle(pix_t* root, int size) {
 
 	pixels = malloc(sizeof(co_t) * size + 1);
 	if (!pixels) return middle;
-
-
 	i = 0;
-
 	curr = root;
 
 	while (curr != NULL)
@@ -340,8 +336,6 @@ co_t pool_middle(pix_t* root, int size) {
 		curr = curr->next;
 		i++;
 	}
-
-
 	x_max = pixels[0].x;
 	x_min = pixels[0].x;
 	y_max = pixels[0].y;
@@ -363,33 +357,28 @@ co_t pool_middle(pix_t* root, int size) {
 
 int load_image(image_t* image, const char* filename, unsigned char* head) {
 	int return_value = 0;
-	unsigned int image_data_address;
 	int width;
 	int height;
-	int bpp;
 
 	FILE* file;
 	return_value = fopen_s(&file, filename, "rb");
 	if (file) {
 		if (fgetc(file) == 'B' && fgetc(file) == 'M') {
-			fseek(file, 8, SEEK_CUR);
-			fread(&image_data_address, 4, 1, file);;
+			fseek(file, 12, SEEK_CUR);
 			fseek(file, 4, SEEK_CUR);
-			fread(&width, 4, 1, file);
-			fread(&height, 4, 1, file);
-			fseek(file, 2, SEEK_CUR);
-			fread(&bpp, 4, 1, file);
+			fread(&width, 4, 1, file); //Reading image width
+			fread(&height, 4, 1, file); //Reading image height
 			image->width = width;
 			image->height = height;
 			fseek(file, 0, SEEK_SET);
 			for (int i = 0;i < 54;i++) {
-				image->header[i] = fgetc(file);
+				image->header[i] = fgetc(file); //Reading & saving header data information
 			}
 		}
 		fclose(file);
 	}
 	else {
-		return_value = 0;
+		return_value = 0; // if failed to open the file
 	}
 	return return_value;
 }
@@ -405,19 +394,16 @@ int imgtrx(pixmat** mtrx, image_t image, char* filename, int width_flag) {
 
 	if (file != 0)
 	{
-		fseek(file, 54, SEEK_SET);
+		fseek(file, 54, SEEK_SET); //Skipping the header bytes and getting to the color pallette 
 		for (i = 0; i < image.height; i++)
 		{
 			for (j = 0; j < width_flag; j++)
 			{
-				mtrx[j][i].color.b = fgetc(file);
-				mtrx[j][i].color.g = fgetc(file);
+				mtrx[j][i].color.b = fgetc(file); //Saving the RGB data to the correct x,y location on the color pallette
+				mtrx[j][i].color.g = fgetc(file); //On the BMP the data is actually stored in order of BGR
 				mtrx[j][i].color.r = fgetc(file);
 				mtrx[j][i].cordinate.x = j;
-				mtrx[j][i].cordinate.y = i;
-				/*if (mtrx[j][i].color.b == 0 || mtrx[j][i].color.g == 0 || mtrx[j][i].color.r == 0) {
-					j--;
-				}*/
+				mtrx[j][i].cordinate.y = i;//assigning x,y values to each pixel (type of the pixmat struct)
 			}
 		}
 	}
@@ -431,30 +417,29 @@ void create_bmp(char* filename, char* origin, char* txt, pixmat** matrix, image_
 	char position;
 	int i, j;
 	imgtrx(matrix, pic, BMP, width_flag); //resetting the image matrix before painting a route
-	fopen_s(&image, filename, "wb");
-	fopen_s(&route, txt, "rt");
+	fopen_s(&image, filename, "wb"); //opening the image file
+	fopen_s(&route, txt, "rt"); //opening the best route file
 
-	if (image != 0 && route != 0) {
-
-		position = fgetc(route);
-		fseek(route, 15, SEEK_SET);
-		start = best_co(route);
+	if (image != 0 && route != 0) { //making sure that the two files are open
+		position = fgetc(route); //the current cursor location
+		fseek(route, 15, SEEK_SET); //skiping the title of the text file
+		start = best_co(route); //fetching the coordinate from the file
 		do {
-			position = fgetc(route);
-			while (position != '(' && position != EOF)
+			position = fgetc(route);  //checking what char will the cursor read
+			while (position != '(' && position != EOF) //checking for brackets where new coordinate starts, making sure we haven't reach to the End Of File
 				position = fgetc(route);
 			fseek(route, -1, SEEK_CUR);
-			end = best_co(route);
-			route_painter(matrix, start.x--, start.y--, end.x, end.y, pic.height, pic.width, width_flag);
-			start.x = end.x;start.y = end.y + 1;
-		} while (end.x != width_flag && end.y != pic.height);
+			end = best_co(route); //fetching coordinate values from the file
+			route_painter(matrix, start.x--, start.y--, end.x, end.y, pic.height, pic.width, width_flag); //painting teh movemnt route on the map for given coordinates
+			start = end; //next movement starts from the last end point
+		} while (end.x != width_flag && end.y != pic.height); //making sure we haven't reach to the edge of the map (top-right corner) 
 		for (int i = 0; i < 54; i++)
 		{
-			fputc(header[i], image);
+			fputc(header[i], image); //printing header data to the new BMP file
 		}
 		for (i = 0; i < pic.height; i++)
 		{
-			for (j = 0; j < width_flag; j++)
+			for (j = 0; j < width_flag; j++) //printing the modified color pallette to the new BMP (prnting the route)
 			{
 				fputc(matrix[j][i].color.b, image);
 				fputc(matrix[j][i].color.g, image);
@@ -462,9 +447,8 @@ void create_bmp(char* filename, char* origin, char* txt, pixmat** matrix, image_
 			}
 		}
 		fclose(image);
-		fclose(route);
+		fclose(route);// closing open files
 	}
-
 	else return;
 }
 
@@ -475,10 +459,10 @@ poolList_t* pools_f(pixmat** mtrx, image_t image, poolList_t* pools, int width_f
 	pix_t* root = NULL;
 	co_t center;
 
-	temp = malloc(sizeof(int*) * width_flag);
+	temp = malloc(sizeof(int*) * width_flag); //alocating memory for matrix which will contain 1/0 for each blue/non-blue pixel
 	if (temp)
 	{
-		for (i = 0;i < width_flag;i++) {
+		for (i = 0;i < width_flag; i++) {
 			temp[i] = malloc(sizeof(int) * image.height);
 		}
 	}// allocate memory to temp color signed matrix
@@ -486,7 +470,7 @@ poolList_t* pools_f(pixmat** mtrx, image_t image, poolList_t* pools, int width_f
 	for (i = 0; i < image.height; i++)
 	{
 		for (j = 0;j < width_flag;j++) {
-			if (mtrx[j][i].color.r == 155 && mtrx[j][i].color.g == 190 && mtrx[j][i].color.b == 245)
+			if (mtrx[j][i].color.r == 155 && mtrx[j][i].color.g == 190 && mtrx[j][i].color.b == 245) // Registering blue and non-blue pixel to 2d matrix named temp
 			{
 				temp[j][i] = 1;
 			}
@@ -498,25 +482,25 @@ poolList_t* pools_f(pixmat** mtrx, image_t image, poolList_t* pools, int width_f
 
 	for (i = 0;i < image.height;i++) {
 		for (j = 0;j < width_flag;j++) {
-			if (temp[j][i] == 1)
+			if (temp[j][i] == 1) //Going over all the pixels in the matrix and checking if it is blue or not
 			{
 				size = 1;
 				temp[j][i] = 0;
-				pix_insert(&root, mtrx[j][i].cordinate);
-				segment(root, mtrx, temp, image, i, j, &size);
+				pix_insert(&root, mtrx[j][i].cordinate); //saving the blue pixel to the head of linked list
+				segment(root, mtrx, temp, image, i, j, &size); //entering to Image segmentation function to find adjacent blue pixels
 
 				if (size > 9)
 				{
 					center = pool_middle(root, size);
-					pool_insert(&pools, size, center, root);
+					pool_insert(&pools, size, center, root); //saving the pool to linked list ONLY if it has size of 10 or more
 				}
 			}
-			deallocpix(&root);
+			deallocpix(&root); //deallocting the memory of the pixel's linked list
 		}
 	}
 
 	for (i = 0;i < width_flag;i++) {
-		free(temp[i]);
+		free(temp[i]); //deallocating temp matrix memory
 	}
 	free(temp);
 
@@ -666,8 +650,7 @@ void route_painter(pixmat** matrix, int x, int y, int x_final, int y_final, int 
 	b = y - (int)(movratio * x);
 	if (movratio == 1 || movratio < 1) //covering cases for the starting pixel color
 		x++;
-	for (x; x < x_final && x < width && y < y_final && y < height; x++)
-	{
+	for (x; x < x_final && x < width && y < y_final && y < height; x++)	{
 		if (movratio != 1)
 		{
 			dif = y;
@@ -696,6 +679,18 @@ void route_painter(pixmat** matrix, int x, int y, int x_final, int y_final, int 
 			y = (int)((x * movratio) + b);
 			matrix[x][y].color.r = 100; matrix[x][y].color.g = 30; matrix[x][y].color.b = 232;
 		}
+	}
+	if (x < x_final)
+		x--;
+	while (y == y_final && x < x_final - 1) {
+		matrix[x][y - 1].color.r = 100; matrix[x][y - 1].color.g = 30; matrix[x][y - 1].color.b = 232;
+		x++;
+	}
+	if (y < y_final)
+		y--;
+	while (x == x_final && y < y_final - 1) {
+		matrix[x - 1][y].color.r = 100; matrix[x - 1][y].color.g = 30; matrix[x - 1][y].color.b = 232;
+		x++;
 	}
 	matrix[width - 1][height - 1].color.r = 250; matrix[width - 1][height - 1].color.g = 180; matrix[width - 1][height - 1].color.b = 30; //color pixel at the end
 }
