@@ -4,7 +4,7 @@
 #include <math.h>
 #include <time.h>//	lecture #6
 
-#define BMP "fishpool.bmp"
+#define BMP "BLANK.bmp"
 #define BMPCPY "fishpool-copy.bmp"
 #define TXT "pools.txt"
 #define BEST_TXT "best-route.txt"
@@ -93,13 +93,9 @@ void pix_insert(pix_t** root, co_t coordinate); //appending new pixel to the end
 
 void pool_insert(poolList_t** root, int size, co_t center, pix_t* pix); //appending new pool element to the end of pools list
 
-void coordinat_insert(cot_list** root, co_t coordinate); //appending new coordinate element to the end of coordinate list
-
 void deallocpix(pix_t** root); //deallocating memory of the pixel list
 
 void deallocpool(poolList_t** root); //deallocating memory of the pools list
-
-void dealloccoordinate(cot_list** root);
 
 int space_mod(int x, int y); //making sure that the correct number of spaces is printed between co. and size in pools.txt
 
@@ -448,6 +444,7 @@ void create_bmp(char* filename, char* origin, char* txt, pixmat** matrix, image_
 		}
 		fclose(image);
 		fclose(route);// closing open files
+		printf_s("A BMP file %s was created\n\n", filename);
 	}
 	else return;
 }
@@ -509,69 +506,59 @@ poolList_t* pools_f(pixmat** mtrx, image_t image, poolList_t* pools, int width_f
 
 void segment(pix_t* root, pixmat** mtrx, int** temp, image_t image, int i, int j, int* size) {
 
-	//pix_insert(root, mtrx[j][i].cordinate);
-
-	if (j > 0) {
+	if (j > 0) { //In case we are at the most left side of the map there are no pixels to the left of our location
 		if (temp[j - 1][i] == 1) {
-			pix_insert(&root, mtrx[j - 1][i].cordinate);
-			*size += 1;
-			temp[j - 1][i] = 0;
-			segment(root, mtrx, temp, image, i, j - 1, size);
+			pix_insert(&root, mtrx[j - 1][i].cordinate); //If the adjacent pixel is also blue. saves it to the blue pixels list
+			*size += 1; //Increasing current pool size by 1
+			temp[j - 1][i] = 0; //Setting the current blue pixel to not blue pixel
+			segment(root, mtrx, temp, image, i, j - 1, size); //Using the segmentation function on the neighboring blue pixel
 		}
 	}
 
-	if (j < image.width - 1) {
+	if (j < image.width - 1) { //Making sure we are not at the right edge of the map
 		if (temp[j + 1][i] == 1) {
-			pix_insert(&root, mtrx[j + 1][i].cordinate);
-			*size += 1;
-			temp[j + 1][i] = 0;
-			segment(root, mtrx, temp, image, i, j + 1, size);
-
+			pix_insert(&root, mtrx[j + 1][i].cordinate); //If the adjacent pixel is also blue. saves it to the blue pixels list
+			*size += 1; //Increasing current pool size by 1
+			temp[j + 1][i] = 0; //Setting the current blue pixel to not blue pixel
+			segment(root, mtrx, temp, image, i, j + 1, size); //Using the segmentation function on the neighboring blue pixel
 		}
 	}
 
-	if (i > 0)
-	{
+	if (i > 0) { //In case we are at the very bottom of the map there are no pixels under current location
 		if (temp[j][i - 1] == 1) {
-			pix_insert(&root, mtrx[j][i - 1].cordinate);
-			*size += 1;
-			temp[j][i - 1] = 0;
-			segment(root, mtrx, temp, image, i - 1, j, size);
+			pix_insert(&root, mtrx[j][i - 1].cordinate); //If the adjacent pixel is also blue. saves it to the blue pixels list
+			*size += 1; //Increasing current pool size by 1
+			temp[j][i - 1] = 0; //Setting the current blue pixel to not blue pixel
+			segment(root, mtrx, temp, image, i - 1, j, size); //Using the segmentation function on the neighboring blue pixel
 		}
 	}
 
-	if (i < image.height - 1)
-	{
+	if (i < image.height - 1) { //Making sure we are not at the top of the map
 		if (temp[j][i + 1] == 1) {
-			pix_insert(&root, mtrx[j][i + 1].cordinate);
-			*size += 1;
-			temp[j][i + 1] = 0;
-			segment(root, mtrx, temp, image, i + 1, j, size);
+			pix_insert(&root, mtrx[j][i + 1].cordinate); //If the adjacent pixel is also blue. saves it to the blue pixels list
+			*size += 1; //Increasing current pool size by 1
+			temp[j][i + 1] = 0; //Setting the current blue pixel to not blue pixel
+			segment(root, mtrx, temp, image, i + 1, j, size); //Using the segmentation function on the neighboring blue pixel
 		}
-
 	}
-
-
-
-
 }
 
 void pix_insert(pix_t** root, co_t coordinate) {
-	pix_t* new_pix = malloc(sizeof(pix_t));
-	if (new_pix == NULL) {
+	pix_t* new_pix = malloc(sizeof(pix_t)); //Allocating memory for new pixel elemnt of type pix_t
+	if (new_pix == NULL) { //Validating the malloc was able to find viable adress in the memory
 		exit(1);
 	}
-	new_pix->next = NULL;
+	new_pix->next = NULL; //The new elemnt is the last one in the list
 	new_pix->p.x = coordinate.x;
-	new_pix->p.y = coordinate.y;
+	new_pix->p.y = coordinate.y; //Assigning the. x,y values to the new pixel in the list
 
-	if (*root == NULL) {
+	if (*root == NULL) { // If it's the first pixel that wat recognized, assigning it to the head of the list
 		*root = new_pix;
 		return;
 	}
 
 	pix_t* curr = *root;
-	while (curr->next != NULL) {
+	while (curr->next != NULL) { //In case that the first spot is already taken appending the new_pix element to the end of the list
 		curr = curr->next;
 	}
 	curr->next = new_pix;
@@ -579,23 +566,23 @@ void pix_insert(pix_t** root, co_t coordinate) {
 
 void pool_insert(poolList_t** root, int size, co_t center, pix_t* pix) {
 
-	poolList_t* new_pool = malloc(sizeof(poolList_t));
-	if (new_pool == NULL) {
+	poolList_t* new_pool = malloc(sizeof(poolList_t)); //Allocating memory for new pixel elemnt of type poolList_t
+	if (new_pool == NULL) { //Validating the malloc was able to find viable adress in the memory
 		exit(1);
 	}
-	new_pool->next = NULL;
-	new_pool->pool_center.x = center.x;
-	new_pool->pool_center.y = center.y;
-	new_pool->size = size;
+	new_pool->next = NULL; //The new elemnt is the last one in the list
+	new_pool->pool_center.x = center.x; //Assigning Pool's ceneter x coordinate
+	new_pool->pool_center.y = center.y; //Assigning Pool's ceneter y coordinate
+	new_pool->size = size; //Assigning Pool's size
 	new_pool->pix = pix;
 
-	if (*root == NULL) {
+	if (*root == NULL) { // If it's the first pool that wat recognized, assigning it to the head of the list
 		*root = new_pool;
 		return;
 	}
 
 	poolList_t* curr = *root;
-	while (curr->next != NULL) {
+	while (curr->next != NULL) { //Making sure that the new pools that was found is saved to the end of the Pools list
 		curr = curr->next;
 	}
 	curr->next = new_pool;
@@ -604,7 +591,7 @@ void pool_insert(poolList_t** root, int size, co_t center, pix_t* pix) {
 void deallocpix(pix_t** root) {
 	pix_t* curr = *root;
 	while (curr != NULL) {
-		pix_t* aux = curr;
+		pix_t* aux = curr; //Deallocating the linked list memory from the down to its tail
 		curr = curr->next;
 		free(aux);
 	}
@@ -615,7 +602,7 @@ void deallocpool(poolList_t** root) {
 	poolList_t* curr = *root;
 	while (curr != NULL)
 	{
-		poolList_t* aux = curr;
+		poolList_t* aux = curr; //Deallocating the linked list memory from the down to its tail
 		curr = curr->next;
 		free(aux);
 	}
@@ -628,13 +615,13 @@ int space_mod(int x, int y) {
 	n = x;
 	while (n != 0)
 	{
-		n = n / 10;
+		n = n / 10; //counting number of digits in the x value
 		space++;
 	}
 	n = y;
 	while (n != 0)
 	{
-		n = n / 10;
+		n = n / 10; //counting number of digits in the y value
 		space++;
 	}
 
@@ -660,17 +647,12 @@ void route_painter(pixmat** matrix, int x, int y, int x_final, int y_final, int 
 				y = (int)(((x + 1) * movratio) + b);
 			}
 			else
-				y = (int)(((x + 1) * movratio) + b); //adding 1 to x in order to reah to next coordinate
-			if (dif == y && s_f != 0) {
-				matrix[x][dif].color.r = 100; matrix[x][dif].color.g = 30; matrix[x][dif].color.b = 232;
-				s_f = 0;
-			}
+				y = (int)(((x + 1) * movratio) + b); //adding 1 to x in order to reach to next coordinate
 			if (y - dif > 1)
 			{
 				for (dif; y - dif >= 1;) {
 					dif++;
 					matrix[x][dif].color.r = 100; matrix[x][dif].color.g = 30; matrix[x][dif].color.b = 232;
-
 				}
 			}else
 				matrix[x][y].color.r = 100; matrix[x][y].color.g = 30; matrix[x][y].color.b = 232;
@@ -693,38 +675,6 @@ void route_painter(pixmat** matrix, int x, int y, int x_final, int y_final, int 
 		x++;
 	}
 	matrix[width - 1][height - 1].color.r = 250; matrix[width - 1][height - 1].color.g = 180; matrix[width - 1][height - 1].color.b = 30; //color pixel at the end
-}
-
-void coordinat_insert(cot_list** root, co_t coordinate) {
-	cot_list* new_co = malloc(sizeof(cot_list));
-	if (new_co == NULL) {
-		exit(1);
-	}
-	new_co->next = NULL;
-	new_co->coordinate.x = coordinate.x;
-	new_co->coordinate.y = coordinate.y;
-
-	if (*root == NULL) {
-		*root = new_co;
-		return;
-	}
-
-	cot_list* curr = *root;
-	while (curr->next != NULL) {
-		curr = curr->next;
-	}
-	curr->next = new_co;
-}
-
-void dealloccoordinate(cot_list** root) {
-	cot_list* curr = *root;
-	while (curr != NULL)
-	{
-		cot_list* aux = curr;
-		curr = curr->next;
-		free(aux);
-	}
-	*root = NULL;
 }
 
 co_t best_co(FILE* route) {
