@@ -206,8 +206,7 @@ int main() {
 	static image_t image;
 	FILE* tx;
 
-	val = fopen_s(&tx, TXT, "w");
-	if (!tx) return 0;
+	
 
 	if ((load_image(&image, BMP, image.header)) != 0) {
 		return -1;
@@ -236,6 +235,8 @@ int main() {
 		case 1:
 			if (imgtrx(matrix, image, BMP, width_flag) != -1)
 			{
+				val = fopen_s(&tx, TXT, "w");
+				if (!tx) return 0;
 				pools = pools_f(matrix, image, pools, width_flag);
 				if (pools == NULL) {
 					printf_s("\nTotal of 0 pools.\n");
@@ -266,7 +267,7 @@ int main() {
 			choice = menu();
 			break;
 		case 2:
-			fclose(tx);
+			
 			printnsortpools();
 			choice = menu();
 			break;
