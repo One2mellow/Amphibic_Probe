@@ -4,7 +4,7 @@
 #include <math.h>
 #include <time.h>//	lecture #6
 
-#define BMP "BLANK.bmp"
+#define BMP "1.bmp"
 #define BMPCPY "fishpool-copy.bmp"
 #define TXT "pools.txt"
 #define BEST_TXT "best-route.txt"
@@ -200,7 +200,7 @@ double distance(co_t a, co_t b); //find distance between to cordinates
 
 
 int main() {
-	int i, val, count = 0, choice = 0, width_flag = 0;
+	int three, i, val, count = 0, choice = 0, width_flag = 0;
 	poolList_t* pools = NULL;
 	pixmat** matrix;
 	static image_t image;
@@ -272,8 +272,7 @@ int main() {
 		case 3:
 			putchar('\n');
 			if (section_3() != -1)
-				break;
-			create_bmp(BMPCPY, BMP, BEST_TXT, matrix, image, image.header, width_flag);
+				create_bmp(BMPCPY, BMP, BEST_TXT, matrix, image, image.header, width_flag);
 			choice = menu();
 			break;
 		case 4:
