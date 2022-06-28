@@ -19,11 +19,11 @@ typedef struct data {
 	double d; //distance
 	double c; //cost
 	struct data* next;
-}data_t
+}data_t;
 
 
 
-
+//להוסי תמונה
 void NumericReport(image_t image);
 pix_t* pointsOfRoute(FILE* route);// לברר 
 void addNewNode(data** head, double d, double c);
@@ -73,6 +73,10 @@ void NumericReport(image_t image) {
 		data_t* temp = head;
 		printf_s("Distance   Consumption\n========== ===========\n");
 		print_data(head, dt);
+	start = end;// ממישיכים את הצעדים מאיפה שסיימנו 
+	}
+	while (end.x != image.width && end.y != image.height);// at the end of one calculations
+
 		freedata_t(head);
 		freepix_t(curr);
 		return 0;
@@ -132,8 +136,6 @@ return head;
 
 	}
 
-	start = end;// ממישיכים את הצעדים מאיפה שסיימנו 
-
 
 	void print_jump(data_t* head, double dt) {
 		data_t* temp = head;
@@ -148,7 +150,6 @@ return head;
 	}
 
 
-	while (end.x != image.width && end.y != image.height);// at the end of one calculations
 	n = dist / dt;
 	//dist = malloc(sizeof(float) * n);
 	cx = malloc(sizeof(float) * n);
