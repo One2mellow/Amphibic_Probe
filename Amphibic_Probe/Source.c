@@ -74,6 +74,12 @@ typedef struct country_link { // struct to store link to all store products in o
 	char* e;
 }link;
 
+typedef struct data {
+	double d; //distance
+	double c; //cost
+	struct data* next;
+}data_t;
+
 int menu(); //menu function
 
 int load_image(image_t* image, const char* filename, unsigned char* head); //loading the BMP image and getting WxH values
@@ -125,6 +131,16 @@ void warehouse(link* root, char purchase, int country); //generates link databas
 char cashier(char purchase, double fuel, int random);
 
 list_t* interReverseLL(list_t* root); //revesrs the linked list order of type list_t
+
+void NumericReport(image_t image);
+
+void addnewnode(data_t** head, double d, double c);
+
+data_t* costsCalc(pix_t* curr, co_t start, co_t end);
+
+void print_jump(data_t* head, double dt);
+
+pix_t* pointsOfRoute(FILE* route);
 
 void section_3();
 
@@ -278,7 +294,7 @@ int main() {
 			choice = menu();
 			break;
 		case 4:
-			//Naama
+			NumericReport(image);
 			break;
 		case 5:
 			time2glow(SPECIAL, matrix, image, width_flag);
@@ -1012,6 +1028,127 @@ list_t* interReverseLL(list_t* root) {
 	root = prev;
 
 }
+
+
+
+void NumericReport(image_t image) {
+	co_t start, end;
+	FILE* route;
+	char position;
+	double dist, dt;//dt is the input user
+
+
+	fopen_s(&route, BEST_TXT, "rt");
+	if (!route) {
+		printf_s("Problem with file best-route.txt, or it might be empty.\n");
+	}
+	position = fgetc(route);
+	fseek(route, 15, SEEK_SET);
+	start = best_co(route);// קוראים קוארודינה ראשונה
+
+	do {
+		position = fgetc(route);
+		while (position != '(' && position != EOF)
+			position = fgetc(route);
+		fseek(route, -1, SEEK_CUR);
+		end = best_co(route);
+		pix_t* curr = NULL; //current step 
+		int c;
+		curr = pointsOfRoute(route);
+		printf_s("Please enter a positive intger as distance display interval: ");
+
+		do
+		{
+
+			scanf_s("%lf", &dt);
+			while ((c = getchar()) != '\n' && c != EOF);
+			if ((dt - (int)dt != 0) || dt <= 0)
+				printf_s("Bad input, try again\n");
+		} while ((dt - (int)dt != 0) || dt <= 0);
+
+		data_t* head = costsCalc(curr, start, end);
+		data_t* temp = head;
+		printf_s("Distance   Consumption\n========== ===========\n");
+		print_jump(head, dt);
+		start = end;// ממישיכים את הצעדים מאיפה שסיימנו 
+	} while (end.x != image.width && end.y != image.height);// at the end of one calculations
+
+	//freedata_t(head);
+	//freepix_t(curr);
+	return 0;
+
+}  //end of numericreport!!!
+
+void addnewnode(data_t** head, double d, double c) {
+
+	data_t* newNode = malloc(sizeof(data_t));
+	if (!newNode)return;
+	newNode->d = d;
+	newNode->c = c;
+	newNode->next = NULL;
+
+	if (*head == NULL)
+		*head = newNode;
+
+	else {
+		data_t* lastNode = *head;
+		while (lastNode->next != NULL) lastNode = lastNode->next;
+		lastNode->next = newNode;
+	}
+
+}
+
+data_t* costsCalc(pix_t* curr, co_t start, co_t end) {     // לברר האם points זה רק הקוארדינטות מהbest route!
+	int  fuel = 20, drive = 1;
+	double costs = 0, D = 0, n = 0;// n is step counter D is distance  
+	//pix_t* start = curr, * end = curr->next;
+	data_t* head = NULL;
+		D = D + distance(start, end);
+		while (n < D) {
+			addnewnode(&head, n, costs);
+			n += 0.1;
+			if (n < D)
+				costs += ((2.5 / (costs + 1) + drive) * 0.1);
+		}
+		if (head->next)//אם קיים איבר הבא אז קטע חדשמ {
+			costs += ((2.5 / (costs + 1) + fuel) * 0.1);
+		addnewnode(&head, n, costs);
+	//start = end;
+	//end = head->next;//
+return head;
+}
+
+void print_jump(data_t* head, double dt) {
+	data_t* temp = head;
+	int i;
+	while (temp->next) {
+	printf_s("   %7.3lf    %7.3lf\t\n", temp->d, temp->c);
+		for (i = 0; i < dt * 10; i++) {
+			if (temp->next)temp = temp->next;
+		}
+	}
+	printf_s("   %7.3lf    %7.3lf\t\n", temp->d, temp->c);
+}
+
+pix_t* pointsOfRoute(FILE * route) {
+	pix_t* tail = NULL, * temp, * head = NULL;
+	char data[40];
+	int i = 0;
+	fseek(route, 0, SEEK_SET);
+	while (fgets(data, sizeof(data), route)) {
+		i++;
+		if (i > 1) {
+			temp = malloc(sizeof(pix_t));
+			if (!temp)return NULL;
+			temp->p.x = atoi(&data[1]);
+			temp->p.y = atoi(strchr(data, ',') + 1);
+			if (tail)tail->next = temp;
+			else head = temp;
+			tail = temp;
+		}
+	}
+}
+
 
 ///////////////////////////////////////////function for section 3- START///////////////////////////////////////////
 
