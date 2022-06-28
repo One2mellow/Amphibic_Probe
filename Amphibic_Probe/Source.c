@@ -678,8 +678,8 @@ void route_painter(pixmat** matrix, int x, int y, int x_final, int y_final, int 
 
 co_t best_co(FILE* route) {
 	int flag = 0, j = 0;
-	char temp[10], tmpx[3] = { 0 }, tmpy[3] = { 0 };
-	co_t coordinate = { 0 };
+	char temp[10], tmpx[3] = { 0 }, tmpy[3] = { 0 }; //Initating strings to recive the coordinate values
+	co_t coordinate = { 0 }; //Initating the co_t coordinate variable
 
 	if (route != 0) {
 
@@ -697,7 +697,6 @@ co_t best_co(FILE* route) {
 					tmpy[j] = temp[i];
 					j++;
 				}
-
 			}
 			else
 			{
@@ -708,7 +707,7 @@ co_t best_co(FILE* route) {
 			}
 		}
 		coordinate.x = atoi(tmpx);
-		coordinate.y = atoi(tmpy);
+		coordinate.y = atoi(tmpy); //Converting string to int type variable
 	}
 	return coordinate;
 }
