@@ -4,7 +4,7 @@
 #include <math.h>
 #include <time.h>//	lecture #6
 
-#define BMP "COPY-another-ex1.bmp"
+#define BMP "fishpool-another-ex1.bmp"
 #define BMPCPY "fishpool-copy.bmp"
 #define TXT "pools.txt"
 #define BEST_TXT "best-route.txt"
@@ -211,14 +211,14 @@ int main() {
 	}
 
 	width_flag = image.width;
-	if (image.width % 4 != 0){ // making sure width is divsible by 4 due to BMP format regulations
-		width_flag = image.width + 4 - (image.width % 4);
-	}
+	for (i = 0; ((width_flag * 3) % 4) != 0; i++)
+		width_flag = image.width + i;
 
 	matrix = malloc(sizeof(pixmat*) * width_flag);
 	if (!matrix) return 0;
-	if (matrix){
-		for (i = 0;i < width_flag;i++) {
+	if (matrix) {
+		image.width;
+		for (i = 0;i <image.width;i++) {
 			matrix[i] = malloc(sizeof(pixmat) * image.height);
 		}
 	}// allocate memory to image pixel matrix
@@ -369,7 +369,7 @@ int load_image(image_t* image, const char* filename, unsigned char* head) {
 }
 
 int imgtrx(pixmat** mtrx, image_t image, char* filename, int width_flag) {
-	int val, i = 0, j;
+	int val, i = 0, j, k;
 	FILE* file;
 	val = fopen_s(&file, filename, "rb");
 	if (!file) {
@@ -379,13 +379,15 @@ int imgtrx(pixmat** mtrx, image_t image, char* filename, int width_flag) {
 	if (file != 0){
 		fseek(file, 54, SEEK_SET); //Skipping the header bytes and getting to the color pallette 
 		for (i = 0; i < image.height; i++){
-			for (j = 0; j < width_flag; j++){
+			for (j = 0; j <image.width; j++){
 				mtrx[j][i].color.b = fgetc(file); //Saving the RGB data to the correct x,y location on the color pallette
 				mtrx[j][i].color.g = fgetc(file); //On the BMP the data is actually stored in order of BGR
 				mtrx[j][i].color.r = fgetc(file);
 				mtrx[j][i].cordinate.x = j;
 				mtrx[j][i].cordinate.y = i;//assigning x,y values to each pixel (type of the pixmat struct)
 			}
+			for (k = 0; k < width_flag - image.width; k++)
+				fseek(file, 1, SEEK_CUR);
 		}
 	}
 	fclose(file);
@@ -396,7 +398,7 @@ void create_bmp(char* filename, char* origin, char* txt, pixmat** matrix, image_
 	FILE* image, * route;
 	co_t start, end;
 	char position;
-	int i, j;
+	int i, j, k;
 	imgtrx(matrix, pic, BMP, width_flag); //resetting the image matrix before painting a route
 	fopen_s(&image, filename, "wb"); //opening the image file
 	fopen_s(&route, txt, "rt"); //opening the best route file
@@ -417,12 +419,16 @@ void create_bmp(char* filename, char* origin, char* txt, pixmat** matrix, image_
 			fputc(header[i], image); //printing header data to the new BMP file
 		}
 		for (i = 0; i < pic.height; i++){
-			for (j = 0; j < width_flag; j++){ //printing the modified color pallette to the new BMP (prnting the route)
+			for (j = 0; j < pic.width; j++){ //printing the modified color pallette to the new BMP (prnting the route)
 				fputc(matrix[j][i].color.b, image);
 				fputc(matrix[j][i].color.g, image);
 				fputc(matrix[j][i].color.r, image);
 			}
+			for (k = 0; k < width_flag - pic.width; k++)
+				fputc(0, image);
 		}
+
+
 		fclose(image);
 		fclose(route);// closing open files
 		printf_s("A BMP file %s was created\n\n", filename);
@@ -435,11 +441,11 @@ poolList_t* pools_f(pixmat** mtrx, image_t image, poolList_t* pools, int width_f
 	int** temp = NULL;
 	pix_t* root = NULL;
 	co_t center;
-	if (sizeof(int*) * width_flag > 0)
-		temp = malloc(sizeof(int*) * width_flag); //alocating memory for matrix which will contain 1/0 for each blue/non-blue pixel
+	if (sizeof(int*) * image.width > 0)
+		temp = malloc(sizeof(int*) * image.width); //alocating memory for matrix which will contain 1/0 for each blue/non-blue pixel
 	if (temp) {
 		if (sizeof(int) * image.height > 0)
-			for (i = 0;i < width_flag; i++) {
+			for (i = 0;i < image.width; i++) {
 				temp[i] = malloc(sizeof(int) * image.height);
 			}// allocate memory to temp color signed matrix
 	}
@@ -447,7 +453,7 @@ poolList_t* pools_f(pixmat** mtrx, image_t image, poolList_t* pools, int width_f
 	if (temp != 0)
 	{
 
-		for (i = 0; i < width_flag; i++) {
+		for (i = 0; i <image.width; i++) {
 			for (j = 0;j < image.height;j++) {
 				if (mtrx[i][j].color.r == 155 && mtrx[i][j].color.g == 190 && mtrx[i][j].color.b == 245) { // Registering blue and non-blue pixel to 2d matrix named temp
 					temp[i][j] = 1;
@@ -458,7 +464,7 @@ poolList_t* pools_f(pixmat** mtrx, image_t image, poolList_t* pools, int width_f
 			}
 		}
 		for (i = 0;i < image.height;i++) {
-			for (j = 0;j < width_flag;j++) {
+			for (j = 0;j <image.width;j++) {
 				if (temp[j][i] == 1) { //Going over all the pixels in the matrix and checking if it is blue or not
 					size = 1;
 					temp[j][i] = 0;
@@ -472,7 +478,7 @@ poolList_t* pools_f(pixmat** mtrx, image_t image, poolList_t* pools, int width_f
 				deallocpix(&root); //deallocting the memory of the pixel's linked list
 			}
 		}
-		for (i = 0;i < width_flag;i++) {
+		for (i = 0;i < image.width;i++) {
 			free(temp[i]); //deallocating temp matrix memory
 		}
 		free(temp);
