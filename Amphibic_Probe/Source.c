@@ -294,14 +294,24 @@ int main() {
 }
 
 int menu() {
-	int choice; //item seection from the menu
+	char firstchoice[2];
+	int choice; //item selection from the menu
 	int enter;
 	printf_s("--------------------------\nME LAB services\n--------------------------");
-
 	printf_s("\nMenu:\n1. Scan pools\n2. Print sorted pool list\n3. Select route\n4. Numeric report.\n5. Students addition\n9. Exit.\nEnter choice: ");
-
-	scanf_s("%d", &choice);
+	firstchoice[0] = getchar();
+	enter = NULL;
 	enter = getchar(); //dealing with the enter being saved in cartridge and getting put in the next char scanning
+	firstchoice[1] = '\0';
+	if (enter != 10 && firstchoice[0] != 49 && firstchoice[0] != 50 && firstchoice[0] !=51 && firstchoice[0] !=52 && firstchoice[0] != 53 && firstchoice[0] != 57 )
+	{
+		printf("\nBad input, try again\n\n");
+		firstchoice[0] = '\0';
+		enter = NULL;
+		menu();
+		
+	}
+	choice = atoi(firstchoice);
 	return choice;
 }
 
