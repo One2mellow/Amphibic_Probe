@@ -1558,7 +1558,7 @@ void there_a_route(double oil, co_t current_pos, co_t end_coordinate) {
 				 i = 0;
 			 }
 		 if (input[i] == ',')
-			 *commacount++;
+			 *commacount += 1;
 	 }
  }
 
