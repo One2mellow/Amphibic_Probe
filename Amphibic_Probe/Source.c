@@ -433,29 +433,27 @@ void create_bmp(char* filename, char* origin, char* txt, pixmat** matrix, image_
 poolList_t* pools_f(pixmat** mtrx, image_t image, poolList_t* pools, int width_flag) {
 	int i, j, size;
 	int** temp = NULL;
-	int HiMem = sizeof(int) * image.height;
-	int WiMem = sizeof(int*) * width_flag;
 	pix_t* root = NULL;
 	co_t center;
-	if (WiMem > 0)
-		temp = malloc(WiMem); //alocating memory for matrix which will contain 1/0 for each blue/non-blue pixel
+	if (sizeof(int*) * width_flag > 0)
+		temp = malloc(sizeof(int*) * width_flag); //alocating memory for matrix which will contain 1/0 for each blue/non-blue pixel
 	if (temp) {
-		if (HiMem > 0)
+		if (sizeof(int) * image.height > 0)
 			for (i = 0;i < width_flag; i++) {
-				temp[i] = malloc(HiMem);
+				temp[i] = malloc(sizeof(int) * image.height);
 			}// allocate memory to temp color signed matrix
 	}
 
 	if (temp != 0)
 	{
 
-		for (i = 0; i < image.height; i++) {
-			for (j = 0;j < width_flag;j++) {
-				if (mtrx[j][i].color.r == 155 && mtrx[j][i].color.g == 190 && mtrx[j][i].color.b == 245) { // Registering blue and non-blue pixel to 2d matrix named temp
-					temp[j][i] = 1;
+		for (i = 0; i < width_flag; i++) {
+			for (j = 0;j < image.height;j++) {
+				if (mtrx[i][j].color.r == 155 && mtrx[i][j].color.g == 190 && mtrx[i][j].color.b == 245) { // Registering blue and non-blue pixel to 2d matrix named temp
+					temp[i][j] = 1;
 				}
 				else {
-					temp[j][i] = 0;
+					temp[i][j] = 0;
 				}
 			}
 		}
