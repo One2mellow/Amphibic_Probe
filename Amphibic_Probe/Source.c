@@ -4,7 +4,7 @@
 #include <math.h>
 #include <time.h>//	lecture #6
 
-#define BMP "fishpool.bmp"
+#define BMP "un4.bmp"
 #define BMPCPY "fishpool-copy.bmp"
 #define TXT "pools.txt"
 #define BEST_TXT "best-route.txt"
@@ -311,7 +311,6 @@ co_t pool_middle(pix_t* root, int size) {
 	co_t middle = { 0 };
 	pix_t* curr;
 	co_t* pixels = { 0 };
-
 	pixels = malloc(sizeof(co_t) * size + 1);
 	if (!pixels) return middle;
 	i = 0;
@@ -340,6 +339,7 @@ co_t pool_middle(pix_t* root, int size) {
 	}
 	middle.x = (x_max + x_min) / 2;
 	middle.y = (y_max + y_min) / 2;
+	free(pixels);
 	return middle;
 }
 
@@ -1435,7 +1435,7 @@ void best_route_file_creation(int i, int counter, double data[], double kk, int 
 					fprintf_s(best_route3, "Best Route	Size\n");
 					fprintf_s(best_route3, "(%3d,%3d)	0\n", current_pos.x, current_pos.y);
 				}
-				else
+				if (p < counter2-1)
 					fprintf_s(best_route3, "(%3d,%3d)	%d\n", xb, yb, sizeb);
 			}
 		}
