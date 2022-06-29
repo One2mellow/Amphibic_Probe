@@ -4,7 +4,7 @@
 #include <math.h>
 #include <time.h>//	lecture #6
 
-#define BMP "fishpool.bmp"
+#define BMP "COPY-another-ex1.bmp"
 #define BMPCPY "fishpool-copy.bmp"
 #define TXT "pools.txt"
 #define BEST_TXT "best-route.txt"
@@ -99,7 +99,7 @@ void deallocpool(poolList_t** root); //deallocating memory of the pools list
 
 int space_mod(int x, int y); //making sure that the correct number of spaces is printed between co. and size in pools.txt
 
-void route_painter(pixmat** matrix, int x, int y, int x_final, int y_final, int height, int width, int width_flag);
+void route_painter(pixmat** matrix, int x, int y, int x_final, int y_final, int height, int width);
 
 co_t best_co(FILE* route); //extrcats coordinates from best route file
 
@@ -410,7 +410,7 @@ void create_bmp(char* filename, char* origin, char* txt, pixmat** matrix, image_
 				position = fgetc(route);
 			fseek(route, -1, SEEK_CUR);
 			end = best_co(route); //fetching coordinate values from the file
-			route_painter(matrix, start.x, start.y, end.x, end.y, pic.height, pic.width, width_flag); //painting teh movemnt route on the map for given coordinates
+			route_painter(matrix, start.x, start.y, end.x, end.y, pic.height, pic.width); //painting teh movemnt route on the map for given coordinates
 			start = end; //next movement starts from the last end point
 		} while (end.x != width_flag && end.y != pic.height); //making sure we haven't reach to the edge of the map (top-right corner) 
 		for (int i = 0; i < 54; i++){
@@ -607,7 +607,7 @@ int space_mod(int x, int y) {
 	return space;
 }
 
-void route_painter(pixmat** matrix, int x, int y, int x_final, int y_final, int height, int width, int width_flag) {
+void route_painter(pixmat** matrix, int x, int y, int x_final, int y_final, int height, int width) {
 	int  b, j = 0, i = 0, s_f = 1, dif;
 	float movratio;
 	x--;y--; //compensating for starting point which must be 1,1
