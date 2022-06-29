@@ -3,13 +3,13 @@
 #include <string.h>
 #include <math.h>
 
-#define BMP "un4.bmp"
+#define BMP "1.bmp"
 #define BMPCPY "fishpool-copy.bmp"
 #define TXT "pools.txt"
 #define BEST_TXT "best-route.txt"
-#define Special "for-nitai.txt"
+#define SPECIAL "for-nitai.txt"
 #define FUEL_TXT "most_fuel.txt"
-#define Most_Fuel "MostFuel.bmp"
+#define MOST_FUEL "MostFuel.bmp"
 
 typedef struct { //bmp file values struct
 	int width;
@@ -40,7 +40,7 @@ typedef struct pixel { //list of pixels
 
 typedef struct pool { //pools' list extructed of bmp
 	int size; //the number of pixels that combine the pool
-	co_t poolCenter;
+	co_t pool_center;
 	pix_t* pix; //list of pool pixels
 	struct pool* next;
 }poolList_t;
@@ -59,24 +59,38 @@ typedef struct cot_list { //list of coordinate sequence (moving path)
 	struct cot_list* next;
 } cot_list;
 
-typedef struct pools_CoordinatesAndSize {
-	int centerX;
-	int centerY;
+typedef struct pools_coordinates_and_size {
+	int center_x;
+	int center_y;
 	int poolsize; //the number of pixels that combine the pool
-	struct pools_CoordinatesAndSize* next;
+	struct pools_coordinates_and_size* next;
 }printing_t;
+
+typedef struct country_link { // struct to store link to all store products in option 5
+	char* a;
+	char* b;
+	char* c;
+	char* d;
+	char* e;
+}link;
+
+typedef struct data {
+	double d; //distance
+	double c; //cost
+	struct data* next;
+}data_t;
 
 int menu(); //menu function
 
-int LoadImage(image_t* image, const char* filename, unsigned char* head); //loading the BMP image and getting WxH values
+int load_image(image_t* image, const char* filename, unsigned char* head); //loading the BMP image and getting WxH values
 
 co_t pool_middle(pix_t* root, int size); //returning the pool's center coordinates from given coordinate array
 
-void imgtrx(pixmat** mtrx, image_t image, char* filename, int width_flag); //converting the BMP image to 2d array of type pixmat
+int imgtrx(pixmat** mtrx, image_t image, char* filename, int width_flag); //converting the BMP image to 2d array of type pixmat
 
-poolList_t* Pools(pixmat** mtrx, image_t image, poolList_t* pools); //Creating list of pools which contain size and center co. for each pool
+poolList_t* pools_f(pixmat** mtrx, image_t image, poolList_t* pools, int width_flag); //Creating list of pools which contain size and center co. for each pool
 
-void CreateBMP(char* filename,char* txt, pixmat** matrix, int height, int width, unsigned char* header, int width_flag); // Print the route on the bmp copy
+void create_bmp(char* filename, char* origin, char* txt, pixmat** matrix, image_t pic, unsigned char* header, int width_flag); // Print the route on the bmp copy
 
 void segment(pix_t* root, pixmat** mtrx, int** temp, image_t image, int i, int j, int* size); //using region base image segmentation to detect pools
 
@@ -92,27 +106,45 @@ void deallocpool(poolList_t** root); //deallocating memory of the pools list
 
 void dealloccoordinate(cot_list** root);
 
-int SpaceMod(int x, int y); //making sure that the correct number of spaces is printed between co. and size in pools.txt
+int space_mod(int x, int y); //making sure that the correct number of spaces is printed between co. and size in pools.txt
 
-void RoutePainter(pixmat** matrix, int x, int y, int x_final, int y_final, int height, int width, int width_flag);
+void route_painter(pixmat** matrix, int x, int y, int x_final, int y_final, int height, int width, int width_flag);
 
 co_t best_co(FILE* route); //extrcats coordinates from best route file
 
-void printNsortpools();
+void printnsortpools();
 
-printing_t* pools_sortingNinsert(printing_t* head, int coordinate_x, int coordinate_y, int poooolsize);
+void free_list_printing(printing_t* head);
+
+void print_list(printing_t* head);
+
+printing_t* pools_sorting_ninsert(printing_t* head, int coordinate_x, int coordinate_y, int poooolsize);
 
 void time2glow(char* filename, pixmat** matrix, image_t image, int width_flag); //for setion 5
 
-void fuelStore(double fuel); //store genertor for section 5
+void fuel_store(double fuel); //store genertor for section 5
 
-void storeMenu(char purchase); //prints the store list for each country
+char store_menu(int country, double fuel, int random); //prints the store list for each country
 
-void NumericReport();
+void warehouse(link* root, char purchase, int country); //generates link database for items of section 5 store
+
+char cashier(char purchase, double fuel, int random);
+
+list_t* interReverseLL(list_t* root); //revesrs the linked list order of type list_t
+
+void NumericReport(image_t image);
+
+void addnewnode(data_t** head, double d, double c);
+
+data_t* costsCalc(pix_t* curr, co_t start, co_t end);
+
+void print_jump(data_t* head, double dt);
+
+pix_t* pointsOfRoute(FILE* route);
 
 void section_3();
 
-co_t InputCheck(co_t image); //checking the validity of the starting coordinates
+co_t input_check(co_t image); //checking the validity of the starting coordinates
 
 void there_a_route(double oil, co_t current_pos, co_t end_coordinate); //All the functions that print to screen and file together
 
@@ -125,7 +157,7 @@ void best_route_file_creation(int i, int counter, double data[], double kk, int 
 void printing_to_screen(char test, int counter2, int j, int i, int p, int counter, double kk, double data[], double oil, co_t current_pos, double timeb, double oilb, int garbi, int xb, int yb);
 //Print data to the screen from the linked list
 
-void freeList(list_t* head); //Release memory in the linked list
+void free_list(list_t* head); //Release memory in the linked list
 
 list_t* add(double time, double oil, int size, int x, int y, list_t* head); //Add a node to the linked list
 
@@ -196,26 +228,23 @@ int main() {
 	val = fopen_s(&tx, TXT, "w");
 	if (!tx) return 0;
 
-	if ((LoadImage(&image, BMP, image.header)) != 0) {
-		printf_s("Failed to load file: \" %s\"", BMP);
+	if ((load_image(&image, BMP, image.header)) != 0) {
 		return -1;
 	}
 
+	width_flag = image.width;
 	if (image.width % 4 != 0) // making sure width is divsible by 4 due to bmp regulations
 	{
-		width_flag = image.width;
-		image.width = image.width + 4 - (image.width % 4);
+		width_flag = image.width + 4 - (image.width % 4);
 	}
 
-	matrix = malloc(sizeof(pixmat*) * image.width);
+	matrix = malloc(sizeof(pixmat*) * width_flag);
 	if (matrix)
 	{
-		for (i = 0;i < image.width;i++) {
+		for (i = 0; i < width_flag; i++) {
 			matrix[i] = malloc(sizeof(pixmat) * image.height);
 		}
 	}// allocate memory to image pixel matrix
-
-	imgtrx(matrix, image, BMP, width_flag);
 
 	choice = menu();
 
@@ -224,49 +253,52 @@ int main() {
 		switch (choice)
 		{
 		case 1:
-			pools = Pools(matrix, image, pools);
-			if (pools == NULL) {
-				printf_s("\nTotal of 0 pools.\n");
-				menu();
-				break;
-			}
-			printf_s("\nCoordinate x1,y1 of the first discoverd pool (%d,%d)", pools->poolCenter.x, pools->poolCenter.y);
-			printf_s("\nSize %d", pools->size);
-			if (val == 0) {
-				fprintf_s(tx, "%s%dx%d%s", "Image size (", image.width, image.height, ")\nPool Center	Size\n===========	====");
-				for (poolList_t* curr = pools; curr != NULL; curr = curr->next) {
-					fprintf_s(tx, "\n(%d,%d)", curr->poolCenter.x, curr->poolCenter.y);
-					for (i = 0; i < 9 - SpaceMod(curr->poolCenter.x, curr->poolCenter.y); i++)
-						fputc(' ', tx);
-					fprintf_s(tx, "%d", curr->size);
-					count++; //iterating through the pool list, printing size and center
-				}
-			}
-			else
+			if (imgtrx(matrix, image, BMP, width_flag) != -1)
 			{
-				printf_s("ERROR! couldn't open %s", TXT);
-			}
+				pools = pools_f(matrix, image, pools, width_flag);
+				if (pools == NULL) {
+					printf_s("\nTotal of 0 pools.\n", BMP);
+					choice = menu();
+					break;
+				}
+				printf_s("\nCoordinate x1,y1 of the first discoverd pool (%d,%d)", pools->pool_center.x, pools->pool_center.y);
+				printf_s("\nSize %d", pools->size);
+				if (val == 0) {
+					fprintf_s(tx, "%s%dx%d%s", "Image size (", image.width, image.height, ")\nPool Center	Size\n===========	====");
+					for (poolList_t* curr = pools; curr != NULL; curr = curr->next) {
+						fprintf_s(tx, "\n(%d,%d)", curr->pool_center.x, curr->pool_center.y);
+						for (i = 0; i < 9 - space_mod(curr->pool_center.x, curr->pool_center.y); i++)
+							fputc(' ', tx);
+						fprintf_s(tx, "%d", curr->size);
+						count++; //iterating through the pool list, printing size and center
+					}
+				}
+				else
+				{
+					printf_s("ERROR! couldn't open %s", TXT);
+				}
 
-			printf_s("\nTotal of %d pools.\n", count);
-			fclose(tx);
+				printf_s("\nTotal of %d pools.\n", count);
+				fclose(tx);
+			}
 			choice = menu();
 			break;
 		case 2:
-			printNsortpools();
+			printnsortpools();
 			choice = menu();
 			break;
 		case 3:
 			putchar('\n');
 			section_3();
-			CreateBMP(BMPCPY, BEST_TXT , matrix, image.height, image.width, image.header, width_flag);
+			create_bmp(BMPCPY, BMP, BEST_TXT, matrix, image, image.header, width_flag);
 			choice = menu();
 			break;
 		case 4:
-			NumericReport();
-			choice = menun();
+			NumericReport(image);
+			choice = menu();
 			break;
 		case 5:
-			time2glow(Special, matrix, image, width_flag);
+			time2glow(SPECIAL, matrix, image, width_flag);
 			choice = menu();
 			break;
 		case 9:
@@ -282,7 +314,7 @@ int main() {
 
 
 	deallocpool(&pools);
-	for (i = 0;i < image.width;i++) {
+	for (i = 0; i < image.width; i++) {
 		free(matrix[i]);
 	}
 	free(matrix);
@@ -295,7 +327,7 @@ int menu() {
 	int enter;
 	printf_s("--------------------------\nME LAB services\n--------------------------");
 
-	printf_s("\nMenu:\n1. Scan pools\n2. Print sorted pool list\n3. Select route\n4. Numeric report.\n5. Students addition\n9. Exit\nEnter choice: ");
+	printf_s("\nMenu:\n1. Scan pools\n2. Print sorted pool list\n3. Select route\n4. Numeric report.\n5. Students addition\n9. Exit.\nEnter choice: ");
 
 	scanf_s("%d", &choice);
 	enter = getchar();
@@ -311,6 +343,7 @@ co_t pool_middle(pix_t* root, int size) {
 
 	pixels = malloc(sizeof(co_t) * size + 1);
 	if (!pixels) return middle;
+
 
 	i = 0;
 
@@ -344,7 +377,7 @@ co_t pool_middle(pix_t* root, int size) {
 	return middle;
 }
 
-int LoadImage(image_t* image, const char* filename, unsigned char* head) {
+int load_image(image_t* image, const char* filename, unsigned char* head) {
 	int return_value = 0;
 	unsigned int image_data_address;
 	int width;
@@ -365,26 +398,25 @@ int LoadImage(image_t* image, const char* filename, unsigned char* head) {
 			image->width = width;
 			image->height = height;
 			fseek(file, 0, SEEK_SET);
-			for (int i = 0;i < 54;i++) {
+			for (int i = 0; i < 54; i++) {
 				image->header[i] = fgetc(file);
 			}
 		}
 		fclose(file);
 	}
 	else {
-		printf_s("(%s) Failed to open file\n", filename);
 		return_value = 0;
 	}
 	return return_value;
 }
 
-void imgtrx(pixmat** mtrx, image_t image, char* filename, int width_flag) {
+int imgtrx(pixmat** mtrx, image_t image, char* filename, int width_flag) {
 	int val, i = 0, j;
 	FILE* file;
 	val = fopen_s(&file, filename, "rb");
 	if (!file) {
-		printf_s("Error open the fishpool.bmp\n");
-		return;
+		printf_s("\nError open the %s\n", filename);
+		return -1;
 	}
 
 	if (file != 0)
@@ -392,7 +424,7 @@ void imgtrx(pixmat** mtrx, image_t image, char* filename, int width_flag) {
 		fseek(file, 54, SEEK_SET);
 		for (i = 0; i < image.height; i++)
 		{
-			for (j = 0; j < image.width; j++)
+			for (j = 0; j < width_flag; j++)
 			{
 				mtrx[j][i].color.b = fgetc(file);
 				mtrx[j][i].color.g = fgetc(file);
@@ -406,14 +438,15 @@ void imgtrx(pixmat** mtrx, image_t image, char* filename, int width_flag) {
 		}
 	}
 	fclose(file);
-	return;
+	return 0;
 }
 
-void CreateBMP(char* filename, char* txt, pixmat** matrix, int height, int width, unsigned char* header, int width_flag) {
+void create_bmp(char* filename, char* origin, char* txt, pixmat** matrix, image_t pic, unsigned char* header, int width_flag) {
 	FILE* image, * route;
 	co_t start, end;
 	char position;
 	int i, j;
+	imgtrx(matrix, pic, BMP, width_flag); //resetting the image matrix before painting a route
 	fopen_s(&image, filename, "wb");
 	fopen_s(&route, txt, "rt");
 
@@ -428,47 +461,47 @@ void CreateBMP(char* filename, char* txt, pixmat** matrix, int height, int width
 				position = fgetc(route);
 			fseek(route, -1, SEEK_CUR);
 			end = best_co(route);
-			RoutePainter(matrix, start.x, start.y, end.x, end.y, height, width, width_flag);
-			start = end;
-		} while (end.x != width && end.y != height);
+			route_painter(matrix, start.x--, start.y--, end.x, end.y, pic.height, pic.width, width_flag);
+			start.x = end.x; start.y = end.y + 1;
+		} while (end.x != width_flag && end.y != pic.height);
 		for (int i = 0; i < 54; i++)
 		{
 			fputc(header[i], image);
 		}
-		for (i = 0; i < height; i++)
+		for (i = 0; i < pic.height; i++)
 		{
-			for (j = 0; j < width; j++)
+			for (j = 0; j < width_flag; j++)
 			{
 				fputc(matrix[j][i].color.b, image);
 				fputc(matrix[j][i].color.g, image);
 				fputc(matrix[j][i].color.r, image);
 			}
 		}
+		fclose(image);
+		fclose(route);
 	}
 
 	else return;
-	fclose(image);
-	fclose(route);
 }
 
-poolList_t* Pools(pixmat** mtrx, image_t image, poolList_t* pools) {
+poolList_t* pools_f(pixmat** mtrx, image_t image, poolList_t* pools, int width_flag) {
 	int i, j;
 	int** temp;
 	int size;
 	pix_t* root = NULL;
 	co_t center;
 
-	temp = malloc(sizeof(int*) * image.width);
+	temp = malloc(sizeof(int*) * width_flag);
 	if (temp)
 	{
-		for (i = 0;i < image.width;i++) {
+		for (i = 0; i < width_flag; i++) {
 			temp[i] = malloc(sizeof(int) * image.height);
 		}
 	}// allocate memory to temp color signed matrix
 
 	for (i = 0; i < image.height; i++)
 	{
-		for (j = 0;j < image.width;j++) {
+		for (j = 0; j < width_flag; j++) {
 			if (mtrx[j][i].color.r == 155 && mtrx[j][i].color.g == 190 && mtrx[j][i].color.b == 245)
 			{
 				temp[j][i] = 1;
@@ -479,8 +512,8 @@ poolList_t* Pools(pixmat** mtrx, image_t image, poolList_t* pools) {
 		}
 	}
 
-	for (i = 0;i < image.height;i++) {
-		for (j = 0;j < image.width;j++) {
+	for (i = 0; i < image.height; i++) {
+		for (j = 0; j < width_flag; j++) {
 			if (temp[j][i] == 1)
 			{
 				size = 1;
@@ -498,7 +531,7 @@ poolList_t* Pools(pixmat** mtrx, image_t image, poolList_t* pools) {
 		}
 	}
 
-	for (i = 0;i < image.width;i++) {
+	for (i = 0; i < width_flag; i++) {
 		free(temp[i]);
 	}
 	free(temp);
@@ -583,8 +616,8 @@ void pool_insert(poolList_t** root, int size, co_t center, pix_t* pix) {
 		exit(1);
 	}
 	new_pool->next = NULL;
-	new_pool->poolCenter.x = center.x;
-	new_pool->poolCenter.y = center.y;
+	new_pool->pool_center.x = center.x;
+	new_pool->pool_center.y = center.y;
 	new_pool->size = size;
 	new_pool->pix = pix;
 
@@ -621,7 +654,7 @@ void deallocpool(poolList_t** root) {
 	*root = NULL;
 }
 
-int SpaceMod(int x, int y) {
+int space_mod(int x, int y) {
 	int n;
 	int space = 0;
 	n = x;
@@ -640,23 +673,46 @@ int SpaceMod(int x, int y) {
 	return space;
 }
 
-void RoutePainter(pixmat** matrix, int x, int y, int x_final, int y_final, int height, int width, int width_flag) {
-	int  j = 0, i = 0;
-	float movratio, b;
-	matrix[x][y].color.r = 250; matrix[x][y].color.g = 180; matrix[x][y].color.b = 30; //color pixel at the beggining
+void route_painter(pixmat** matrix, int x, int y, int x_final, int y_final, int height, int width, int width_flag) {
+	int  b, j = 0, i = 0, s_f = 1, dif;
+	float movratio;
+	x--; y--; //compensating for starting point which must be 1,1
+	matrix[x][y].color.r = 18; matrix[x][y].color.g = 180; matrix[x][y].color.b = 30; //color pixel at the beggining
 	movratio = ((float)y_final - (float)y) / ((float)x_final - (float)x);
-	b = (float)y - (float)(movratio * x);
-	x++;y++;
-
-	if (width_flag != 0) {
-		width = width_flag;
-		x_final = width_flag;
-	}
-
+	b = y - (int)(movratio * x);
+	if (movratio == 1 || movratio < 1) //covering cases for the starting pixel color
+		x++;
 	for (x; x < x_final && x < width && y < y_final && y < height; x++)
 	{
-		y = (int)((x * movratio) + b);
-		matrix[x][y].color.r = 100; matrix[x][y].color.g = 30; matrix[x][y].color.b = 232;
+		if (movratio != 1)
+		{
+			dif = y;
+			if ((int)((x * movratio) + b) == 0) {
+				y++;
+				matrix[x][y].color.r = 100; matrix[x][y].color.g = 30; matrix[x][y].color.b = 232;
+				y = (int)(((x + 1) * movratio) + b);
+			}
+			else
+				y = (int)(((x + 1) * movratio) + b); //adding 1 to x in order to reah to next coordinate
+			if (dif == y && s_f != 0) {
+				matrix[x][dif].color.r = 100; matrix[x][dif].color.g = 30; matrix[x][dif].color.b = 232;
+				s_f = 0;
+			}
+			if (y - dif > 1)
+			{
+				for (dif; y - dif >= 1;) {
+					dif++;
+					matrix[x][dif].color.r = 100; matrix[x][dif].color.g = 30; matrix[x][dif].color.b = 232;
+
+				}
+			}
+			else
+				matrix[x][y].color.r = 100; matrix[x][y].color.g = 30; matrix[x][y].color.b = 232;
+		}
+		else {
+			y = (int)((x * movratio) + b);
+			matrix[x][y].color.r = 100; matrix[x][y].color.g = 30; matrix[x][y].color.b = 232;
+		}
 	}
 	matrix[width - 1][height - 1].color.r = 250; matrix[width - 1][height - 1].color.g = 180; matrix[width - 1][height - 1].color.b = 30; //color pixel at the end
 }
@@ -724,128 +780,99 @@ co_t best_co(FILE* route) {
 				}
 			}
 		}
-		coordinate.x = (int)atof(tmpx);
-		coordinate.y = (int)atof(tmpy);
+		coordinate.x = atoi(tmpx);
+		coordinate.y = atoi(tmpy);
 	}
 	return coordinate;
 }
 
-void printNsortpools() {
-
-	FILE* f;
-	printing_t* head = malloc(sizeof(printing_t));
-	//printing_t* head = NULL;
-	int a = fopen_s(&f, "pools.txt", "rt");
-	int i; int k = 0; int j = 0; int  count_pools = -3; ; int flag = 0; int l = 0;
-	int coordinate_x, coordinate_y, poooolsize;
-	char filechar[22]; char chr;
-	if (f == NULL) {
+void printnsortpools() {
+	printing_t* head = NULL;
+	FILE* pools;
+	char trash;
+	co_t end_coordinate = { 0 };
+	int num_of_pool = pool_counter();
+	int poooolsize = 0, coordinate_x = 0, coordinate_y = 0;
+	int* pool_size_arr = pool_size_arr_malloc(num_of_pool);
+	co_t* middle_arr = middle_arr_malloc(num_of_pool);
+	fopen_s(&pools, "pools.txt", "rt");
+	if (!pools) {
 		printf_s("Problem reading pools.txt file\nList is empty"); //if there is no such a file  //failed to open pools.txt
-		return 0;
+		return;
 	}
-	if (a == 0) // open successfully
-	{
-		chr = fgetc(f);
-		while (chr != EOF)
-		{
-			if (chr == '\n')
-			{
-				count_pools = count_pools + 1; //counter pools
-			}
-			chr = fgetc(f);
-		}
-		if (count_pools == 0) { printf_s("List is empty"); } //if there are no pools
-		if (count_pools > 0)
-		{
+	else {
+		if (num_of_pool <= 0) { printf_s("List is empty"); } //if there are no pools)
+		else {
 			printf_s("\nSorted pools by size:\nCoordinate      Size\n==========  \t====\n");
+			fseek(pools, 12, SEEK_SET);
+			fscanf_s(pools, "%d %c %d", &end_coordinate.x, &trash, 1, &end_coordinate.y);
+			fseek(pools, 40, SEEK_CUR);
+			for (int i = 0; i < num_of_pool; i++) {
+				fscanf_s(pools, "%d %c %d", &coordinate_x, &trash, 1, &coordinate_y);
+				fseek(pools, 1, SEEK_CUR);
+				fscanf_s(pools, "%d %c ", &poooolsize, &trash, 1);
 
-			for (l = 0; l < count_pools; l++)
-			{
+				head = pools_sorting_ninsert(head, coordinate_x, coordinate_y, poooolsize);
 
-				char str[21], x[3], y[3], size[21];
-				for (i = 0; i <= strlen(str); i++)
-				{
-					str[i] = 0;
-				}
-				char* strpointer = str;
-				/*fgets(str,1, f);
-				fgets(str, 1, f);
-				fgets(str, 1, f);*/
-				fseek(f, 56 + l * 13, SEEK_SET);
-				fgets(strpointer, 19, f);
-				j = 0; k = 0;
-				for (i = 0; i <= strlen(str); i++)
-				{
-
-					if (str[i] != ',' && flag == 0)
-					{
-						x[i] = str[i + 1];
-					}
-					if (str[i] == ',')
-					{
-						flag = 1;
-					}
-					if (str[i] != ')' && flag == 1)
-					{
-						y[j] = str[i + 1];
-						j++;
-
-					}
-					if (str[i] == ')') { flag = 2; i++; }
-					if (flag == 2)
-					{
-						size[k] = str[i + 1];
-						k++;
-					}
-				}
-				flag = 0;
-
-				poooolsize = (int)atof(size);
-				coordinate_x = (int)atof(x);
-				coordinate_y = (int)atof(y);
-
-				pools_sortingNinsert(head, coordinate_x, coordinate_y, poooolsize);
 			}
-
 		}
+		fclose(pools);
+
 	}
-	fclose(f);
-	/*free(head);*/
+	print_list(head);
+	free_list_printing(head);
+	free(pool_size_arr);
+	free(middle_arr);
 }
 
-printing_t* pools_sortingNinsert(printing_t* head, int coordinate_x, int coordinate_y, int poooolsize) {
 
-	printing_t* temp = head;
-	printing_t* root = malloc(sizeof(printing_t));
+void free_list_printing(printing_t* head) {
+	printing_t* tmp;
+	while (head != NULL) {
+		tmp = head;
+		head = head->next;
+		free(tmp);
+	}
+}
+
+void print_list(printing_t* head) {
+	while (head != NULL) {
+		printf_s("(%3d,%3d)  \t%d \n", head->center_x, head->center_y, head->poolsize);
+		head = head->next;
+	}
+}
+
+printing_t* pools_sorting_ninsert(printing_t* head, int coordinate_x, int coordinate_y, int poooolsize) {
+
+
+	printing_t* ptr = head;
 	printing_t* newNode = malloc(sizeof(printing_t));
-	newNode->centerX = coordinate_x;
-	newNode->centerY = coordinate_y;
+	newNode->center_x = coordinate_x;
+	newNode->center_y = coordinate_y;
 	newNode->poolsize = poooolsize;
-
+	newNode->next = NULL;
 	if (!head) // empty list_t
 		return newNode;
-	if (poooolsize < root->poolsize) {
-		while (root->next && poooolsize < root->next->poolsize)
-			root = root->next;
-		newNode->next = root->next;
-		root->next = newNode;
+	if (poooolsize < ptr->poolsize) {
+		while (ptr->next && poooolsize < ptr->next->poolsize)
+			ptr = ptr->next;
+		newNode->next = ptr->next;
+		ptr->next = newNode;
 	}
 	else { // Place at beginning of list_t
 		newNode->next = head;
 		head = newNode;
 	}
-	printf_s("(%3d,%3d)  \t%d \n", head->centerX, head->centerY, head->poolsize);
-
 	return head;
 }
 
 void time2glow(char* filename, pixmat** matrix, image_t image, int width_flag) {
-	FILE* file, *txt;
-	list_t* curr, *root = NULL;
+	FILE* file, * txt;
+	list_t* curr, * root = NULL;
 	char pos;
 	float time, fuel;
 	int size, x, y, i = 0;
-	fopen_s(&file, Special, "rt");
+	fopen_s(&file, filename, "rt");
 	fopen_s(&txt, FUEL_TXT, "wt");
 	if (file != 0 && txt != 0)
 	{
@@ -854,6 +881,7 @@ void time2glow(char* filename, pixmat** matrix, image_t image, int width_flag) {
 		while (pos != EOF) {
 			fscanf_s(file, "%f %f %d %d %d", &time, &fuel, &size, &x, &y);
 			root = add((double)time, (double)fuel, size, x, y, root);
+			root = interReverseLL(root);
 			pos = fgetc(file);
 			for (i; pos != '>' && pos != EOF; i++)
 				pos = fgetc(file);
@@ -864,135 +892,264 @@ void time2glow(char* filename, pixmat** matrix, image_t image, int width_flag) {
 		for (curr = root; curr != NULL; curr = curr->next) {
 			fprintf_s(txt, "(%3d,%3d)\t%d\n", curr->x, curr->y, curr->size); //need to reverse list first
 			if (curr->next == NULL)
-				fuelStore(curr->oil);
+				fuel_store(curr->oil);
 		}
-		
+
 		fclose(file);
 		fclose(txt);
-		//CreateBMP(Most_Fuel,FUEL_TXT, matrix, image.height, image.width, image.header, width_flag);
-		freeList(root);
+		create_bmp(MOST_FUEL, BMP, FUEL_TXT, matrix, image, image.header, width_flag);
+		free_list(root);
 	}
 }
 
-void fuelStore(double fuel) {
-	int country;
+void fuel_store(double fuel) {
+	srand(time(NULL)); //initiating randomize function
+	int country, random = rand();
 	char purchase;
-	printf_s("\a\ncongratulations YOU HAVE MADE IT TO THE END!\nWelcome to your new plant, we have exausted our natural resorces and fuel is our only currency!\n\nyou have %.2lf fuel left in the tank\n", fuel);
+	link root[5];
+	printf_s("\a\ncongratulations YOU HAVE MADE IT TO THE END!\nWelcome to your new plant, we have exausted our natural resorces and fuel is our only currency!\n\nyou have %.2lf $ worth fuel left in the tank\n", fuel);
 	printf_s("\a\nthere is our store, you can buy anything here right away!\n (provided you have anough fuel...)\n");
 	if (fuel < 4)
 		printf("With this amount you can buy only a bottle of water..\n");
 	else {
-		printf_s("\nPlease select the country you want to buy from:\n 1) Israel\n 2) USA\n 3) China\n 4) Russia\n 5) Turkey\n Your Choice:");
-		scanf_s("%d%c", &country,& purchase,1);
-		switch (country){
-		case 1:
-			printf_s("A: Bottle of Wine (Mid-Range) %.2lf $\nB: Meal, Inexpensive Restaurant %.2lf $\nC: Monthly Pass (Regular Price) %.2lf $\nD: Meal for 2 People, Mid-range Restaurant, Three-course %.2lf $\nE: Parking in Rotschild st. in Tel Aviv %.2lf $\n",(fuel) / 5, (fuel) / 4, (fuel) / 3, (fuel) / 2, fuel);
-			printf_s("What will you would like to buy? : ");
-			purchase = getchar();
-			break;
-		case 2:
-			printf_s("A: Bottle of Wine (Mid-Range) %.2lf $\nB: 6 Domestic Beer (0.5 liter draught) %.2lf $\nC: 1 Pair of Jeans %.2lf $\nD: 1 Pair of Nike Running Shoes %.2lf $\nE: A tour in NASA space Station %.2lf $\n", (fuel) / 5, (fuel) / 4, (fuel) / 3, (fuel) / 2, fuel);
-			printf_s("What will you would like to buy? : ");
-			purchase = getchar();
-			break;
-		case 3:
-			printf_s("A: Beef Round (1kg) %.2lf $\nB: Meal for 2 People, Mid-range Restaurant, Three-course %.2lf $\nC: 1 Summer Dress in a Chain Store %.2lf $\nD: 1 Pair of Men Leather Business Shoes %.2lf $\nE: A Kung-Fu lesson with Shaolin munk %.2lf $\n", (fuel) / 5, (fuel) / 4, (fuel) / 3, (fuel) / 2, fuel);
-			printf_s("What will you would like to buy? : ");
-			purchase = getchar();
-			break;
-		case 4:
-			printf_s("A: Beef Round (1kg) %.2lf $\nB: 2 Bottles of Wine (Mid-Range) %.2lf $\nC: Monthly Pass (Regular Price) %.2lf $\nD: Meal for 2 People, Mid-range Restaurant, Three-course %.2lf $\nE: Horseback riding with the one and only Vladimir Putin %.2lf $\n", (fuel) / 5, (fuel) / 4, (fuel) / 3, (fuel) / 2, fuel);
-			printf_s("What will you would like to buy? : ");
-			purchase = getchar();
-			break;
-		case 5:
-			printf_s("A: 3 Meals, Inexpensive Restaurant %.2lf $\nB: 1 Pair of Nike Running Shoes(Fake ones) %.2lf $\nC: A couple retreat to Istanbul's best Spa & Turkish bath %.2lf $\nD: A picture infront the palace (without getting arrested) %.2lf $\nE: Starring in your own Soap Opera %.2lf $\n", (fuel) / 5, (fuel) / 4, (fuel) / 3, (fuel) / 2, fuel);
-			printf_s("What will you would like to buy? : ");
-			purchase = getchar();
-			break;
-		default:
-			break;
-		}
+		printf_s("\nPlease select the country you want to buy from:\n\n 1) Israel\n 2) USA\n 3) China\n 4) Russia\n 5) Turkey\n\n Your Choice : ");
+		scanf_s("%d%c", &country, &purchase, 1);
+		purchase = store_menu(country, fuel, random);
+		warehouse(root, purchase, country);
+		printf("\nAnd as a bonus we printed out for you a map with the route you've taken so others could learn how to save on fuel!\nlook for \"%s\" image in the folder\n", MOST_FUEL);
 	}
 }
 
-void storeMenu(char purchase) {
+char store_menu(int country, double fuel, int random) {
+	char purchase;
+	switch (country) {
+	case 1:
+		printf_s("\nA: Bottle of Wine (Mid-Range) %.2lf $\nB: Meal, Inexpensive Restaurant %.2lf $\nC: Monthly Pass (Regular Price) %.2lf $\nD: Meal for 2 People, Mid-range Restaurant, Three-course %.2lf $\nE: Parking in Rotschild st. in Tel Aviv %.2lf $\n", (fuel) / 5, (fuel) / 4, (fuel) / 3 + random % 2, (fuel) / 2 + random % 4, fuel + random % 10);
+		printf_s("What will you would like to buy? : ");
+		purchase = cashier(getchar(), fuel, random);
+		break;
+	case 2:
+		printf_s("\nA: Bottle of Wine (Mid-Range) %.2lf $\nB: 6 Domestic Beer (0.5 liter draught) %.2lf $\nC: 1 Pair of Jeans %.2lf $\nD: 1 Pair of Nike Running Shoes %.2lf $\nE: A tour in NASA space Station %.2lf $\n", (fuel) / 5, (fuel) / 4, (fuel) / 3 + random % 2, (fuel) / 2 + random % 4, fuel + random % 10);
+		printf_s("What will you would like to buy? : ");
+		purchase = cashier(getchar(), fuel, random);
+		break;
+	case 3:
+		printf_s("\nA: Beef Round (1kg) %.2lf $\nB: Meal for 2 People, Mid-range Restaurant, Three-course %.2lf $\nC: 1 Summer Dress in a Chain Store %.2lf $\nD: 1 Pair of Men Leather Business Shoes %.2lf $\nE: A Kung-Fu lesson with Shaolin munk %.2lf $\n", (fuel) / 5, (fuel) / 4, (fuel) / 3 + random % 2, (fuel) / 2 + random % 4, fuel + random % 10);
+		printf_s("What will you would like to buy? : ");
+		purchase = cashier(getchar(), fuel, random);
+		break;
+	case 4:
+		printf_s("\nA: Beef Round (1kg) %.2lf $\nB: 2 Bottles of Wine (Mid-Range) %.2lf $\nC: Monthly Pass (Regular Price) %.2lf $\nD: Meal for 2 People, Mid-range Restaurant, Three-course %.2lf $\nE: Horseback riding with the one and only Vladimir Putin %.2lf $\n", (fuel) / 5, (fuel) / 4, (fuel) / 3 + random % 2, (fuel) / 2 + random % 4, fuel + random % 10);
+		printf_s("What will you would like to buy? : ");
+		purchase = cashier(getchar(), fuel, random);
+		break;
+	case 5:
+		printf_s("\nA: 3 Meals, Inexpensive Restaurant %.2lf $\nB: 1 Pair of Nike Running Shoes(Fake ones) %.2lf $\nC: A couple retreat to Istanbul's best Spa & Turkish bath %.2lf $\nD: A picture infront the palace (without getting arrested) %.2lf $\nE: Starring in your own Soap Opera %.2lf $\n", (fuel) / 5, (fuel) / 4, (fuel) / 3 + random % 2, (fuel) / 2 + random % 4, fuel + random % 10);
+		printf_s("What will you would like to buy? : ");
+		purchase = cashier(getchar(), fuel, random);
+		break;
+	default:
+		purchase = 'F';
+		break;
+	} return purchase;
+}
+
+void warehouse(link* root, char purchase, int country) {
+	root[0].a = "https://images.app.goo.gl/ywD6DBAA7VYeydC7A"; root[0].b = "https://images.app.goo.gl/tHh1p6ZpRtVyAU3QA"; root[0].c = "https://images.app.goo.gl/8EYuGorXd3i1Zm4S8"; root[0].d = "https://images.app.goo.gl/7EBnM4NXzPVeMVBZ6"; root[0].e = "https://images.app.goo.gl/gft2hhyj6tL16T3J6";
+	root[1].a = root[0].a; root[1].b = "https://images.app.goo.gl/j4dE3DmupwjMrsmM7"; root[1].c = "https://images.app.goo.gl/iAV8FFF2Puq8jBVt5"; root[1].d = "https://images.app.goo.gl/agoj1a1cBfMntM179"; root[1].e = "https://images.app.goo.gl/jL7L1ap2dS6P5XRP7";
+	root[2].a = "https://images.app.goo.gl/jZoXAhupeoL3vAvU7"; root[2].b = "https://images.app.goo.gl/Qep3v3heo9oKAh9w9"; root[2].c = "https://images.app.goo.gl/mMEkYzUGVQ4N3ps27"; root[2].d = "https://images.app.goo.gl/WypDRjnJvUjRAddM8"; root[2].e = "https://images.app.goo.gl/fNQQReVSpatNh4Tv5";
+	root[3].a = root[2].a; root[3].b = root[1].a; root[3].c = root[0].c; root[3].d = "https://images.app.goo.gl/H23qyGT3Co3Z6ZL29"; root[3].e = "https://images.app.goo.gl/UTKJsDncjcbXrFZ79";
+	root[4].a = "https://images.app.goo.gl/rmXDTxquFaJ5wkW59"; root[4].b = "https://images.app.goo.gl/kgHje9Cg7ezoQwBT7"; root[4].c = "https://images.app.goo.gl/rUfouppXL9rt3o1o9"; root[4].d = "https://images.app.goo.gl/Wz2qRQ8Do6bD66pZ8"; root[4].e = "https://images.app.goo.gl/VxPKtzbjnmnaNpe89";
 	switch (purchase)
 	{
+	case 'A':
+		printf_s("Copy the link to your browser to get your product\n\n ----  %s  ----\n", root[country - 1].a);
+		break;
+	case 'B':
+		printf_s("Copy the link to your browser to get your product\n\n ----  %s  ----\n", root[country - 1].b);
+		break;
+	case 'C':
+		printf_s("Copy the link to your browser to get your product\n\n ----  %s  ----\n", root[country - 1].c);
+		break;
+	case 'D':
+		printf_s("Copy the link to your browser to get your product\n\n ----  %s  ----\n", root[country - 1].d);
+		break;
+	case 'E':
+		printf_s("Copy the link to your browser to get your product\n\n ----  %s  ----\n", root[country - 1].e);
+		break;
 	default:
+		printf_s("\nSorry, you don't have enough currency for this item\nBut... I'll take your fuel anyway, TNX! \n");
 		break;
 	}
 }
 
-void NumericReport() {
-	co_t start, end; 
-	FILE* route;
-	char position;
-	float* dist, * cx, * costs;
-	const float A = 2.5, dx = 0.1;
-	float distance, df;
-	int n, fx, i,j, dt, tf;
 
-	int x1 = 0, y1 = 0, x2 = 32, y2 = 43, x3 = 53, y3 = 55, x4 = 88, y4 = 100;
-	fopen_s(&route, BEST_TXT, "rt");
-
-
-	if (route != 0) {
-		printf_s("Please enter a positive intger as distance display interval:");
-		scanf_s("%d", &dt);
-		position = fgetc(route);
-		fseek(route, 14, SEEK_SET);
-		start = best_co(route);
-		do {
-			position = fgetc(route);
-			fseek(route, 2, SEEK_CUR);
-			end = best_co(route);
-			distance = sqrt(pow((start.x - end.x), 2) + pow((start.y - end.y), 2));
-			n = distance / dt;
-			dist = malloc(sizeof(float) * (n + 1));
-			dist[0] = 0;
-			cx = malloc(sizeof(float) * (n + 1));
-			costs = malloc(sizeof(float) * (n + 1));
-			cx[0] = 0;
-			costs[0] = 0;
-
-
-			for (i = 0; i <= n; i++) {
-				for (j = 0; j <= n; j++) {
-					if (distance = dist[j]) {
-						fx = 20;
-						dist[j] = 0;
-						j = j - n;
-					fx = 1;
-					dist[j] = j * dt;
-	 
-
-					}
-
-
-				}
-
-				cx[i + 1] = (A / (cx[i] + 1) + fx) * 0.1 + cx[i];
-				cx[i] =
-					df = (cx[i + 1] - cx[i]);
-				df = (A / (cx[i] + 1 + fx)) * dx;
-				costs[i] = df / dx;
-			}
-			if (i = n + 1)
-				dist[i] = distance - dist[i - 1];
-			costs[i] = df / dx;
-
-			start = end;
-		} while (end.x != 5 && end.y != 5);// not sure....
-
-
-		fclose(route);
-	}
-	else
+char cashier(char purchase, double fuel, int random) {
+	switch (purchase)
 	{
-		printf_s("\ncan't open file");
+	case 'A':
+		return 'A';
+		break;
+	case 'B':
+		return 'B';
+		break;
+	case 'C':
+		if (fuel - (fuel / 3 + random % 2) >= 0)
+			return purchase;
+		else
+			return 'Z';
+		break;
+	case 'D':
+		if (fuel - (fuel / 2 + random % 4) >= 0)
+			return purchase;
+		else
+			return 'Z';
+		break;
+	case 'E':
+		if (fuel - (fuel + random % 10) >= 0)
+			return purchase;
+		else
+			return 'Z';
+		break;
+	default:
+		printf_s("No such product\n But I'll take your fuel anywayyyy\a\nJust kidding, try again, enter only capital letters A-E, make sure you have enough currency:\t");
+		cashier(getchar(), fuel, random);
+		break;
 	}
 }
+
+list_t* interReverseLL(list_t* root) {
+	list_t* current = root;
+	list_t* prev = NULL, * after = NULL;
+	while (current != NULL) {
+		after = current->next;
+		current->next = prev;
+		prev = current;
+		current = after;
+	}
+	root = prev;
+
+}
+
+
+
+void NumericReport(image_t image) {
+	co_t start, end;
+	FILE* route;
+	char position;
+	double dt;//dt is the input user
+
+
+	fopen_s(&route, BEST_TXT, "rt");
+	if (!route) {
+		printf_s("Problem with file best-route.txt, or it might be empty.\n");
+	}
+	position = fgetc(route);
+	fseek(route, 15, SEEK_SET);
+	start = best_co(route);//                        
+
+	do {
+		position = fgetc(route);
+		while (position != '(' && position != EOF)
+			position = fgetc(route);
+		fseek(route, -1, SEEK_CUR);
+		end = best_co(route);
+		pix_t* curr = NULL; //current step 
+		int c;
+		curr = pointsOfRoute(route);
+		printf_s("Please enter a positive intger as distance display interval: ");
+
+		do
+		{
+
+			scanf_s("%lf", &dt);
+			while ((c = getchar()) != '\n' && c != EOF);
+			if ((dt - (int)dt != 0) || dt <= 0)
+				printf_s("Bad input, try again\n");
+		} while ((dt - (int)dt != 0) || dt <= 0);
+
+		data_t* head = costsCalc(curr, start, end);
+		data_t* temp = head;
+		printf_s("Distance   Consumption\n========== ===========\n");
+		print_jump(head, dt);
+		start = end;//                                  
+	} while (end.x != image.width && end.y != image.height);// at the end of one calculations
+
+	//freedata_t(head);
+	//freepix_t(curr);
+	return 0;
+
+}  //end of numericreport!!!
+
+void addnewnode(data_t** head, double d, double c) {
+
+	data_t* newNode = malloc(sizeof(data_t));
+	if (!newNode)return;
+	newNode->d = d;
+	newNode->c = c;
+	newNode->next = NULL;
+
+	if (*head == NULL)
+		*head = newNode;
+
+	else {
+		data_t* lastNode = *head;
+		while (lastNode->next != NULL) lastNode = lastNode->next;
+		lastNode->next = newNode;
+	}
+
+}
+
+data_t* costsCalc(pix_t* curr, co_t start, co_t end) {     //          points                     best route!
+	int  fuel = 20, drive = 1;
+	double costs = 0, D = 0, n = 0;// n is step counter D is distance  
+	data_t* head = NULL;
+	D = D + distance(start, end);
+	while (n < D) {
+		addnewnode(&head, n, costs);
+		n += 0.1;
+		if (n < D)
+			costs += ((2.5 / (costs + 1) + drive) * 0.1);
+	}
+	if (head->next)//                             {
+		costs += ((2.5 / (costs + 1) + fuel) * 0.1);
+	addnewnode(&head, distance(start,end), costs);
+	//start = end;
+	//end = head->next;//
+	return head;
+}
+
+void print_jump(data_t* head, double dt) {
+	data_t* temp = head;
+	int i;
+	while (temp->next) {
+		printf_s("   %7.3lf    %7.3lf\t\n", temp->d, temp->c);
+		for (i = 0; i < dt * 10; i++) {
+			if (temp->next)temp = temp->next;
+		}
+	}
+	printf_s("   %7.3lf    %7.3lf\t\n", temp->d, temp->c);
+}
+
+pix_t* pointsOfRoute(FILE* route) {
+	pix_t* tail = NULL, * temp, * head = NULL;
+	char data[40];
+	int i = 0;
+	fseek(route, 0, SEEK_SET);
+	while (fgets(data, sizeof(data), route)) {
+		i++;
+		if (i > 1) {
+			temp = malloc(sizeof(pix_t));
+			if (!temp)return NULL;
+			temp->p.x = atoi(&data[1]);
+			temp->p.y = atoi(strchr(data, ',') + 1);
+			if (tail)tail->next = temp;
+			else head = temp;
+			tail = temp;
+		}
+	}
+}
+
 
 ///////////////////////////////////////////function for section 3- START///////////////////////////////////////////
 
@@ -1415,7 +1572,7 @@ list_t* add(double time, double oil, int size, int x, int y, list_t* head) {
 	return head;
 }
 
-void freeList(list_t* head) {
+void free_list(list_t* head) {
 	list_t* tmp;
 	while (head != NULL) {
 		tmp = head;
@@ -1455,7 +1612,7 @@ void printing_to_screen(char test, int counter2, int j, int i, int p, int counte
 			}
 			print(head, 0, counter2);
 			printf_s("\n");
-			freeList(head);
+			free_list(head);
 		}
 		i++;
 	}
@@ -1561,7 +1718,7 @@ void there_a_route(double oil, co_t current_pos, co_t end_coordinate) {
 	//need to add section 3c!!!
 }
 
-co_t InputCheck(co_t image) {
+co_t input_check(co_t image) {
 	co_t coordinate;
 	do {
 		char input[81], * dex;
@@ -1592,12 +1749,18 @@ co_t InputCheck(co_t image) {
 				x[i] = input[i];
 			}
 			else {
+				if (input[i] < '0' || input[i] > '9')
+				{
+					input_check(image);
+				}
 				y[j] = input[i];
 				j++;
 			}
 		}
-		coordinate.x = (int)atof(x);
+		coordinate.x = (int)atof(x); //we set the matrix from 0,0 in order to answer the demend of bottom left coordinate is 1,1 we subtract 1 from the input
 		coordinate.y = (int)atof(y);
+		if (coordinate.x == 0 || coordinate.y == 0)
+			input_check(image);
 	} while (coordinate.x > image.x || coordinate.y > image.y);
 	return coordinate;
 }
@@ -1627,7 +1790,7 @@ void section_3() {
 		}
 		fclose(pools);
 		reset_files();
-		co_t current_pos = InputCheck(end_coordinate);
+		co_t current_pos = input_check(end_coordinate);
 		double oil = oil_input();
 		if (route_finder(current_pos, end_coordinate, oil, 0, pool_size_arr, middle_arr, 0, 0, num_of_pool, 1) != 0) {
 			printf_s("Sorry, could not reach destination with these inputs\n");
