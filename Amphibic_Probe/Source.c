@@ -77,6 +77,8 @@ typedef struct country_link { // struct to store link to all store products in o
 
 int menu(); //menu function
 
+void switcher(char* choice, pixmat** matrix, int width_flag, image_t image);
+
 int load_image(image_t* image, const char* filename, unsigned char* head); //loading the BMP image and getting WxH values
 
 co_t pool_middle(pix_t* root, int size); //returning the pool's center coordinates from given coordinate array
@@ -208,11 +210,9 @@ int file_curpt(int num_of_pool); //check if the file crupt
 
 
 int main() {
-	int i, val, count = 0, choice = 0, width_flag = 0;
-	poolList_t* pools = NULL;
+	int i, choice = 0, width_flag = 0;
 	pixmat** matrix;
 	static image_t image;
-	FILE* tx;
 
 	if ((load_image(&image, BMP, image.header)) != 0) {
 		return -1;
@@ -233,64 +233,7 @@ int main() {
 	choice = menu();
 
 	while (choice != 9){
-		switch (choice){
-		case 1:
-			if (imgtrx(matrix, image, BMP, width_flag) != -1){
-				deallocpool(&pools);
-				val = fopen_s(&tx, TXT, "w");
-				if (!tx) return 0;
-				pools = pools_f(matrix, image, pools, width_flag);
-				if (pools == NULL) {
-					printf_s("\nTotal of 0 pools.\n");
-					fprintf_s(tx, "%s%dx%d%s", "Image size (", image.width, image.height, ")\nPool Center	Size\n===========	====");
-					fclose(tx);
-					choice = menu();
-					break;
-				}
-				printf_s("\nCoordinate x1,y1 of the first discoverd pool (%d,%d)", pools->pool_center.x, pools->pool_center.y);
-				printf_s("\nSize %d", pools->size);
-				if (val == 0) {
-					fprintf_s(tx, "%s%dx%d%s", "Image size (", image.width, image.height, ")\nPool Center	Size\n===========	====");
-					for (poolList_t* curr = pools; curr != NULL; curr = curr->next) {
-						fprintf_s(tx, "\n(%d,%d)", curr->pool_center.x, curr->pool_center.y);
-						for (i = 0; i < 9 - space_mod(curr->pool_center.x, curr->pool_center.y); i++)
-							fputc(' ', tx);
-						fprintf_s(tx, "%d", curr->size);
-						count++; //iterating through the pool list, printing size and center
-					}
-				}
-				else{
-					printf_s("ERROR! couldn't open %s", TXT);
-				}
-				printf_s("\nTotal of %d pools.\n", count);
-				fclose(tx);
-			}
-			choice = menu();
-			break;
-		case 2:
-			printnsortpools();
-			choice = menu();
-			break;
-		case 3:
-			putchar('\n');
-			if (section_3() != -1)
-				create_bmp(BMPCPY, BMP, BEST_TXT, matrix, image, image.header, width_flag);
-			choice = menu();
-			break;
-		case 4:
-			//Naama
-			printf("\nNot ready yet...\n");
-			choice = menu();
-			break;
-		case 5:
-			time2glow(SPECIAL, matrix, image, width_flag);
-			choice = menu();
-			break;
-		default:
-			printf("\nBad input, try again\n\n");
-			choice = menu();
-			break;
-		}
+		switcher(&choice, matrix,width_flag,image);
 	}
 	for (i = 0;i < image.width;i++) {
 		free(matrix[i]);
@@ -309,6 +252,72 @@ int menu() {
 	scanf_s("%d", &choice);
 	enter = getchar(); //dealing with the enter being saved in cartridge and getting put in the next char scanning
 	return choice;
+}
+
+void switcher(char* choice, pixmat** matrix, int width_flag, image_t image) {
+	int i, val, count = 0;
+	poolList_t* pools = NULL;
+	FILE* tx;
+
+	switch (*choice) {
+	case 1:
+		if (imgtrx(matrix, image, BMP, width_flag) != -1) {
+			if(pools) deallocpool(pools);
+			val = fopen_s(&tx, TXT, "w");
+			if (!tx) return 0;
+			pools = pools_f(matrix, image, pools, width_flag);
+			if (pools == NULL) {
+				printf_s("\nTotal of 0 pools.\n");
+				fprintf_s(tx, "%s%dx%d%s", "Image size (", image.width, image.height, ")\nPool Center	Size\n===========	====");
+				fclose(tx);
+				*choice = menu();
+				break;
+			}
+			printf_s("\nCoordinate x1,y1 of the first discoverd pool (%d,%d)", pools->pool_center.x, pools->pool_center.y);
+			printf_s("\nSize %d", pools->size);
+			if (val == 0) {
+				fprintf_s(tx, "%s%dx%d%s", "Image size (", image.width, image.height, ")\nPool Center	Size\n===========	====");
+				for (poolList_t* curr = pools; curr != NULL; curr = curr->next) {
+					fprintf_s(tx, "\n(%d,%d)", curr->pool_center.x, curr->pool_center.y);
+					for (i = 0; i < 9 - space_mod(curr->pool_center.x, curr->pool_center.y); i++)
+						fputc(' ', tx);
+					fprintf_s(tx, "%d", curr->size);
+					count++; //iterating through the pool list, printing size and center
+				}
+			}
+			else {
+				printf_s("ERROR! couldn't open %s", TXT);
+			}
+			printf_s("\nTotal of %d pools.\n", count);
+			fclose(tx);
+		}
+		*choice = menu();
+		break;
+	case 2:
+		printnsortpools();
+		*choice = menu();
+		break;
+	case 3:
+		putchar('\n');
+		if (section_3() != -1)
+			create_bmp(BMPCPY, BMP, BEST_TXT, matrix, image, image.header, width_flag);
+		*choice = menu();
+		break;
+	case 4:
+		//Naama
+		printf("\nNot ready yet...\n");
+		*choice = menu();
+		break;
+	case 5:
+		time2glow(SPECIAL, matrix, image, width_flag);
+		*choice = menu();
+		break;
+	default:
+		printf("\nBad input, try again\n\n");
+		*choice = menu();
+		break;
+	}
+
 }
 
 co_t pool_middle(pix_t* root, int size) {
