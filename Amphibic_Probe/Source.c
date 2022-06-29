@@ -85,6 +85,8 @@ int imgtrx(pixmat** mtrx, image_t image, char* filename, int width_flag); //conv
 
 poolList_t* pools_f(pixmat** mtrx, image_t image, poolList_t* pools, int width_flag); //Creating list of pools which contain size and center co. for each pool
 
+void BluePixRec(pixmat** mtrx, int** temp, image_t image);
+
 void create_bmp(char* filename, char* origin, char* txt, pixmat** matrix, image_t pic, unsigned char* header, int width_flag); // Print the route on the bmp copy
 
 void segment(pix_t* root, pixmat** mtrx, int** temp, image_t image, int i, int j, int* size); //using region base image segmentation to detect pools
@@ -448,20 +450,9 @@ poolList_t* pools_f(pixmat** mtrx, image_t image, poolList_t* pools, int width_f
 				temp[i] = malloc(sizeof(int) * image.height);
 			}// allocate memory to temp color signed matrix
 	}
-
+	BluePixRec(mtrx, temp, image);
 	if (temp != 0)
 	{
-
-		for (i = 0; i < image.width; i++) {
-			for (j = 0;j < image.height;j++) {
-				if (mtrx[i][j].color.r == 155 && mtrx[i][j].color.g == 190 && mtrx[i][j].color.b == 245) { // Registering blue and non-blue pixel to 2d matrix named temp
-					temp[i][j] = 1;
-				}
-				else {
-					temp[i][j] = 0;
-				}
-			}
-		}
 		for (i = 0;i < image.height;i++) {
 			for (j = 0;j < image.width;j++) {
 				if (temp[j][i] == 1) { //Going over all the pixels in the matrix and checking if it is blue or not
@@ -484,6 +475,20 @@ poolList_t* pools_f(pixmat** mtrx, image_t image, poolList_t* pools, int width_f
 		return pools;
 	} else
 		return pools;
+}
+
+void BluePixRec(pixmat** mtrx, int** temp, image_t image) {
+	int i, j;
+	for (i = 0; i < image.width; i++) {
+		for (j = 0;j < image.height;j++) {
+			if (mtrx[i][j].color.r == 155 && mtrx[i][j].color.g == 190 && mtrx[i][j].color.b == 245) { // Registering blue and non-blue pixel to 2d matrix named temp
+				temp[i][j] = 1;
+			}
+			else {
+				temp[i][j] = 0;
+			}
+		}
+	}
 }
 
 void segment(pix_t* root, pixmat** mtrx, int** temp, image_t image, int i, int j, int* size) {
@@ -1504,7 +1509,6 @@ void there_a_route(double oil, co_t current_pos, co_t end_coordinate) {
 	remove("best-route2.txt");
 	printf_s("New best-route.txt file was created\n");
 	free(data);
-	//need to add section 3c!!!
 }
 
  co_t input_check(co_t image) {
