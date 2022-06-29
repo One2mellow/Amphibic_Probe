@@ -127,6 +127,8 @@ int section_3();
 
 co_t input_check(co_t image); //checking the validity of the starting coordinates
 
+int stringfixer(char* input, int* commacount, co_t image);//making sure that the string for section 3 input is ok
+
 void there_a_route(double oil, co_t current_pos, co_t end_coordinate); //All the functions that print to screen and file together
 
 void max_oil_file_creation(int i, int counter, double data[], double kk, int j, char test, int p, int counter2, int c, double timeb, double oilb, int sizeb, int xb, int yb, co_t current_pos, co_t end_coordinate, double oil);
@@ -1506,29 +1508,14 @@ void there_a_route(double oil, co_t current_pos, co_t end_coordinate) {
 }
 
  co_t input_check(co_t image) {
-	co_t coordinate;
+	 co_t coordinate = { 0 };
 	do {
-		char input[81], * dex;
+		char input[81];
 		char x[80] = { 0 }, y[80] = { 0 };
 		int i, j = 0, flag = 0, commacount = 0;
 		printf_s("Please Enter valid x,y start coordinate, bmp width is %d and height is %d\n", image.x, image.y);
 		gets_s(input, 81);
-		dex = strchr(input, ',');
-		while (dex == NULL) {
-			printf_s("Please Enter valid x,y start coordinate, bmp width is %d and height is %d\n", image.x, image.y);
-			gets_s(input, 81);
-			dex = strchr(input, ',');
-		}
-		for (i = 0; input[i] != '\0'; i++) {
-			if (input[i] < '0' || input[i] > '9')
-				if (input[i] != ',' && input[i] != ' ') {
-					printf_s("Please Enter valid x,y start coordinate, bmp width is %d and height is %d\n", image.x, image.y);
-					gets_s(input, 81);
-					i = 0;
-				}
-			if (input[i] == ',')
-				commacount++;
-		}
+		stringfixer(&input, &commacount, image);
 		for (i = 0; input[i] != '\0'; i++) {
 			if (input[i] == ',') {
 				flag = 1;
@@ -1549,6 +1536,27 @@ void there_a_route(double oil, co_t current_pos, co_t end_coordinate) {
 	} while (coordinate.x > image.x || coordinate.y > image.y);
 	return coordinate;
 }
+
+ int stringfixer(char* input, int* commacount, co_t image) {
+	 char* dex;
+	 int i;
+	 dex = strchr(input, ',');
+	 while (dex == NULL) {
+		 printf_s("Please Enter valid x,y start coordinate, bmp width is %d and height is %d\n", image.x, image.y);
+		 gets_s(input, 81);
+		 dex = strchr(input, ',');
+	 }
+	 for (i = 0; input[i] != '\0'; i++) {
+		 if (input[i] < '0' || input[i] > '9')
+			 if (input[i] != ',' && input[i] != ' ') {
+				 printf_s("Please Enter valid x,y start coordinate, bmp width is %d and height is %d\n", image.x, image.y);
+				 gets_s(input, 81);
+				 i = 0;
+			 }
+		 if (input[i] == ',')
+			 *commacount++;
+	 }
+ }
 
 /*Section 3 -
 Shows the fastest route from a certain point on the map to the end point considering the amount of oil*/
