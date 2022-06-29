@@ -432,45 +432,55 @@ void create_bmp(char* filename, char* origin, char* txt, pixmat** matrix, image_
 
 poolList_t* pools_f(pixmat** mtrx, image_t image, poolList_t* pools, int width_flag) {
 	int i, j, size;
-	int** temp;
+	int** temp = NULL;
+	int HiMem = sizeof(int) * image.height;
+	int WiMem = sizeof(int*) * width_flag;
 	pix_t* root = NULL;
 	co_t center;
-	temp = malloc(sizeof(int*) * width_flag); //alocating memory for matrix which will contain 1/0 for each blue/non-blue pixel
-	if (temp){
-		for (i = 0;i < width_flag; i++) {
-			temp[i] = malloc(sizeof(int) * image.height);
-		}
-	}// allocate memory to temp color signed matrix
-	for (i = 0; i < image.height; i++){
-		for (j = 0;j < width_flag;j++) {
-			if (mtrx[j][i].color.r == 155 && mtrx[j][i].color.g == 190 && mtrx[j][i].color.b == 245){ // Registering blue and non-blue pixel to 2d matrix named temp
-				temp[j][i] = 1;
-			}
-			else {
-				temp[j][i] = 0;
-			}
-		}
+	if (WiMem > 0)
+		temp = malloc(WiMem); //alocating memory for matrix which will contain 1/0 for each blue/non-blue pixel
+	if (temp) {
+		if (HiMem > 0)
+			for (i = 0;i < width_flag; i++) {
+				temp[i] = malloc(HiMem);
+			}// allocate memory to temp color signed matrix
 	}
-	for (i = 0;i < image.height;i++) {
-		for (j = 0;j < width_flag;j++) {
-			if (temp[j][i] == 1){ //Going over all the pixels in the matrix and checking if it is blue or not
-				size = 1;
-				temp[j][i] = 0;
-				pix_insert(&root, mtrx[j][i].cordinate); //saving the blue pixel to the head of linked list
-				segment(root, mtrx, temp, image, i, j, &size); //entering to Image segmentation function to find adjacent blue pixels
-				if (size > 9){
-					center = pool_middle(root, size);
-					pool_insert(&pools, size, center, root); //saving the pool to linked list ONLY if it has size of 10 or more
+
+	if (temp != 0)
+	{
+
+		for (i = 0; i < image.height; i++) {
+			for (j = 0;j < width_flag;j++) {
+				if (mtrx[j][i].color.r == 155 && mtrx[j][i].color.g == 190 && mtrx[j][i].color.b == 245) { // Registering blue and non-blue pixel to 2d matrix named temp
+					temp[j][i] = 1;
+				}
+				else {
+					temp[j][i] = 0;
 				}
 			}
-			deallocpix(&root); //deallocting the memory of the pixel's linked list
 		}
-	}
-	for (i = 0;i < width_flag;i++) {
-		free(temp[i]); //deallocating temp matrix memory
-	}
-	free(temp);
-	return pools;
+		for (i = 0;i < image.height;i++) {
+			for (j = 0;j < width_flag;j++) {
+				if (temp[j][i] == 1) { //Going over all the pixels in the matrix and checking if it is blue or not
+					size = 1;
+					temp[j][i] = 0;
+					pix_insert(&root, mtrx[j][i].cordinate); //saving the blue pixel to the head of linked list
+					segment(root, mtrx, temp, image, i, j, &size); //entering to Image segmentation function to find adjacent blue pixels
+					if (size > 9) {
+						center = pool_middle(root, size);
+						pool_insert(&pools, size, center, root); //saving the pool to linked list ONLY if it has size of 10 or more
+					}
+				}
+				deallocpix(&root); //deallocting the memory of the pixel's linked list
+			}
+		}
+		for (i = 0;i < width_flag;i++) {
+			free(temp[i]); //deallocating temp matrix memory
+		}
+		free(temp);
+		return pools;
+	} else
+		return pools;
 }
 
 void segment(pix_t* root, pixmat** mtrx, int** temp, image_t image, int i, int j, int* size) {
@@ -799,7 +809,7 @@ void time2glow(char* filename, pixmat** matrix, image_t image, int width_flag) {
 }
 
 void fuel_store(double fuel) {
-	srand(time(NULL)); //initiating randomize function
+	srand((unsigned int)time(NULL)); //initiating randomize function
 	int country, random = rand();
 	char purchase;
 	link root[5];
