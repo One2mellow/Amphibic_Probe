@@ -75,6 +75,12 @@ typedef struct country_link { // struct to store link to all store products in o
 	char* e;
 }link;
 
+typedef struct data {
+	double d; //distance
+	double c; //cost
+	struct data* next;
+}data_t;
+
 int menu(); //menu function
 
 void switcher(char* choice, pixmat** matrix, int width_flag, image_t image);
@@ -128,6 +134,16 @@ void warehouse(link* root, char purchase, int country); //generates link databas
 char cashier(char purchase, double fuel, int random);
 
 list_t* interReverseLL(list_t* root); //revesrs the linked list order of type list_t
+
+void NumericReport(image_t image);
+
+void addnewnode(data_t** head, double d, double c);
+
+data_t* costsCalc(pix_t* curr, co_t start, co_t end);
+
+void print_jump(data_t* head, double dt);
+
+pix_t* pointsOfRoute(FILE* route);
 
 int section_3();
 
@@ -197,6 +213,7 @@ int reducing_route_finder4(int x); //Print x when the tracker runs out of oil
 int reducing_route_finder2(co_t middle_arr[], int p1, int x, int r, double bb, double ab, int pool_size_arr[], co_t temp1); //Print tracker data to a file
 
 int reducing_route_finder(int x, int r, double time, co_t tracker_coordinate, co_t end_coordinate, double ab, int size_of_pool); //Print tracker data to a file
+
 
 int closest_pool(co_t current_pos, co_t middle_arr[], int size); //find the closest pool
 /*The function receives an array of pools and a current coordinate and
@@ -304,8 +321,7 @@ void switcher(char* choice, pixmat** matrix, int width_flag, image_t image) {
 		*choice = menu();
 		break;
 	case 4:
-		//Naama
-		printf("\nNot ready yet...\n");
+		NumericReport(image);
 		*choice = menu();
 		break;
 	case 5:
@@ -964,6 +980,123 @@ list_t* interReverseLL(list_t* root) {
 	}
 	root = prev;
 	return root;
+}
+
+void NumericReport(image_t image) {
+	co_t start, end;
+	FILE* route;
+	char position;
+	double dist, dt;//dt is the input user
+
+
+	fopen_s(&route, BEST_TXT, "rt");
+	if (!route) {
+		printf_s("Problem with file best-route.txt, or it might be empty.\n");
+	}
+	position = fgetc(route);
+	fseek(route, 15, SEEK_SET);
+	start = best_co(route);//                        
+
+	do {
+		position = fgetc(route);
+		while (position != '(' && position != EOF)
+			position = fgetc(route);
+		fseek(route, -1, SEEK_CUR);
+		end = best_co(route);
+		pix_t* curr = NULL; //current step 
+		int c;
+		curr = pointsOfRoute(route);
+		printf_s("Please enter a positive intger as distance display interval: ");
+
+		do
+		{
+
+			scanf_s("%lf", &dt);
+			while ((c = getchar()) != '\n' && c != EOF);
+			if ((dt - (int)dt != 0) || dt <= 0)
+				printf_s("Bad input, try again\n");
+		} while ((dt - (int)dt != 0) || dt <= 0);
+
+		data_t* head = costsCalc(curr, start, end);
+		data_t* temp = head;
+		printf_s("Distance   Consumption\n========== ===========\n");
+		print_jump(head, dt);
+		start = end;//                                  
+	} while (end.x != image.width && end.y != image.height);// at the end of one calculations
+
+	//freedata_t(head);
+	//freepix_t(curr);
+	return 0;
+
+}
+
+void addnewnode(data_t** head, double d, double c) {
+
+	data_t* newNode = malloc(sizeof(data_t));
+	if (!newNode)return;
+	newNode->d = d;
+	newNode->c = c;
+	newNode->next = NULL;
+
+	if (*head == NULL)
+		*head = newNode;
+
+	else {
+		data_t* lastNode = *head;
+		while (lastNode->next != NULL) lastNode = lastNode->next;
+		lastNode->next = newNode;
+	}
+}
+
+data_t* costsCalc(pix_t* curr, co_t start, co_t end) {     //points from best route
+	int  fuel = 20, drive = 1;
+	double costs = 0, D = 0, n = 0;// n is step counter D is distance  
+	//pix_t* start = curr, * end = curr->next;
+	data_t* head = NULL;
+	D = D + distance(start, end);
+	while (n < D) {
+		addnewnode(&head, n, costs);
+		n += 0.1;
+		if (n < D)
+			costs += ((2.5 / (costs + 1) + drive) * 0.1);
+	}
+	if (head->next)//                             {
+		costs += ((2.5 / (costs + 1) + fuel) * 0.1);
+	addnewnode(&head, distance(start, end), costs);
+	//start = end;
+	//end = head->next;//
+	return head;
+}
+
+void print_jump(data_t* head, double dt) {
+	data_t* temp = head;
+	int i;
+	while (temp->next) {
+		printf_s("   %7.3lf    %7.3lf\t\n", temp->d, temp->c);
+		for (i = 0; i < dt * 10; i++) {
+			if (temp->next)temp = temp->next;
+		}
+	}
+	printf_s("   %7.3lf    %7.3lf\t\n", temp->d, temp->c);
+}
+
+pix_t* pointsOfRoute(FILE* route) {
+	pix_t* tail = NULL, * temp, * head = NULL;
+	char data[40];
+	int i = 0;
+	fseek(route, 0, SEEK_SET);
+	while (fgets(data, sizeof(data), route)) {
+		i++;
+		if (i > 1) {
+			temp = malloc(sizeof(pix_t));
+			if (!temp)return NULL;
+			temp->p.x = atoi(&data[1]);
+			temp->p.y = atoi(strchr(data, ',') + 1);
+			if (tail)tail->next = temp;
+			else head = temp;
+			tail = temp;
+		}
+	}
 }
 
 
