@@ -200,27 +200,23 @@ double distance(co_t a, co_t b); //find distance between to cordinates
 
 
 int main() {
-	int three, i, val, count = 0, choice = 0, width_flag = 0;
+	int i, val, count = 0, choice = 0, width_flag = 0;
 	poolList_t* pools = NULL;
 	pixmat** matrix;
 	static image_t image;
 	FILE* tx;
-
-	
 
 	if ((load_image(&image, BMP, image.header)) != 0) {
 		return -1;
 	}
 
 	width_flag = image.width;
-	if (image.width % 4 != 0) // making sure width is divsible by 4 due to BMP format regulations
-	{
+	if (image.width % 4 != 0){ // making sure width is divsible by 4 due to BMP format regulations
 		width_flag = image.width + 4 - (image.width % 4);
 	}
 
 	matrix = malloc(sizeof(pixmat*) * width_flag);
-	if (matrix)
-	{
+	if (matrix){
 		for (i = 0;i < width_flag;i++) {
 			matrix[i] = malloc(sizeof(pixmat) * image.height);
 		}
@@ -228,13 +224,10 @@ int main() {
 
 	choice = menu();
 
-	while (choice != 9)
-	{
-		switch (choice)
-		{
+	while (choice != 9){
+		switch (choice){
 		case 1:
-			if (imgtrx(matrix, image, BMP, width_flag) != -1)
-			{
+			if (imgtrx(matrix, image, BMP, width_flag) != -1){
 				val = fopen_s(&tx, TXT, "w");
 				if (!tx) return 0;
 				pools = pools_f(matrix, image, pools, width_flag);
@@ -256,18 +249,15 @@ int main() {
 						count++; //iterating through the pool list, printing size and center
 					}
 				}
-				else
-				{
+				else{
 					printf_s("ERROR! couldn't open %s", TXT);
 				}
-
 				printf_s("\nTotal of %d pools.\n", count);
 				fclose(tx);
 			}
 			choice = menu();
 			break;
 		case 2:
-			
 			printnsortpools();
 			choice = menu();
 			break;
@@ -279,6 +269,8 @@ int main() {
 			break;
 		case 4:
 			//Naama
+			printf("\nNot ready yet...\n");
+			choice = menu();
 			break;
 		case 5:
 			time2glow(SPECIAL, matrix, image, width_flag);
@@ -294,12 +286,10 @@ int main() {
 		}
 	}
 	deallocpool(&pools);
-
 	for (i = 0;i < width_flag;i++) {
 		free(matrix[i]);
 	}
 	free(matrix);
-
 	return 0;
 }
 
@@ -353,10 +343,7 @@ co_t pool_middle(pix_t* root, int size) {
 }
 
 int load_image(image_t* image, const char* filename, unsigned char* head) {
-	int return_value = 0;
-	int width;
-	int height;
-
+	int width, height, return_value = 0;
 	FILE* file;
 	return_value = fopen_s(&file, filename, "rb");
 	if (file) {
@@ -388,14 +375,10 @@ int imgtrx(pixmat** mtrx, image_t image, char* filename, int width_flag) {
 		printf_s("\nError open the %s\n", filename);
 		return -1;
 	}
-
-	if (file != 0)
-	{
+	if (file != 0){
 		fseek(file, 54, SEEK_SET); //Skipping the header bytes and getting to the color pallette 
-		for (i = 0; i < image.height; i++)
-		{
-			for (j = 0; j < width_flag; j++)
-			{
+		for (i = 0; i < image.height; i++){
+			for (j = 0; j < width_flag; j++){
 				mtrx[j][i].color.b = fgetc(file); //Saving the RGB data to the correct x,y location on the color pallette
 				mtrx[j][i].color.g = fgetc(file); //On the BMP the data is actually stored in order of BGR
 				mtrx[j][i].color.r = fgetc(file);
@@ -416,7 +399,6 @@ void create_bmp(char* filename, char* origin, char* txt, pixmat** matrix, image_
 	imgtrx(matrix, pic, BMP, width_flag); //resetting the image matrix before painting a route
 	fopen_s(&image, filename, "wb"); //opening the image file
 	fopen_s(&route, txt, "rt"); //opening the best route file
-
 	if (image != 0 && route != 0) { //making sure that the two files are open
 		position = fgetc(route); //the current cursor location
 		fseek(route, 15, SEEK_SET); //skiping the title of the text file
@@ -430,14 +412,11 @@ void create_bmp(char* filename, char* origin, char* txt, pixmat** matrix, image_
 			route_painter(matrix, start.x, start.y, end.x, end.y, pic.height, pic.width, width_flag); //painting teh movemnt route on the map for given coordinates
 			start = end; //next movement starts from the last end point
 		} while (end.x != width_flag && end.y != pic.height); //making sure we haven't reach to the edge of the map (top-right corner) 
-		for (int i = 0; i < 54; i++)
-		{
+		for (int i = 0; i < 54; i++){
 			fputc(header[i], image); //printing header data to the new BMP file
 		}
-		for (i = 0; i < pic.height; i++)
-		{
-			for (j = 0; j < width_flag; j++) //printing the modified color pallette to the new BMP (prnting the route)
-			{
+		for (i = 0; i < pic.height; i++){
+			for (j = 0; j < width_flag; j++){ //printing the modified color pallette to the new BMP (prnting the route)
 				fputc(matrix[j][i].color.b, image);
 				fputc(matrix[j][i].color.g, image);
 				fputc(matrix[j][i].color.r, image);
@@ -451,25 +430,19 @@ void create_bmp(char* filename, char* origin, char* txt, pixmat** matrix, image_
 }
 
 poolList_t* pools_f(pixmat** mtrx, image_t image, poolList_t* pools, int width_flag) {
-	int i, j;
+	int i, j, size;
 	int** temp;
-	int size;
 	pix_t* root = NULL;
 	co_t center;
-
 	temp = malloc(sizeof(int*) * width_flag); //alocating memory for matrix which will contain 1/0 for each blue/non-blue pixel
-	if (temp)
-	{
+	if (temp){
 		for (i = 0;i < width_flag; i++) {
 			temp[i] = malloc(sizeof(int) * image.height);
 		}
 	}// allocate memory to temp color signed matrix
-
-	for (i = 0; i < image.height; i++)
-	{
+	for (i = 0; i < image.height; i++){
 		for (j = 0;j < width_flag;j++) {
-			if (mtrx[j][i].color.r == 155 && mtrx[j][i].color.g == 190 && mtrx[j][i].color.b == 245) // Registering blue and non-blue pixel to 2d matrix named temp
-			{
+			if (mtrx[j][i].color.r == 155 && mtrx[j][i].color.g == 190 && mtrx[j][i].color.b == 245){ // Registering blue and non-blue pixel to 2d matrix named temp
 				temp[j][i] = 1;
 			}
 			else {
@@ -477,18 +450,14 @@ poolList_t* pools_f(pixmat** mtrx, image_t image, poolList_t* pools, int width_f
 			}
 		}
 	}
-
 	for (i = 0;i < image.height;i++) {
 		for (j = 0;j < width_flag;j++) {
-			if (temp[j][i] == 1) //Going over all the pixels in the matrix and checking if it is blue or not
-			{
+			if (temp[j][i] == 1){ //Going over all the pixels in the matrix and checking if it is blue or not
 				size = 1;
 				temp[j][i] = 0;
 				pix_insert(&root, mtrx[j][i].cordinate); //saving the blue pixel to the head of linked list
 				segment(root, mtrx, temp, image, i, j, &size); //entering to Image segmentation function to find adjacent blue pixels
-
-				if (size > 9)
-				{
+				if (size > 9){
 					center = pool_middle(root, size);
 					pool_insert(&pools, size, center, root); //saving the pool to linked list ONLY if it has size of 10 or more
 				}
@@ -496,12 +465,10 @@ poolList_t* pools_f(pixmat** mtrx, image_t image, poolList_t* pools, int width_f
 			deallocpix(&root); //deallocting the memory of the pixel's linked list
 		}
 	}
-
 	for (i = 0;i < width_flag;i++) {
 		free(temp[i]); //deallocating temp matrix memory
 	}
 	free(temp);
-
 	return pools;
 }
 
@@ -729,7 +696,7 @@ void printnsortpools() {
 		return;
 	}
 	else {
-		if (num_of_pool <= 0) { printf_s("List is empty\n"); } //if there are no pools)
+		if (num_of_pool <= 0) { printf_s("\nList is empty\n"); } //if there are no pools)
 		else {
 			printf_s("\nSorted pools by size:\nCoordinate      Size\n==========  \t====\n");
 			fseek(pools, 12, SEEK_SET);
@@ -773,22 +740,22 @@ void print_list(printing_t* head) {
 printing_t* pools_sorting_ninsert(printing_t* head, int coordinate_x, int coordinate_y, int poooolsize) {
 
 	printing_t* ptr = head;
-	printing_t* newNode = malloc(sizeof(printing_t));
-	newNode->center_x = coordinate_x;
-	newNode->center_y = coordinate_y;
-	newNode->poolsize = poooolsize;
-	newNode->next = NULL;
+	printing_t* new_node = malloc(sizeof(printing_t));
+	new_node->center_x = coordinate_x;
+	new_node->center_y = coordinate_y;
+	new_node->poolsize = poooolsize;
+	new_node->next = NULL;
 	if (!head) // empty list_t
-		return newNode;
+		return new_node;
 	if (poooolsize < ptr->poolsize) {
 		while (ptr->next && poooolsize < ptr->next->poolsize)
 			ptr = ptr->next;
-		newNode->next = ptr->next;
-		ptr->next = newNode;
+		new_node->next = ptr->next;
+		ptr->next = new_node;
 	}
 	else { // Place at beginning of list_t
-		newNode->next = head;
-		head = newNode;
+		new_node->next = head;
+		head = new_node;
 	}
 	return head;
 }
@@ -959,7 +926,6 @@ list_t* interReverseLL(list_t* root) {
 	return root;
 }
 
-///////////////////////////////////////////function for section 3- START///////////////////////////////////////////
 
 double distance(co_t a, co_t b) {
 	double x1, x2, y1, y2;
