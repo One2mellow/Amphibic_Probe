@@ -1519,7 +1519,7 @@ void there_a_route(double oil, co_t current_pos, co_t end_coordinate) {
 			gets_s(input, 81);
 			dex = strchr(input, ',');
 		}
-		for (i = 0; input[i] != '\0' && commacount < 2; i++) {
+		for (i = 0; input[i] != '\0'; i++) {
 			if (input[i] < '0' || input[i] > '9')
 				if (input[i] != ',' && input[i] != ' ') {
 					printf_s("Please Enter valid x,y start coordinate, bmp width is %d and height is %d\n", image.x, image.y);
@@ -1545,6 +1545,8 @@ void there_a_route(double oil, co_t current_pos, co_t end_coordinate) {
 		coordinate.x = atoi(x); //we set the matrix from 0,0 in order to answer the demend of bottom left coordinate is 1,1 we subtract 1 from the input
 		coordinate.y = atoi(y);
 		if (coordinate.x == 0 || coordinate.y == 0)
+			input_check(image);
+		if (commacount > 1)
 			input_check(image);
 	} while (coordinate.x > image.x || coordinate.y > image.y);
 	return coordinate;
