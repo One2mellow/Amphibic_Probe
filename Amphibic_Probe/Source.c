@@ -286,16 +286,13 @@ int main() {
 			time2glow(SPECIAL, matrix, image, width_flag);
 			choice = menu();
 			break;
-		case 9:
-			return 0;
-			break;
 		default:
 			printf("\nBad input, try again\n\n");
 			choice = menu();
 			break;
 		}
 	}
-	for (i = 0;i < width_flag;i++) {
+	for (i = 0;i < image.width;i++) {
 		free(matrix[i]);
 	}
 	free(matrix);
