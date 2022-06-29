@@ -1113,7 +1113,7 @@ data_t* costsCalc(pix_t* curr, co_t start, co_t end) {     //          points   
 		}
 		if (head->next)//                             {
 			costs += ((2.5 / (costs + 1) + fuel) * 0.1);
-		addnewnode(&head, n, costs);
+		addnewnode(&head, distance(start, end), costs);
 	//start = end;
 	//end = head->next;//
 return head;
