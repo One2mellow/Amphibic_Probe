@@ -229,6 +229,7 @@ int main() {
 		switch (choice){
 		case 1:
 			if (imgtrx(matrix, image, BMP, width_flag) != -1){
+				deallocpool(&pools);
 				val = fopen_s(&tx, TXT, "w");
 				if (!tx) return 0;
 				pools = pools_f(matrix, image, pools, width_flag);
@@ -286,7 +287,6 @@ int main() {
 			break;
 		}
 	}
-	deallocpool(&pools);
 	for (i = 0;i < width_flag;i++) {
 		free(matrix[i]);
 	}
