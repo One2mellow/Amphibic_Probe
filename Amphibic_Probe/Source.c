@@ -202,6 +202,8 @@ returns the index in the array of the nearest pool.*/
 
 double distance(co_t a, co_t b); //find distance between to cordinates
 
+int file_curpt(int num_of_pool); //check if the file crupt
+
 
 
 
@@ -241,6 +243,7 @@ int main() {
 				if (pools == NULL) {
 					printf_s("\nTotal of 0 pools.\n");
 					fprintf_s(tx, "%s%dx%d%s", "Image size (", image.width, image.height, ")\nPool Center	Size\n===========	====");
+					fclose(tx);
 					choice = menu();
 					break;
 				}
@@ -715,6 +718,10 @@ void printnsortpools() {
 	int poooolsize = 0, coordinate_x = 0, coordinate_y = 0;
 	int* pool_size_arr = pool_size_arr_malloc(num_of_pool);
 	co_t* middle_arr = middle_arr_malloc(num_of_pool);
+	if (file_curpt(num_of_pool) == 0) {
+		printf_s("\nfunction readpools resulted with file read error. Check that the text file has the correct format.\n");
+		return;
+	}
 	fopen_s(&pools, "pools.txt", "rt");
 	if (!pools) {
 		printf_s("\nProblem reading pools.txt file\nList is empty\n"); //if there is no such a file  //failed to open pools.txt
@@ -737,7 +744,6 @@ void printnsortpools() {
 			}
 		}
 		fclose(pools);
-
 	}
 	print_list(head);
 	free_list_printing(head);
@@ -1576,6 +1582,10 @@ int section_3() {
 	co_t end_coordinate = { 0 };
 	int num_of_pool = pool_counter();
 	int* pool_size_arr = pool_size_arr_malloc(num_of_pool);
+	if (file_curpt(num_of_pool) == 0) {
+		printf_s("function readpools resulted with file read error.Check that the text file has the correct format.\n");
+		return -1;
+	}
 	co_t* middle_arr = middle_arr_malloc(num_of_pool);
 	fopen_s(&pools, TXT, "rt");
 	if (!pools) {
@@ -1607,4 +1617,42 @@ int section_3() {
 	free(pool_size_arr);
 	free(middle_arr);
 	return 0;
+}
+
+int file_curpt(int num_of_pool) {
+	FILE* pools;
+	int a, b, d, e;
+	char c, f, g, h;
+	fopen_s(&pools, "pools.txt", "rt");
+	if (!pools) {
+		return -1;
+	}
+	else {
+		fseek(pools, 12, SEEK_SET);
+		fscanf_s(pools, "%d %c %d", &a, &c, 1, &b);
+		fseek(pools, 39, SEEK_CUR);
+		for (int i = 0; i < num_of_pool; i++) {
+			fscanf_s(pools, "%c %d %c %d %c", &c, 1, &d, &f, 1, &e, &g, 1);
+			if (c != '(') {
+				fclose(pools);
+				return 0;
+			}
+			if (f != ',') {
+				fclose(pools);
+				return 0;
+			}
+			if (g != ')') {
+				fclose(pools);
+				return 0;
+			}
+			fscanf_s(pools, "%d ", &d);
+		}
+		c = getc(pools);
+		if (c != EOF) {
+			fclose(pools);
+			return 0;
+		}
+		fclose(pools);
+	}
+	return 1;
 }
