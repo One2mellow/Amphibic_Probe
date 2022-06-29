@@ -222,7 +222,7 @@ int main() {
 	for (i = 0; ((width_flag * 3) % 4) != 0; i++) // making sure width is divsible by 4 due to BMP format regulations
 		width_flag = image.width + i;
 
-	matrix = malloc(sizeof(pixmat*) * width_flag);
+	matrix = malloc(sizeof(pixmat*) * image.width);
 	if (matrix){
 		for (i = 0;i < image.width;i++) {
 			matrix[i] = malloc(sizeof(pixmat) * image.height);
