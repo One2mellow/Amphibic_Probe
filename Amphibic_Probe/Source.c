@@ -1510,7 +1510,7 @@ void there_a_route(double oil, co_t current_pos, co_t end_coordinate) {
 	do {
 		char input[81], * dex;
 		char x[80] = { 0 }, y[80] = { 0 };
-		int i, j = 0, flag = 0;
+		int i, j = 0, flag = 0, commacount = 0;
 		printf_s("Please Enter valid x,y start coordinate, bmp width is %d and height is %d\n", image.x, image.y);
 		gets_s(input, 81);
 		dex = strchr(input, ',');
@@ -1519,13 +1519,15 @@ void there_a_route(double oil, co_t current_pos, co_t end_coordinate) {
 			gets_s(input, 81);
 			dex = strchr(input, ',');
 		}
-		for (i = 0; input[i] != '\0' && flag > -1; i++) {
+		for (i = 0; input[i] != '\0' && commacount < 2; i++) {
 			if (input[i] < '0' || input[i] > '9')
 				if (input[i] != ',' && input[i] != ' ') {
 					printf_s("Please Enter valid x,y start coordinate, bmp width is %d and height is %d\n", image.x, image.y);
 					gets_s(input, 81);
 					i = 0;
 				}
+			if (input[i] == ',')
+				commacount++;
 		}
 		for (i = 0; input[i] != '\0'; i++) {
 			if (input[i] == ',') {
