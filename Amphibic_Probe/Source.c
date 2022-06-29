@@ -216,6 +216,7 @@ int main() {
 	}
 
 	matrix = malloc(sizeof(pixmat*) * width_flag);
+	if (!matrix) return 0;
 	if (matrix){
 		for (i = 0;i < width_flag;i++) {
 			matrix[i] = malloc(sizeof(pixmat) * image.height);
@@ -309,7 +310,7 @@ co_t pool_middle(pix_t* root, int size) {
 	int x_max, x_min, y_max, y_min, i;
 	co_t middle = { 0 };
 	pix_t* curr;
-	co_t* pixels;
+	co_t* pixels = { 0 };
 
 	pixels = malloc(sizeof(co_t) * size + 1);
 	if (!pixels) return middle;
@@ -741,6 +742,7 @@ printing_t* pools_sorting_ninsert(printing_t* head, int coordinate_x, int coordi
 
 	printing_t* ptr = head;
 	printing_t* new_node = malloc(sizeof(printing_t));
+	if (!new_node) return head;
 	new_node->center_x = coordinate_x;
 	new_node->center_y = coordinate_y;
 	new_node->poolsize = poooolsize;
