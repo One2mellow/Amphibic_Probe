@@ -651,6 +651,7 @@ void route_painter(pixmat** matrix, int x, int y, int x_final, int y_final, int 
 			matrix[x][y].color.r = 100; matrix[x][y].color.g = 30; matrix[x][y].color.b = 232;
 		}
 	}
+	ReachToEnd(matrix, &x, &y, &x_final, &y_final);
 	matrix[width - 1][height - 1].color.r = 250; matrix[width - 1][height - 1].color.g = 180; matrix[width - 1][height - 1].color.b = 30; //color pixel at the end
 }
 
