@@ -312,6 +312,8 @@ void switcher(char* choice, pixmat** matrix, int width_flag, image_t image) {
 		time2glow(SPECIAL, matrix, image, width_flag);
 		*choice = menu();
 		break;
+	case 9:
+		break;
 	default:
 		printf("\nBad input, try again\n\n");
 		*choice = menu();
