@@ -226,6 +226,8 @@ void reducing_route_finder7(co_t tracker_coordinate, co_t* middle_arr, int num_o
 
 void reducing_section_3(co_t current_pos, co_t end_coordinate, double oil, int pool_size_arr[], co_t middle_arr[], int num_of_pool); //printing route data to the screen
 
+int input_menu();
+
 
 
 
@@ -237,7 +239,6 @@ int main() {
 	if ((load_image(&image, BMP, image.header)) != 0) {
 		return -1;
 	}
-
 	width_flag = image.width;
 	for (i = 0; ((width_flag * 3) % 4) != 0; i++) // making sure width is divsible by 4 due to BMP format regulations
 		width_flag = image.width + i;
@@ -250,15 +251,17 @@ int main() {
 	} else
 		return 1;
 
-	choice = menu();
+	
 
 	while (choice != 9){
-		switcher(&choice, matrix,width_flag,image);
+		choice = input_menu();
+		switcher(choice, matrix,width_flag,image);
 	}
 	for (i = 0;i < image.width;i++) {
 		free(matrix[i]);
 	}
 	free(matrix);
+	printf_s("\nGood bye!\n");
 	return 0;
 }
 
@@ -274,12 +277,11 @@ int menu() {
 	return choice;
 }
 
-void switcher(char* choice, pixmat** matrix, int width_flag, image_t image) {
+void switcher(int choice, pixmat** matrix, int width_flag, image_t image) {
 	int i, val, count = 0;
 	poolList_t* pools = NULL;
 	FILE* tx;
-
-	switch (*choice) {
+	switch (choice) {
 	case 1:
 		if (imgtrx(matrix, image, BMP, width_flag) != -1) {
 			if(pools) deallocpool(pools);
@@ -290,7 +292,6 @@ void switcher(char* choice, pixmat** matrix, int width_flag, image_t image) {
 				printf_s("\nTotal of 0 pools.\n");
 				fprintf_s(tx, "%s%dx%d%s", "Image size (", image.width, image.height, ")\nPool Center	Size\n===========	====");
 				fclose(tx);
-				*choice = menu();
 				break;
 			}
 			printf_s("\nCoordinate x1,y1 of the first discoverd pool (%d,%d)", pools->pool_center.x, pools->pool_center.y);
@@ -311,34 +312,22 @@ void switcher(char* choice, pixmat** matrix, int width_flag, image_t image) {
 			printf_s("\nTotal of %d pools.\n", count);
 			fclose(tx);
 		}
-		*choice = menu();
 		break;
 	case 2:
 		printnsortpools();
-		*choice = menu();
 		break;
 	case 3:
 		putchar('\n');
 		if (section_3(0) != -1)
 			create_bmp(BMPCPY, BMP, BEST_TXT, matrix, image, image.header, width_flag);
-		*choice = menu();
 		break;
 	case 4:
 		NumericReport(image);
-		*choice = menu();
 		break;
 	case 5:
 		time2glow(SPECIAL, matrix, image, width_flag);
-		*choice = menu();
-		break;
-	case 9:
-		break;
-	default:
-		printf("\nBad input, try again\n\n");
-		*choice = menu();
 		break;
 	}
-
 }
 
 co_t pool_middle(pix_t* root, int size) {
@@ -1260,6 +1249,7 @@ double oil_input() {
 		printf_s("Please enter valid oil supply in range 1-1000\n");
 		scanf_s("%lf", &oil);
 	} while ((oil < 1) || (oil > 1000));
+	int enter = getchar();
 	return oil;
 }
 
@@ -1801,4 +1791,21 @@ int file_curpt(int num_of_pool) {
 		fclose(pools);
 	}
 	return 1;
+}
+
+int input_menu() {
+	int choice = 0;
+	char str[81];
+	while (choice == 0) {
+		printf_s("--------------------------\nME LAB services\n--------------------------");
+		printf_s("\nMenu:\n1. Scan pools\n2. Print sorted pool list\n3. Select route\n4. Numeric report.\n5. Students addition\n9. Exit.\nEnter choice: ");
+		gets_s(str, 80);
+		if ((str[0] > '0') && ((str[0] < '6')) || (str[0] == '9')) {
+			if (str[1] == '\0') {
+				choice = str[0] - 48;
+				return choice;
+			}
+		}
+		printf_s("\nBad input, try again\n\n");
+	}
 }
