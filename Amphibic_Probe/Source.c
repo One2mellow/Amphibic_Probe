@@ -145,11 +145,11 @@ void print_jump(data_t* head, double dt);
 
 pix_t* pointsOfRoute(FILE* route);
 
-int section_3();
+int section_3(char trash);
 
 co_t input_check(co_t image); //checking the validity of the starting coordinates
 
-int stringfixer(char* input, int* commacount, co_t image);//making sure that the string for section 3 input is ok
+void stringfixer(char* input, int* commacount, co_t image);//making sure that the string for section 3 input is ok
 
 void there_a_route(double oil, co_t current_pos, co_t end_coordinate); //All the functions that print to screen and file together
 
@@ -214,7 +214,6 @@ int reducing_route_finder2(co_t middle_arr[], int p1, int x, int r, double bb, d
 
 int reducing_route_finder(int x, int r, double time, co_t tracker_coordinate, co_t end_coordinate, double ab, int size_of_pool); //Print tracker data to a file
 
-
 int closest_pool(co_t current_pos, co_t middle_arr[], int size); //find the closest pool
 /*The function receives an array of pools and a current coordinate and
 returns the index in the array of the nearest pool.*/
@@ -222,6 +221,10 @@ returns the index in the array of the nearest pool.*/
 double distance(co_t a, co_t b); //find distance between to cordinates
 
 int file_curpt(int num_of_pool); //check if the file crupt
+
+void reducing_route_finder7(co_t tracker_coordinate, co_t* middle_arr, int num_of_pool, double oil, co_t end_coordinate, int pool_size_arr[], int r, int x, double time); //turn left in the binary tree
+
+void reducing_section_3(co_t current_pos, co_t end_coordinate, double oil, int pool_size_arr[], co_t middle_arr[], int num_of_pool); //printing route data to the screen
 
 
 
@@ -281,7 +284,7 @@ void switcher(char* choice, pixmat** matrix, int width_flag, image_t image) {
 		if (imgtrx(matrix, image, BMP, width_flag) != -1) {
 			if(pools) deallocpool(pools);
 			val = fopen_s(&tx, TXT, "w");
-			if (!tx) return 0;
+			if (!tx) return;
 			pools = pools_f(matrix, image, pools, width_flag);
 			if (pools == NULL) {
 				printf_s("\nTotal of 0 pools.\n");
@@ -316,7 +319,7 @@ void switcher(char* choice, pixmat** matrix, int width_flag, image_t image) {
 		break;
 	case 3:
 		putchar('\n');
-		if (section_3() != -1)
+		if (section_3(0) != -1)
 			create_bmp(BMPCPY, BMP, BEST_TXT, matrix, image, image.header, width_flag);
 		*choice = menu();
 		break;
@@ -986,17 +989,15 @@ void NumericReport(image_t image) {
 	co_t start, end;
 	FILE* route;
 	char position;
-	double dist, dt;//dt is the input user
-
-
+	double dt;//dt is the input user
 	fopen_s(&route, BEST_TXT, "rt");
 	if (!route) {
 		printf_s("Problem with file best-route.txt, or it might be empty.\n");
+		return;
 	}
 	position = fgetc(route);
 	fseek(route, 15, SEEK_SET);
 	start = best_co(route);//                        
-
 	do {
 		position = fgetc(route);
 		while (position != '(' && position != EOF)
@@ -1006,11 +1007,8 @@ void NumericReport(image_t image) {
 		pix_t* curr = NULL; //current step 
 		int c;
 		curr = pointsOfRoute(route);
-		printf_s("Please enter a positive intger as distance display interval: ");
-
-		do
-		{
-
+		printf_s("\nPlease enter a positive intger as distance display interval:\n");
+		do{
 			scanf_s("%lf", &dt);
 			while ((c = getchar()) != '\n' && c != EOF);
 			if ((dt - (int)dt != 0) || dt <= 0)
@@ -1026,7 +1024,7 @@ void NumericReport(image_t image) {
 
 	//freedata_t(head);
 	//freepix_t(curr);
-	return 0;
+	return;
 
 }
 
@@ -1097,6 +1095,7 @@ pix_t* pointsOfRoute(FILE* route) {
 			tail = temp;
 		}
 	}
+	return tail;
 }
 
 
@@ -1166,6 +1165,23 @@ co_t* reducing_route_finder6(int num_of_pool) {
 	return middle_arr2;
 }
 
+void reducing_route_finder7(co_t tracker_coordinate, co_t* middle_arr, int num_of_pool, double oil, co_t end_coordinate, int pool_size_arr[], int r, int x, double time) {
+	int p2 = closest_pool(tracker_coordinate, middle_arr, num_of_pool);
+	if (p2 == -1)return;
+	co_t temp2 = middle_arr[p2];
+	double ac = oil - distance(tracker_coordinate, temp2) * 0.2 + pool_size_arr[p2] * 0.2;
+	double aa = time + pool_size_arr[p2] + distance(tracker_coordinate, temp2) / 0.2;
+	if ((oil - distance(tracker_coordinate, temp2) * 0.2) > 0) {
+		reducing_route_finder2(middle_arr, p2, x, r, aa, ac, pool_size_arr, temp2);
+		middle_arr[p2].x = 2000;
+		co_t* middle_arr3 = reducing_route_finder6(num_of_pool);
+		for (int i = 0; i < num_of_pool; i++)
+			middle_arr3[i] = middle_arr[i];
+		x *= route_finder(temp2, end_coordinate, ac, aa, pool_size_arr, middle_arr3, pool_size_arr[p2], r, num_of_pool, 1);
+		free(middle_arr3);
+	}
+}
+
 int route_finder(co_t tracker_coordinate, co_t end_coordinate, double oil, double time, int pool_size_arr[], co_t middle_arr[], int size_of_pool, int r, int num_of_pool, int x) {
 	r++;
 	if (oil >= 0) {
@@ -1187,25 +1203,15 @@ int route_finder(co_t tracker_coordinate, co_t end_coordinate, double oil, doubl
 				for (int i = 0; i < num_of_pool; i++)
 					middle_arr2[i] = middle_arr[i];
 				x *= route_finder(temp1, end_coordinate, ab, time + pool_size_arr[p1] + distance(tracker_coordinate, temp1) / 0.2, pool_size_arr, middle_arr2, pool_size_arr[p1], r, num_of_pool, 1);
+				free(middle_arr2);
 			}
-			int p2 = closest_pool(tracker_coordinate, middle_arr, num_of_pool);
-			if (p2 == -1)return 1;
-			co_t temp2 = middle_arr[p2];
-			double ac = oil - distance(tracker_coordinate, temp2) * 0.2 + pool_size_arr[p2] * 0.2;
-			double aa = time + pool_size_arr[p2] + distance(tracker_coordinate, temp2) / 0.2;
-			if ((oil - distance(tracker_coordinate, temp2) * 0.2) > 0) {
-				reducing_route_finder2(middle_arr, p2, x, r, aa, ac, pool_size_arr, temp2);
-				middle_arr[p2].x = 2000;
-				co_t* middle_arr3 = reducing_route_finder6(num_of_pool);
-				for (int i = 0; i < num_of_pool; i++)
-					middle_arr3[i] = middle_arr[i];
-				x *= route_finder(temp2, end_coordinate, ac, aa, pool_size_arr, middle_arr3, pool_size_arr[p2], r, num_of_pool, 1);
-			}
+			reducing_route_finder7(tracker_coordinate, middle_arr, num_of_pool, oil, end_coordinate, pool_size_arr, r, x, time);
 		}
 	}
 	reducing_route_finder4(x);
 	return x;
 }
+
 
 int pool_counter() {
 	char pointer = 0;
@@ -1589,6 +1595,7 @@ void best_route_file_creation(int i, int counter, double data[], double kk, int 
 				c++;
 			}
 			fseek(best_route, -c, SEEK_CUR);
+			test = getc(best_route);
 			for (p = 0; p < counter2; p++) {
 				fscanf_s(best_route, "%lf %lf %d %d %d ", &timeb, &oilb, &sizeb, &xb, &yb);
 				fseek(best_route, 3, SEEK_CUR);
@@ -1672,7 +1679,7 @@ void there_a_route(double oil, co_t current_pos, co_t end_coordinate) {
 		int i, j = 0, flag = 0, commacount = 0;
 		printf_s("Please Enter valid x,y start coordinate, bmp width is %d and height is %d\n", image.x, image.y);
 		gets_s(input, 81);
-		stringfixer(&input, &commacount, image);
+		stringfixer(input, &commacount, image);
 		for (i = 0; input[i] != '\0'; i++) {
 			if (input[i] == ',') {
 				flag = 1;
@@ -1694,7 +1701,7 @@ void there_a_route(double oil, co_t current_pos, co_t end_coordinate) {
 	return coordinate;
 }
 
- int stringfixer(char* input, int* commacount, co_t image) {
+ void stringfixer(char* input, int* commacount, co_t image) {
 	 char* dex;
 	 int i;
 	 dex = strchr(input, ',');
@@ -1717,9 +1724,8 @@ void there_a_route(double oil, co_t current_pos, co_t end_coordinate) {
 
 /*Section 3 -
 Shows the fastest route from a certain point on the map to the end point considering the amount of oil*/
-int section_3() {
+int section_3(char trash) {
 	FILE* pools;
-	char trash;
 	co_t end_coordinate = { 0 };
 	int num_of_pool = pool_counter();
 	int* pool_size_arr = pool_size_arr_malloc(num_of_pool);
@@ -1746,24 +1752,29 @@ int section_3() {
 		reset_files();
 		co_t current_pos = input_check(end_coordinate);
 		double oil = oil_input();
-		if (route_finder(current_pos, end_coordinate, oil, 0, pool_size_arr, middle_arr, 0, 0, num_of_pool, 1) != 0) {
-			printf_s("Sorry, could not reach destination with these inputs\n");
-			remove("best-route.txt");
-			remove("best-route2.txt");
-		}
-		else {
-			there_a_route(oil, current_pos, end_coordinate);
-		}
+		reducing_section_3(current_pos, end_coordinate, oil, pool_size_arr, middle_arr, num_of_pool);
 	}
 	free(pool_size_arr);
 	free(middle_arr);
 	return 0;
 }
 
+void reducing_section_3(co_t current_pos, co_t end_coordinate, double oil, int pool_size_arr[], co_t middle_arr[], int num_of_pool) {
+	if (route_finder(current_pos, end_coordinate, oil, 0, pool_size_arr, middle_arr, 0, 0, num_of_pool, 1) != 0) {
+		printf_s("Sorry, could not reach destination with these inputs\n");
+		remove("best-route.txt");
+		remove("best-route2.txt");
+	}
+	else {
+		there_a_route(oil, current_pos, end_coordinate);
+	}
+}
+
+
 int file_curpt(int num_of_pool) {
 	FILE* pools;
 	int a, b, d, e;
-	char c, f, g, h;
+	char c, f, g;
 	fopen_s(&pools, "pools.txt", "rt");
 	if (!pools) {
 		return -1;
