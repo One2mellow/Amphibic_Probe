@@ -83,7 +83,7 @@ typedef struct data {
 
 int menu(); //menu function
 
-void switcher(char* choice, pixmat** matrix, int width_flag, image_t image);
+void switcher(int choice, pixmat** matrix, int width_flag, image_t image);
 
 int load_image(image_t* image, const char* filename, unsigned char* head); //loading the BMP image and getting WxH values
 
@@ -251,11 +251,9 @@ int main() {
 	} else
 		return 1;
 
-	
-
 	while (choice != 9){
 		choice = input_menu();
-		switcher(choice, matrix,width_flag,image);
+		switcher(choice, matrix, width_flag,image);
 	}
 	for (i = 0;i < image.width;i++) {
 		free(matrix[i]);
@@ -1808,4 +1806,5 @@ int input_menu() {
 		}
 		printf_s("\nBad input, try again\n\n");
 	}
+	return choice;
 }
