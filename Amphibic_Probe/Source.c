@@ -642,7 +642,7 @@ void route_painter(pixmat** matrix, int x, int y, int x_final, int y_final, int 
 	b = y - (int)(movratio * x);
 	if (movratio == 1 || movratio < 1) //covering cases for the starting pixel color
 		x++;
-	for (x; x < x_final && x < width && y < y_final && y < height; x++)	{
+	for (x; x < x_final && x < width - 1 && y < y_final && y < height - 1; x++)	{
 		if (movratio != 1)
 		{
 			dif = y;
