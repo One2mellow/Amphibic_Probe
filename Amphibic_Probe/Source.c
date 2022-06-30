@@ -90,7 +90,7 @@ typedef struct data {
 
 void switcher(int choice, pixmat** matrix, int width_flag, image_t image); // Switch case for menu selection
 
-int load_image(image_t* image, const char* filename, unsigned char* head); //loading the BMP image and getting WxH values
+int loadImage(image_t* image, const char* filename, unsigned char* head); //loading the BMP image and getting WxH values
 
 co_t pool_middle(pix_t* root, int size); //returning the pool's center coordinates from given coordinate array
 
@@ -98,7 +98,7 @@ int imgtrx(pixmat** mtrx, image_t image, char* filename, int width_flag); //conv
 
 poolList_t* pools_f(pixmat** mtrx, image_t image, poolList_t* pools, int width_flag); //Creating list of pools which contain size and center co. for each pool
 
-void BluePixRec(pixmat** mtrx, int** temp, image_t image);
+void bluePixRec(pixmat** mtrx, int** temp, image_t image);
 
 void create_bmp(char* filename, char* origin, char* txt, pixmat** matrix, image_t pic, unsigned char* header, int width_flag); // Print the route on the bmp copy
 
@@ -241,7 +241,7 @@ int main() {
 	pixmat** matrix;
 	static image_t image;
 
-	if ((load_image(&image, BMP, image.header)) != 0) {
+	if ((loadImage(&image, BMP, image.header)) != 0) {
 		return -1;
 	}
 	width_flag = image.width;
@@ -358,7 +358,7 @@ co_t pool_middle(pix_t* root, int size) {
 	return middle;
 }
 
-int load_image(image_t* image, const char* filename, unsigned char* head) {
+int loadImage(image_t* image, const char* filename, unsigned char* head) {
 	int width, height, return_value = 0;
 	FILE* file;
 	return_value = fopen_s(&file, filename, "rb");
@@ -462,7 +462,7 @@ poolList_t* pools_f(pixmat** mtrx, image_t image, poolList_t* pools, int width_f
 				temp[i] = malloc(sizeof(int) * image.height);
 			}// allocate memory to temp color signed matrix
 	}
-	BluePixRec(mtrx, temp, image);
+	bluePixRec(mtrx, temp, image);
 	if (temp != 0){
 		for (i = 0;i < image.height;i++) {
 			for (j = 0;j < image.width;j++) {
@@ -488,7 +488,7 @@ poolList_t* pools_f(pixmat** mtrx, image_t image, poolList_t* pools, int width_f
 		return pools;
 }
 
-void BluePixRec(pixmat** mtrx, int** temp, image_t image) {
+void bluePixRec(pixmat** mtrx, int** temp, image_t image) {
 	int i, j;
 	for (i = 0; i < image.width; i++) {
 		for (j = 0;j < image.height;j++) {
