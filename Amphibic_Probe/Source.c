@@ -88,13 +88,13 @@ typedef struct data {
 	struct data* next;
 }data_t;
 
-void switcher(int choice, pixmat** matrix, int width_flag, image_t image); // Switch case for menu selection
+void switcher(int choice, pixmat** matrix, int width_flag, image_t image); //Switch case for menu selection
 
-int loadImage(image_t* image, const char* filename, unsigned char* head); //loading the BMP image and getting WxH values
+int loadImage(image_t* image, const char* filename, unsigned char* head); //Loading the BMP image and getting WxH values
 
-co_t pool_middle(pix_t* root, int size); //returning the pool's center coordinates from given coordinate array
+co_t pool_middle(pix_t* root, int size); //Returning the pool's center coordinates from given coordinate array
 
-int imgtrx(pixmat** mtrx, image_t image, char* filename, int width_flag); //converting the BMP image to 2d array of type pixmat
+int imgtrx(pixmat** mtrx, image_t image, char* filename, int width_flag); //Converting the BMP image to 2d array of type pixmat
 
 poolList_t* poolsFunction(pixmat** mtrx, image_t image, poolList_t* pools, int width_flag); //Creating list of pools which contain size and center co. for each pool
 
@@ -102,23 +102,23 @@ void bluePixRec(pixmat** mtrx, int** temp, image_t image); //Assigning values to
 
 void createBMP(char* filename, char* origin, char* txt, pixmat** matrix, image_t pic, unsigned char* header, int width_flag); // Print the route on the BMP copy
 
-void segment(pix_t* root, pixmat** mtrx, int** temp, image_t image, int i, int j, int* size); //using region base image segmentation to detect pools
+void segment(pix_t* root, pixmat** mtrx, int** temp, image_t image, int i, int j, int* size); //Using region base image segmentation to detect pools
 
-void pixInsert(pix_t** root, co_t coordinate); //appending new pixel to the end of pixels list
+void pixInsert(pix_t** root, co_t coordinate); //Appending new pixel to the end of pixels list
 
-void poolInsert(poolList_t** root, int size, co_t center, pix_t* pix); //appending new pool element to the end of pools list
+void poolInsert(poolList_t** root, int size, co_t center, pix_t* pix); //Appending new pool element to the end of pools list
 
-void deallocPix(pix_t** root); //deallocating memory of the pixel list
+void deallocPix(pix_t** root); //Deallocating memory of the pixel list
 
-void deallocPool(poolList_t** root); //deallocating memory of the pools list
+void deallocPool(poolList_t** root); //Deallocating memory of the pools list
 
-int spaceMod(int x, int y); //making sure that the correct number of spaces is printed between co. and size in pools.txt
+int spaceMod(int x, int y); //Making sure that the correct number of spaces is printed between co. and size in pools.txt
 
 void routePainter(pixmat** matrix, int x, int y, int x_final, int y_final, int height, int width); //Painting the movement route in the map
 
 void reachToEnd(pixmat**, int x, int y, int x_final, int y_final); //Compensating on extreme incline while painting the route
 
-co_t bestCo(FILE* route); //extrcats coordinates from best route file
+co_t bestCo(FILE* route); //Extrcats coordinates from best route file
 
 void printnsortpools();
 
@@ -629,77 +629,77 @@ void routePainter(pixmat** matrix, int x, int y, int x_final, int y_final, int h
 	float movratio;
 	x--;y--; //compensating for starting point which must be 1,1
 	matrix[x][y].color.r = 18; matrix[x][y].color.g = 180; matrix[x][y].color.b = 30; //color pixel at the beggining
-	movratio = ((float)y_final - (float)y) / ((float)x_final - (float)x);
-	b = y - (int)(movratio * x);
-	if (movratio == 1 || movratio < 1) //covering cases for the starting pixel color
+	movratio = ((float)y_final - (float)y) / ((float)x_final - (float)x); //Calculating the slope of the line
+	b = y - (int)(movratio * x); //Calculating line's constant
+	if (movratio == 1 || movratio < 1) //Covering cases so that the starting pixel color won't be overpainted
 		x++;
-	for (x; x < x_final && x < width - 1 && y < y_final && y < height - 1; x++)	{
+	for (x; x < x_final && x < width - 1 && y < y_final && y < height - 1; x++)	{ //Making sure we are not going over the end point or the image borders
 		if (movratio != 1)
 		{
 			dif = y;
-			if ((int)((x * movratio) + b) == 0) {
+			if ((int)((x * movratio) + b) == 0) { //In cases when the line function returns y = 0 due to calculations (b added to the slope)
 				y++;
 				matrix[x][y].color.r = 100; matrix[x][y].color.g = 30; matrix[x][y].color.b = 232;
-				y = (int)(((x + 1) * movratio) + b);
+				y = (int)(((x + 1) * movratio) + b); //New y value on the line
 			}
 			else
 				y = (int)(((x + 1) * movratio) + b); //adding 1 to x in order to reach to next coordinate
-			if (y - dif > 1)
+			if (y - dif > 1) //If the slope is too steep\gentle somteimes there are gaps between the y values of two points
 			{
-				for (dif; y - dif >= 1;) {
+				for (dif; y - dif >= 1;) { //In this loop we are maing sure that all the pixel between the point(In the case mentioned above) are colored
 					dif++;
 					matrix[x][dif].color.r = 100; matrix[x][dif].color.g = 30; matrix[x][dif].color.b = 232;
 				}
-			}else
+			}else //In case the slope is not too steep\gentle
 				matrix[x][y].color.r = 100; matrix[x][y].color.g = 30; matrix[x][y].color.b = 232;
 		}
-		else {
+		else { //For slope = 1
 			y = (int)((x * movratio) + b);
 			matrix[x][y].color.r = 100; matrix[x][y].color.g = 30; matrix[x][y].color.b = 232;
 		}
 	}
-	reachToEnd(matrix, x, y, x_final, y_final);
-	matrix[width - 1][height - 1].color.r = 250; matrix[width - 1][height - 1].color.g = 180; matrix[width - 1][height - 1].color.b = 30; //color pixel at the end
+	reachToEnd(matrix, x, y, x_final, y_final); //This function check if we painted the entire route (up to the end)
+	matrix[width - 1][height - 1].color.r = 250; matrix[width - 1][height - 1].color.g = 180; matrix[width - 1][height - 1].color.b = 30; //Coloring pixel at the end
 }
 
 void reachToEnd(pixmat** matrix, int x, int y, int x_final, int y_final) {
-	if (x < x_final - 1)
+	if (x < x_final - 1) //If we haven't reach to the x value we supposed to be at the finish point
 		x -= 1;
-	while (y == y_final - 1 && x < x_final - 1) {
+	while (y == y_final - 1 && x < x_final - 1) { //If we inline (horizontally) with our finish point, paint the route straight to it
 		matrix[x][y].color.r = 100; matrix[x][y].color.g = 30; matrix[x][y].color.b = 232;
 		x += 1;
 	}
-	if (y < y_final - 1)
+	if (y < y_final - 1) //If we haven't reach to the y value we supposed to be at the finish point
 		y -= 1;
-	while (x == x_final - 1 && y < y_final - 1) {
+	while (x == x_final - 1 && y < y_final - 1) { //If we inline (vertically) with our finish point, paint the route straight to it
 		matrix[x][y].color.r = 100; matrix[x][y].color.g = 30; matrix[x][y].color.b = 232;
 		y += 1;
 	}
 }
 
 co_t bestCo(FILE* route) {
-	int flag = 0, j = 0;
+	int flag = 0, j = 0; //Flag that tells us to assign values to y after the cooma, j is a counter
 	char temp[10], tmpx[3] = { 0 }, tmpy[3] = { 0 }; //Initating strings to recive the coordinate values
 	co_t coordinate = { 0 }; //Initating the co_t coordinate variable
 
-	if (route != 0) {
+	if (route != 0) { //If the best route file exists and open
 
-		fread(&temp, 1, 10, route);
+		fread(&temp, 1, 10, route); //Read 10 charecters from it to the temp char array
 
-		for (int i = 0; i < 9; i++)
+		for (int i = 0; i < 9; i++) //the length of the coordinate line is 9 chrecters by format requirements
 		{
-			if (temp[i] == ',') {
+			if (temp[i] == ',') { //Setting the flag so we know if we are reading x or y value from the coordinate
 				flag = 1;
 				j = 0;
 			}
-			if (flag == 1)
+			if (flag == 1) //Before the comma we read the x value 
 			{
 				if (temp[i] >= '0' && temp[i] <= '9') {
 					tmpy[j] = temp[i];
 					j++;
 				}
 			}
-			else
+			else //After the comma (flag is set to 0) we read the y value
 			{
 				if (temp[i] >= '0' && temp[i] <= '9') {
 					tmpx[j] = temp[i];
