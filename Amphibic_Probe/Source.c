@@ -665,16 +665,16 @@ void route_painter(pixmat** matrix, int x, int y, int x_final, int y_final, int 
 }
 
 void ReachToEnd(pixmat** matrix, int x, int y, int x_final, int y_final) {
-	if (x < x_final)
+	if (x < x_final - 1)
 		x -= 1;
-	while (y == y_final && x < x_final - 1) {
-		matrix[x][y - 1].color.r = 100; matrix[x][y - 1].color.g = 30; matrix[x][y - 1].color.b = 232;
+	while (y == y_final - 1 && x < x_final - 1) {
+		matrix[x][y].color.r = 100; matrix[x][y].color.g = 30; matrix[x][y].color.b = 232;
 		x += 1;
 	}
-	if (y < y_final)
+	if (y < y_final - 1)
 		y -= 1;
-	while (x == x_final && y < y_final - 1) {
-		matrix[x - 1][y].color.r = 100; matrix[x - 1][y].color.g = 30; matrix[x - 1][y].color.b = 232;
+	while (x == x_final - 1 && y < y_final - 1) {
+		matrix[x][y].color.r = 100; matrix[x][y].color.g = 30; matrix[x][y].color.b = 232;
 		x += 1;
 	}
 }
