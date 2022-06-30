@@ -9,7 +9,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#include <time.h>//	lecture #6
+#include <time.h> //lecture #6
 
 #define BMP "fishpool-another-ex1.bmp"
 #define BMPCPY "fishpool-copy.bmp"
