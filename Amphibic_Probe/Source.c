@@ -11,7 +11,7 @@
 #include <math.h>
 #include <time.h>//	lecture #6
 
-#define BMP "1.bmp"
+#define BMP "fishpool-another-ex1.bmp"
 #define BMPCPY "fishpool-copy.bmp"
 #define TXT "pools.txt"
 #define BEST_TXT "best-route.txt"
@@ -96,29 +96,29 @@ co_t pool_middle(pix_t* root, int size); //returning the pool's center coordinat
 
 int imgtrx(pixmat** mtrx, image_t image, char* filename, int width_flag); //converting the BMP image to 2d array of type pixmat
 
-poolList_t* pools_f(pixmat** mtrx, image_t image, poolList_t* pools, int width_flag); //Creating list of pools which contain size and center co. for each pool
+poolList_t* poolsFunction(pixmat** mtrx, image_t image, poolList_t* pools, int width_flag); //Creating list of pools which contain size and center co. for each pool
 
-void bluePixRec(pixmat** mtrx, int** temp, image_t image);
+void bluePixRec(pixmat** mtrx, int** temp, image_t image); //Assigning values to 1/0 matrix for each pixel 1 for blue pixel, 0 for any other pixel
 
-void create_bmp(char* filename, char* origin, char* txt, pixmat** matrix, image_t pic, unsigned char* header, int width_flag); // Print the route on the bmp copy
+void createBMP(char* filename, char* origin, char* txt, pixmat** matrix, image_t pic, unsigned char* header, int width_flag); // Print the route on the bmp copy
 
 void segment(pix_t* root, pixmat** mtrx, int** temp, image_t image, int i, int j, int* size); //using region base image segmentation to detect pools
 
-void pix_insert(pix_t** root, co_t coordinate); //appending new pixel to the end of pixels list
+void pixInsert(pix_t** root, co_t coordinate); //appending new pixel to the end of pixels list
 
-void pool_insert(poolList_t** root, int size, co_t center, pix_t* pix); //appending new pool element to the end of pools list
+void poolInsert(poolList_t** root, int size, co_t center, pix_t* pix); //appending new pool element to the end of pools list
 
-void deallocpix(pix_t** root); //deallocating memory of the pixel list
+void deallocPix(pix_t** root); //deallocating memory of the pixel list
 
-void deallocpool(poolList_t** root); //deallocating memory of the pools list
+void deallocPool(poolList_t** root); //deallocating memory of the pools list
 
-int space_mod(int x, int y); //making sure that the correct number of spaces is printed between co. and size in pools.txt
+int spaceMod(int x, int y); //making sure that the correct number of spaces is printed between co. and size in pools.txt
 
-void route_painter(pixmat** matrix, int x, int y, int x_final, int y_final, int height, int width); //Painting the movement route in the map
+void routePainter(pixmat** matrix, int x, int y, int x_final, int y_final, int height, int width); //Painting the movement route in the map
 
-void ReachToEnd(pixmat**, int x, int y, int x_final, int y_final);
+void reachToEnd(pixmat**, int x, int y, int x_final, int y_final); //Compensating on extreme incline while painting the route
 
-co_t best_co(FILE* route); //extrcats coordinates from best route file
+co_t bestCo(FILE* route); //extrcats coordinates from best route file
 
 void printnsortpools();
 
@@ -128,15 +128,15 @@ void print_list(printing_t* head);
 
 printing_t* pools_sorting_ninsert(printing_t* head, int coordinate_x, int coordinate_y, int poooolsize);
 
-void time2glow(char* filename, pixmat** matrix, image_t image, int width_flag); //for setion 5
+void time2Glow(char* filename, pixmat** matrix, image_t image, int width_flag); //for setion 5
 
-void fuel_store(double fuel); //store genertor for section 5
+void fuelStore(double fuel); //store genertor for section 5
 
-char store_menu(int country, double fuel, int random); //prints the store list for each country
+char storeMenu(int country, double fuel, int random); //prints the store list for each country
 
 void warehouse(link* root, char purchase, int country); //generates link database for items of section 5 store
 
-char cashier(char purchase, double fuel, int random);
+char cashier(char purchase, double fuel, int random); //Checking if you have enogh cash to complete the transaction
 
 list_t* interReverseLL(list_t* root); //revesrs the linked list order of type list_t
 
@@ -275,10 +275,10 @@ void switcher(int choice, pixmat** matrix, int width_flag, image_t image) {
 	switch (choice) {
 	case 1:
 		if (imgtrx(matrix, image, BMP, width_flag) != -1) {
-			if(pools) deallocpool(pools);
+			if(pools) deallocPool(pools);
 			val = fopen_s(&tx, TXT, "w");
 			if (!tx) return;
-			pools = pools_f(matrix, image, pools, width_flag);
+			pools = poolsFunction(matrix, image, pools, width_flag);
 			if (pools == NULL) {
 				printf_s("\nTotal of 0 pools.\n");
 				fprintf_s(tx, "%s%dx%d%s", "Image size (", image.width, image.height, ")\nPool Center	Size\n===========	====");
@@ -291,7 +291,7 @@ void switcher(int choice, pixmat** matrix, int width_flag, image_t image) {
 				fprintf_s(tx, "%s%dx%d%s", "Image size (", image.width, image.height, ")\nPool Center	Size\n===========	====");
 				for (poolList_t* curr = pools; curr != NULL; curr = curr->next) {
 					fprintf_s(tx, "\n(%d,%d)", curr->pool_center.x, curr->pool_center.y);
-					for (i = 0; i < 9 - space_mod(curr->pool_center.x, curr->pool_center.y); i++)
+					for (i = 0; i < 9 - spaceMod(curr->pool_center.x, curr->pool_center.y); i++)
 						fputc(' ', tx);
 					fprintf_s(tx, "%d", curr->size);
 					count++; //iterating through the pool list, printing size and center
@@ -310,13 +310,13 @@ void switcher(int choice, pixmat** matrix, int width_flag, image_t image) {
 	case 3:
 		putchar('\n');
 		if (section_3(0) != -1)
-			create_bmp(BMPCPY, BMP, BEST_TXT, matrix, image, image.header, width_flag);
+			createBMP(BMPCPY, BMP, BEST_TXT, matrix, image, image.header, width_flag);
 		break;
 	case 4:
 		NumericReport(image);
 		break;
 	case 5:
-		time2glow(SPECIAL, matrix, image, width_flag);
+		time2Glow(SPECIAL, matrix, image, width_flag);
 		break;
 	}
 }
@@ -359,13 +359,13 @@ co_t pool_middle(pix_t* root, int size) {
 }
 
 int loadImage(image_t* image, const char* filename, unsigned char* head) {
-	int width, height, return_value = 0;
-	FILE* file;
-	return_value = fopen_s(&file, filename, "rb");
+	int width, height, return_value = 0; //Image width, image height, validating the the file can be opened
+	FILE* file; //File pointer to store the image in
+	return_value = fopen_s(&file, filename, "rb"); //Reading the BMP file as binary
 	if (file) {
-		if (fgetc(file) == 'B' && fgetc(file) == 'M') {
-			fseek(file, 12, SEEK_CUR);
-			fseek(file, 4, SEEK_CUR);
+		if (fgetc(file) == 'B' && fgetc(file) == 'M') {  //The first to bytes 'B' & 'M' are BMP header prifxes
+			fseek(file, 16, SEEK_CUR);
+		//	fseek(file, 4, SEEK_CUR);
 			fread(&width, 4, 1, file); //Reading image width
 			fread(&height, 4, 1, file); //Reading image height
 			image->width = width;
@@ -409,7 +409,7 @@ int imgtrx(pixmat** mtrx, image_t image, char* filename, int width_flag) {
 	return 0;
 }
 
-void create_bmp(char* filename, char* origin, char* txt, pixmat** matrix, image_t pic, unsigned char* header, int width_flag) {
+void createBMP(char* filename, char* origin, char* txt, pixmat** matrix, image_t pic, unsigned char* header, int width_flag) {
 	FILE* image, * route;
 	co_t start, end;
 	char position;
@@ -420,14 +420,14 @@ void create_bmp(char* filename, char* origin, char* txt, pixmat** matrix, image_
 	if (image != 0 && route != 0) { //making sure that the two files are open
 		position = fgetc(route); //the current cursor location
 		fseek(route, 15, SEEK_SET); //skiping the title of the text file
-		start = best_co(route); //fetching the coordinate from the file
+		start = bestCo(route); //fetching the coordinate from the file
 		do {
 			position = fgetc(route);  //checking what char will the cursor read
 			while (position != '(' && position != EOF) //checking for brackets where new coordinate starts, making sure we haven't reach to the End Of File
 				position = fgetc(route);
 			fseek(route, -1, SEEK_CUR);
-			end = best_co(route); //fetching coordinate values from the file
-			route_painter(matrix, start.x, start.y, end.x, end.y, pic.height, pic.width); //painting teh movemnt route on the map for given coordinates
+			end = bestCo(route); //fetching coordinate values from the file
+			routePainter(matrix, start.x, start.y, end.x, end.y, pic.height, pic.width); //painting teh movemnt route on the map for given coordinates
 			start = end; //next movement starts from the last end point
 		} while (end.x != width_flag && end.y != pic.height); //making sure we haven't reach to the edge of the map (top-right corner) 
 		for (int i = 0; i < 54; i++){
@@ -449,7 +449,7 @@ void create_bmp(char* filename, char* origin, char* txt, pixmat** matrix, image_
 	else return;
 }
 
-poolList_t* pools_f(pixmat** mtrx, image_t image, poolList_t* pools, int width_flag) {
+poolList_t* poolsFunction(pixmat** mtrx, image_t image, poolList_t* pools, int width_flag) {
 	int i, j, size;
 	int** temp = NULL;
 	pix_t* root = NULL;
@@ -469,14 +469,14 @@ poolList_t* pools_f(pixmat** mtrx, image_t image, poolList_t* pools, int width_f
 				if (temp[j][i] == 1) { //Going over all the pixels in the matrix and checking if it is blue or not
 					size = 1;
 					temp[j][i] = 0;
-					pix_insert(&root, mtrx[j][i].cordinate); //saving the blue pixel to the head of linked list
+					pixInsert(&root, mtrx[j][i].cordinate); //saving the blue pixel to the head of linked list
 					segment(root, mtrx, temp, image, i, j, &size); //entering to Image segmentation function to find adjacent blue pixels
 					if (size > 9) {
 						center = pool_middle(root, size);
-						pool_insert(&pools, size, center, root); //saving the pool to linked list ONLY if it has size of 10 or more
+						poolInsert(&pools, size, center, root); //saving the pool to linked list ONLY if it has size of 10 or more
 					}
 				}
-				deallocpix(&root); //deallocting the memory of the pixel's linked list
+				deallocPix(&root); //deallocting the memory of the pixel's linked list
 			}
 		}
 		for (i = 0;i < image.width;i++) {
@@ -506,7 +506,7 @@ void segment(pix_t* root, pixmat** mtrx, int** temp, image_t image, int i, int j
 
 	if (j > 0) { //In case we are at the most left side of the map there are no pixels to the left of our location
 		if (temp[j - 1][i] == 1) {
-			pix_insert(&root, mtrx[j - 1][i].cordinate); //If the adjacent pixel is also blue. saves it to the blue pixels list
+			pixInsert(&root, mtrx[j - 1][i].cordinate); //If the adjacent pixel is also blue. saves it to the blue pixels list
 			*size += 1; //Increasing current pool size by 1
 			temp[j - 1][i] = 0; //Setting the current blue pixel to not blue pixel
 			segment(root, mtrx, temp, image, i, j - 1, size); //Using the segmentation function on the neighboring blue pixel
@@ -515,7 +515,7 @@ void segment(pix_t* root, pixmat** mtrx, int** temp, image_t image, int i, int j
 
 	if (j < image.width - 1) { //Making sure we are not at the right edge of the map
 		if (temp[j + 1][i] == 1) {
-			pix_insert(&root, mtrx[j + 1][i].cordinate); //If the adjacent pixel is also blue. saves it to the blue pixels list
+			pixInsert(&root, mtrx[j + 1][i].cordinate); //If the adjacent pixel is also blue. saves it to the blue pixels list
 			*size += 1; //Increasing current pool size by 1
 			temp[j + 1][i] = 0; //Setting the current blue pixel to not blue pixel
 			segment(root, mtrx, temp, image, i, j + 1, size); //Using the segmentation function on the neighboring blue pixel
@@ -524,7 +524,7 @@ void segment(pix_t* root, pixmat** mtrx, int** temp, image_t image, int i, int j
 
 	if (i > 0) { //In case we are at the very bottom of the map there are no pixels under current location
 		if (temp[j][i - 1] == 1) {
-			pix_insert(&root, mtrx[j][i - 1].cordinate); //If the adjacent pixel is also blue. saves it to the blue pixels list
+			pixInsert(&root, mtrx[j][i - 1].cordinate); //If the adjacent pixel is also blue. saves it to the blue pixels list
 			*size += 1; //Increasing current pool size by 1
 			temp[j][i - 1] = 0; //Setting the current blue pixel to not blue pixel
 			segment(root, mtrx, temp, image, i - 1, j, size); //Using the segmentation function on the neighboring blue pixel
@@ -533,7 +533,7 @@ void segment(pix_t* root, pixmat** mtrx, int** temp, image_t image, int i, int j
 
 	if (i < image.height - 1) { //Making sure we are not at the top of the map
 		if (temp[j][i + 1] == 1) {
-			pix_insert(&root, mtrx[j][i + 1].cordinate); //If the adjacent pixel is also blue. saves it to the blue pixels list
+			pixInsert(&root, mtrx[j][i + 1].cordinate); //If the adjacent pixel is also blue. saves it to the blue pixels list
 			*size += 1; //Increasing current pool size by 1
 			temp[j][i + 1] = 0; //Setting the current blue pixel to not blue pixel
 			segment(root, mtrx, temp, image, i + 1, j, size); //Using the segmentation function on the neighboring blue pixel
@@ -541,7 +541,7 @@ void segment(pix_t* root, pixmat** mtrx, int** temp, image_t image, int i, int j
 	}
 }
 
-void pix_insert(pix_t** root, co_t coordinate) {
+void pixInsert(pix_t** root, co_t coordinate) {
 	pix_t* new_pix = malloc(sizeof(pix_t)); //Allocating memory for new pixel elemnt of type pix_t
 	if (new_pix == NULL) { //Validating the malloc was able to find viable adress in the memory
 		exit(1);
@@ -562,7 +562,7 @@ void pix_insert(pix_t** root, co_t coordinate) {
 	curr->next = new_pix;
 }
 
-void pool_insert(poolList_t** root, int size, co_t center, pix_t* pix) {
+void poolInsert(poolList_t** root, int size, co_t center, pix_t* pix) {
 
 	poolList_t* new_pool = malloc(sizeof(poolList_t)); //Allocating memory for new pixel elemnt of type poolList_t
 	if (new_pool == NULL) { //Validating the malloc was able to find viable adress in the memory
@@ -586,7 +586,7 @@ void pool_insert(poolList_t** root, int size, co_t center, pix_t* pix) {
 	curr->next = new_pool;
 }
 
-void deallocpix(pix_t** root) {
+void deallocPix(pix_t** root) {
 	pix_t* curr = *root;
 	while (curr != NULL) {
 		pix_t* aux = curr; //Deallocating the linked list memory from the down to its tail
@@ -596,7 +596,7 @@ void deallocpix(pix_t** root) {
 	*root = NULL;
 }
 
-void deallocpool(poolList_t** root) {
+void deallocPool(poolList_t** root) {
 	poolList_t* curr = *root;
 	while (curr != NULL)
 	{
@@ -607,7 +607,7 @@ void deallocpool(poolList_t** root) {
 	*root = NULL;
 }
 
-int space_mod(int x, int y) {
+int spaceMod(int x, int y) {
 	int n;
 	int space = 0;
 	n = x;
@@ -626,7 +626,7 @@ int space_mod(int x, int y) {
 	return space;
 }
 
-void route_painter(pixmat** matrix, int x, int y, int x_final, int y_final, int height, int width) {
+void routePainter(pixmat** matrix, int x, int y, int x_final, int y_final, int height, int width) {
 	int  b, j = 0, i = 0, s_f = 1, dif;
 	float movratio;
 	x--;y--; //compensating for starting point which must be 1,1
@@ -660,11 +660,11 @@ void route_painter(pixmat** matrix, int x, int y, int x_final, int y_final, int 
 			matrix[x][y].color.r = 100; matrix[x][y].color.g = 30; matrix[x][y].color.b = 232;
 		}
 	}
-	ReachToEnd(matrix, x, y, x_final, y_final);
+	reachToEnd(matrix, x, y, x_final, y_final);
 	matrix[width - 1][height - 1].color.r = 250; matrix[width - 1][height - 1].color.g = 180; matrix[width - 1][height - 1].color.b = 30; //color pixel at the end
 }
 
-void ReachToEnd(pixmat** matrix, int x, int y, int x_final, int y_final) {
+void reachToEnd(pixmat** matrix, int x, int y, int x_final, int y_final) {
 	if (x < x_final - 1)
 		x -= 1;
 	while (y == y_final - 1 && x < x_final - 1) {
@@ -675,11 +675,11 @@ void ReachToEnd(pixmat** matrix, int x, int y, int x_final, int y_final) {
 		y -= 1;
 	while (x == x_final - 1 && y < y_final - 1) {
 		matrix[x][y].color.r = 100; matrix[x][y].color.g = 30; matrix[x][y].color.b = 232;
-		x += 1;
+		y += 1;
 	}
 }
 
-co_t best_co(FILE* route) {
+co_t bestCo(FILE* route) {
 	int flag = 0, j = 0;
 	char temp[10], tmpx[3] = { 0 }, tmpy[3] = { 0 }; //Initating strings to recive the coordinate values
 	co_t coordinate = { 0 }; //Initating the co_t coordinate variable
@@ -796,7 +796,7 @@ printing_t* pools_sorting_ninsert(printing_t* head, int coordinate_x, int coordi
 	return head;
 }
 
-void time2glow(char* filename, pixmat** matrix, image_t image, int width_flag) {
+void time2Glow(char* filename, pixmat** matrix, image_t image, int width_flag) {
 	FILE* file, * txt;
 	list_t* curr, * root = NULL;
 	char pos;
@@ -822,17 +822,17 @@ void time2glow(char* filename, pixmat** matrix, image_t image, int width_flag) {
 		for (curr = root; curr != NULL; curr = curr->next) {
 			fprintf_s(txt, "(%3d,%3d)\t%d\n", curr->x, curr->y, curr->size); //need to reverse list first
 			if (curr->next == NULL)
-				fuel_store(curr->oil);
+				fuelStore(curr->oil);
 		}
 
 		fclose(file);
 		fclose(txt);
-		create_bmp(MOST_FUEL, BMP, FUEL_TXT, matrix, image, image.header, width_flag);
+		createBMP(MOST_FUEL, BMP, FUEL_TXT, matrix, image, image.header, width_flag);
 		free_list(root);
 	}
 }
 
-void fuel_store(double fuel) {
+void fuelStore(double fuel) {
 	srand((unsigned int)time(NULL)); //initiating randomize function
 	int country, random = rand();
 	char purchase;
@@ -844,13 +844,13 @@ void fuel_store(double fuel) {
 	else {
 		printf_s("\nPlease select the country you want to buy from:\n\n 1) Israel\n 2) USA\n 3) China\n 4) Russia\n 5) Turkey\n\n Your Choice : ");
 		scanf_s("%d%c", &country, &purchase, 1);
-		purchase = store_menu(country, fuel, random);
+		purchase = storeMenu(country, fuel, random);
 		warehouse(root, purchase, country);
 		printf("\nAnd as a bonus we printed out for you a map with the route you've taken so others could learn how to save on fuel!\nlook for \"%s\" image in the folder\n", MOST_FUEL);
 	}
 }
 
-char store_menu(int country, double fuel, int random) {
+char storeMenu(int country, double fuel, int random) {
 	char purchase, enter;
 	switch (country) {
 	case 1:
@@ -981,13 +981,13 @@ void NumericReport(image_t image) {
 	}
 	position = fgetc(route);
 	fseek(route, 15, SEEK_SET);
-	start = best_co(route);//                        
+	start = bestCo(route);//                        
 	do {
 		position = fgetc(route);
 		while (position != '(' && position != EOF)
 			position = fgetc(route);
 		fseek(route, -1, SEEK_CUR);
-		end = best_co(route);
+		end = bestCo(route);
 		if (end.x == 0 && end.y == 0) return;
 		pix_t* curr = NULL; //current step 
 		int c;
