@@ -233,7 +233,7 @@ void reducing_section_3(co_t current_pos, co_t end_coordinate, double oil, int p
 
 int input_menu();
 
-
+void section_1(pixmat** matrix, image_t image, int width_flag, poolList_t* pools, int val, int count, int i);
 
 
 int main() {
@@ -269,40 +269,10 @@ int main() {
 }
 
 void switcher(int choice, pixmat** matrix, int width_flag, image_t image) {
-	int i, val, count = 0;
 	poolList_t* pools = NULL;
-	FILE* tx;
 	switch (choice) {
 	case 1:
-		if (imgtrx(matrix, image, BMP, width_flag) != -1) {
-			if(pools) deallocPool(pools);
-			val = fopen_s(&tx, TXT, "w");
-			if (!tx) return;
-			pools = poolsFunction(matrix, image, pools, width_flag);
-			if (pools == NULL) {
-				printf_s("\nTotal of 0 pools.\n");
-				fprintf_s(tx, "%s%dx%d%s", "Image size (", image.width, image.height, ")\nPool Center	Size\n===========	====");
-				fclose(tx);
-				break;
-			}
-			printf_s("\nCoordinate x1,y1 of the first discoverd pool (%d,%d)", pools->pool_center.x, pools->pool_center.y);
-			printf_s("\nSize %d", pools->size);
-			if (val == 0) {
-				fprintf_s(tx, "%s%dx%d%s", "Image size (", image.width, image.height, ")\nPool Center	Size\n===========	====");
-				for (poolList_t* curr = pools; curr != NULL; curr = curr->next) {
-					fprintf_s(tx, "\n(%d,%d)", curr->pool_center.x, curr->pool_center.y);
-					for (i = 0; i < 9 - spaceMod(curr->pool_center.x, curr->pool_center.y); i++) //Total line length in the pools.txt file
-						fputc(' ', tx);
-					fprintf_s(tx, "%d", curr->size);
-					count++; //iterating through the pool list, printing size and center
-				}
-			}
-			else {
-				printf_s("ERROR! couldn't open %s", TXT);
-			}
-			printf_s("\nTotal of %d pools.\n", count);
-			fclose(tx);
-		}
+		section_1(matrix, image, width_flag, pools, 0, 0, 0);
 		break;
 	case 2:
 		printnsortpools();
@@ -1242,11 +1212,13 @@ void reset_files() {
 
 double oil_input() {
 	double oil;
+	char temp[80] = { 0 };
 	do {
 		printf_s("Please enter valid oil supply in range 1-1000\n");
-		scanf_s("%lf", &oil);
+		gets_s(temp, 80);
+		//int enter = getchar();
+		oil = atof(temp);
 	} while ((oil < 1) || (oil > 1000));
-	int enter = getchar();
 	return oil;
 }
 
@@ -1742,7 +1714,7 @@ int section_3(char trash) {
 
 void reducing_section_3(co_t current_pos, co_t end_coordinate, double oil, int pool_size_arr[], co_t middle_arr[], int num_of_pool) {
 	if (route_finder(current_pos, end_coordinate, oil, 0, pool_size_arr, middle_arr, 0, 0, num_of_pool, 1) != 0) {
-		printf_s("Sorry, could not reach destination with these inputs\n");
+		printf_s("Sorry, could not reach destination with these inputs\n\n");
 		remove("best-route.txt");
 		remove("best-route2.txt");
 	}
@@ -1806,4 +1778,40 @@ int input_menu() {
 		printf_s("\nBad input, try again\n\n");
 	}
 	return choice;
+}
+
+
+void section_1(pixmat** matrix, image_t image, int width_flag, poolList_t* pools , int val, int count, int i) {
+	FILE* tx;
+	if (imgtrx(matrix, image, BMP, width_flag) != -1) {
+		if (pools) deallocPool(pools);
+		val = fopen_s(&tx, TXT, "w");
+		if (!tx) return;
+		pools = poolsFunction(matrix, image, pools, width_flag);
+		if (pools == NULL) {
+			printf_s("\nTotal of 0 pools.\n");
+			fprintf_s(tx, "%s%dx%d%s", "Image size (", image.width, image.height, ")\nPool Center	Size\n===========	====");
+			fclose(tx);
+			return;
+		}
+		else {
+			printf_s("\nCoordinate x1,y1 of the first discoverd pool (%d,%d)", pools->pool_center.x, pools->pool_center.y);
+			printf_s("\nSize %d", pools->size);
+			if (val == 0) {
+				fprintf_s(tx, "%s%dx%d%s", "Image size (", image.width, image.height, ")\nPool Center	Size\n===========	====");
+				for (poolList_t* curr = pools; curr != NULL; curr = curr->next) {
+					fprintf_s(tx, "\n(%d,%d)", curr->pool_center.x, curr->pool_center.y);
+					for (i = 0; i < 9 - spaceMod(curr->pool_center.x, curr->pool_center.y); i++) //Total line length in the pools.txt file
+						fputc(' ', tx);
+					fprintf_s(tx, "%d", curr->size);
+					count++; //iterating through the pool list, printing size and center
+				}
+			}
+			else {
+				printf_s("ERROR! couldn't open %s", TXT);
+			}
+			printf_s("\nTotal of %d pools.\n", count);
+			fclose(tx);
+		}
+	}
 }
