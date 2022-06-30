@@ -483,8 +483,7 @@ poolList_t* pools_f(pixmat** mtrx, image_t image, poolList_t* pools, int width_f
 			}// allocate memory to temp color signed matrix
 	}
 	BluePixRec(mtrx, temp, image);
-	if (temp != 0)
-	{
+	if (temp != 0){
 		for (i = 0;i < image.height;i++) {
 			for (j = 0;j < image.width;j++) {
 				if (temp[j][i] == 1) { //Going over all the pixels in the matrix and checking if it is blue or not
@@ -765,9 +764,7 @@ void printnsortpools() {
 				fscanf_s(pools, "%d %c %d", &coordinate_x, &trash, 1, &coordinate_y);
 				fseek(pools, 1, SEEK_CUR);
 				fscanf_s(pools, "%d %c ", &poooolsize, &trash, 1);
-
 				head = pools_sorting_ninsert(head, coordinate_x, coordinate_y, poooolsize);
-
 			}
 		}
 		fclose(pools);
@@ -1008,24 +1005,21 @@ void NumericReport(image_t image) {
 		int c;
 		curr = pointsOfRoute(route);
 		printf_s("\nPlease enter a positive intger as distance display interval:\n");
-		do{
+		do {
 			scanf_s("%lf", &dt);
 			while ((c = getchar()) != '\n' && c != EOF);
 			if ((dt - (int)dt != 0) || dt <= 0)
 				printf_s("Bad input, try again\n");
 		} while ((dt - (int)dt != 0) || dt <= 0);
-
 		data_t* head = costsCalc(curr, start, end);
 		data_t* temp = head;
 		printf_s("Distance   Consumption\n========== ===========\n");
 		print_jump(head, dt);
 		start = end;//                                  
 	} while (end.x != image.width && end.y != image.height);// at the end of one calculations
-
 	//freedata_t(head);
 	//freepix_t(curr);
 	return;
-
 }
 
 void addnewnode(data_t** head, double d, double c) {
