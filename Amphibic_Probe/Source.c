@@ -116,7 +116,7 @@ int space_mod(int x, int y); //making sure that the correct number of spaces is 
 
 void route_painter(pixmat** matrix, int x, int y, int x_final, int y_final, int height, int width); //Painting the movement route in the map
 
-void ReachToEnd(pixmat**, int* x, int* y, int* x_final, int* y_final);
+void ReachToEnd(pixmat**, int x, int y, int x_final, int y_final);
 
 co_t best_co(FILE* route); //extrcats coordinates from best route file
 
@@ -660,22 +660,22 @@ void route_painter(pixmat** matrix, int x, int y, int x_final, int y_final, int 
 			matrix[x][y].color.r = 100; matrix[x][y].color.g = 30; matrix[x][y].color.b = 232;
 		}
 	}
-	ReachToEnd(matrix, &x, &y, &x_final, &y_final);
+	ReachToEnd(matrix, x, y, x_final, y_final);
 	matrix[width - 1][height - 1].color.r = 250; matrix[width - 1][height - 1].color.g = 180; matrix[width - 1][height - 1].color.b = 30; //color pixel at the end
 }
 
-void ReachToEnd(pixmat** matrix, int* x, int* y, int* x_final, int* y_final) {
-	if (*x < *x_final)
-		*x -= 1;
-	while (*y == *y_final && *x < *x_final - 1) {
-		matrix[*x][*y - 1].color.r = 100; matrix[*x][*y - 1].color.g = 30; matrix[*x][*y - 1].color.b = 232;
-		*x += 1;
+void ReachToEnd(pixmat** matrix, int x, int y, int x_final, int y_final) {
+	if (x < x_final)
+		x -= 1;
+	while (y == y_final && x < x_final - 1) {
+		matrix[x][y - 1].color.r = 100; matrix[x][y - 1].color.g = 30; matrix[x][y - 1].color.b = 232;
+		x += 1;
 	}
-	if (*y < *y_final)
-		*y -= 1;
-	while (*x == *x_final && *y < *y_final - 1) {
-		matrix[*x - 1][*y].color.r = 100; matrix[*x - 1][*y].color.g = 30; matrix[*x - 1][*y].color.b = 232;
-		*x += 1;
+	if (y < y_final)
+		y -= 1;
+	while (x == x_final && y < y_final - 1) {
+		matrix[x - 1][y].color.r = 100; matrix[x - 1][y].color.g = 30; matrix[x - 1][y].color.b = 232;
+		x += 1;
 	}
 }
 
