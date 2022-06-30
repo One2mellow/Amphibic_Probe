@@ -150,7 +150,7 @@ void print_jump(data_t* head, double dt);
 
 pix_t* pointsOfRoute(FILE* route);
 
-int section_3(char trash);
+int section_3(char trash);// section 3 find the best route that get you to the ending point
 
 co_t input_check(co_t image); //checking the validity of the starting coordinates
 
@@ -225,15 +225,15 @@ returns the index in the array of the nearest pool.*/
 
 double distance(co_t a, co_t b); //find distance between to cordinates
 
-int file_curpt(int num_of_pool); //check if the file crupt
+int file_corrupt(int num_of_pool); //check if the file corrupt
 
 void reducing_route_finder7(co_t tracker_coordinate, co_t* middle_arr, int num_of_pool, double oil, co_t end_coordinate, int pool_size_arr[], int r, int x, double time); //turn left in the binary tree
 
 void reducing_section_3(co_t current_pos, co_t end_coordinate, double oil, int pool_size_arr[], co_t middle_arr[], int num_of_pool); //printing route data to the screen
 
-int input_menu();
+int input_menu();// the menu of the program
 
-void section_1(pixmat** matrix, image_t image, int width_flag, poolList_t* pools, int val, int count, int i);
+void section_1(pixmat** matrix, image_t image, int width_flag, poolList_t* pools, int val, int count, int i); //section 1 get data from bmp and create a txt file
 
 
 int main() {
@@ -692,7 +692,7 @@ void printnsortpools() {
 	int poooolsize = 0, coordinate_x = 0, coordinate_y = 0;
 	int* pool_size_arr = pool_size_arr_malloc(num_of_pool);
 	co_t* middle_arr = middle_arr_malloc(num_of_pool);
-	if (file_curpt(num_of_pool) == 0) {
+	if (file_corrupt(num_of_pool) == 0) {
 		printf_s("\nfunction readpools resulted with file read error. Check that the text file has the correct format.\n");
 		return;
 	}
@@ -771,32 +771,35 @@ void time2Glow(char* filename, pixmat** matrix, image_t image, int width_flag) {
 	float time, fuel;
 	int size, x, y, i = 0;
 	fopen_s(&file, filename, "rt");
+	if (!file) {
+		printf_s("\nThe file does not open or does not exist. Try to do section 3 first.\n\n");
+		return;
+	}
+	else {
 	fopen_s(&txt, FUEL_TXT, "wt");
-	if (file != 0 && txt != 0)
-	{
-		pos = fgetc(file);
-		fseek(file, 0, SEEK_SET);
-		while (pos != EOF) {
-			fscanf_s(file, "%f %f %d %d %d", &time, &fuel, &size, &x, &y);
-			root = add((double)time, (double)fuel, size, x, y, root);
-			root = interReverseLL(root);
+		if (file != 0 && txt != 0) {
 			pos = fgetc(file);
-			for (i; pos != '>' && pos != EOF; i++)
+			fseek(file, 0, SEEK_SET);
+			while (pos != EOF) {
+				fscanf_s(file, "%f %f %d %d %d", &time, &fuel, &size, &x, &y);
+				root = add((double)time, (double)fuel, size, x, y, root);
+				root = interReverseLL(root);
 				pos = fgetc(file);
+				for (i; pos != '>' && pos != EOF; i++)
+					pos = fgetc(file);
+			}
+			fseek(txt, 15, SEEK_SET);
+			//iterating through the list
+			for (curr = root; curr != NULL; curr = curr->next) {
+				fprintf_s(txt, "(%3d,%3d)\t%d\n", curr->x, curr->y, curr->size); //need to reverse list first
+				if (curr->next == NULL)
+					fuelStore(curr->oil);
+			}
+			fclose(file);
+			fclose(txt);
+			createBMP(MOST_FUEL, BMP, FUEL_TXT, matrix, image, image.header, width_flag);
+			free_list(root);
 		}
-
-		fseek(txt, 15, SEEK_SET);
-		//iterating through the list
-		for (curr = root; curr != NULL; curr = curr->next) {
-			fprintf_s(txt, "(%3d,%3d)\t%d\n", curr->x, curr->y, curr->size); //need to reverse list first
-			if (curr->next == NULL)
-				fuelStore(curr->oil);
-		}
-
-		fclose(file);
-		fclose(txt);
-		createBMP(MOST_FUEL, BMP, FUEL_TXT, matrix, image, image.header, width_flag);
-		free_list(root);
 	}
 }
 
@@ -1049,20 +1052,20 @@ pix_t* pointsOfRoute(FILE* route) {
 }
 
 
-double distance(co_t a, co_t b) {
+double distance(co_t a, co_t b) {//Finding the distance between two coordinates
 	double x1, x2, y1, y2;
 	x1 = a.x, x2 = b.x, y1 = a.y, y2 = b.y;
 	double d;
-	d = sqrt(pow(x1 - x2, 2) + pow(y1 - y2, 2));
+	d = sqrt(pow(x1 - x2, 2) + pow(y1 - y2, 2));//A formula for finding distance
 	return d;
 }
 
 int closest_pool(co_t current_pos, co_t middle_arr[], int size) {
 	int i, j = -1;
-	double smallest_d = 10000;
+	double smallest_d = 10000;//Placing a large value
 	for (i = 0; i < size; i++) {
 		if (middle_arr[i].x != 2000)
-			if (smallest_d > distance(middle_arr[i], current_pos)) {
+			if (smallest_d > distance(middle_arr[i], current_pos)) {//Finding the nearest pool
 				smallest_d = distance(middle_arr[i], current_pos);
 				j = i;
 			}
@@ -1074,6 +1077,7 @@ int reducing_route_finder(int x, int r, double time, co_t tracker_coordinate, co
 	FILE* best_route;
 	fopen_s(&best_route, "best-route.txt", "at");
 	if (!best_route) return x;
+	//Prints the data from the track to the file
 	fprintf_s(best_route, "(%d) %.2lf %.2lf %d %d %d\n", r, time + distance(tracker_coordinate, end_coordinate) / 0.2, ab, size_of_pool, end_coordinate.x, end_coordinate.y);
 	fclose(best_route);
 	return x;
@@ -1084,6 +1088,7 @@ int reducing_route_finder2(co_t middle_arr[], int p1, int x, int r, double bb, d
 		FILE* best_route;
 		fopen_s(&best_route, "best-route.txt", "at");
 		if (!best_route) return x;
+		//Prints the data from the track to the file
 		fprintf_s(best_route, "(%d) %.2lf %.2lf %d %d %d	", r, bb, ab, pool_size_arr[p1], temp1.x, temp1.y);
 		fclose(best_route);
 	}
@@ -1094,21 +1099,21 @@ int reducing_route_finder4(int x) {
 	FILE* best_route;
 	fopen_s(&best_route, "best-route.txt", "at");
 	if (!best_route) return x;
-	fprintf_s(best_route, "X\n");
+	fprintf_s(best_route, "X\n");//Prints to file X and drops a line to indicate that it failed to reach the destination.
 	fclose(best_route);
 	return x;
 }
 
 double reducing_route_finder5(double oil, co_t tracker_coordinate, co_t end_coordinate) {
 	double ab = (oil - distance(tracker_coordinate, end_coordinate) * 0.2);
-	if (ab < 0)
+	if (ab < 0)//Correction of the negative sign if the fuel is precise enough for the route
 		ab = ab * -1;
 	return ab;
 }
 
 co_t* reducing_route_finder6(int num_of_pool) {
 	co_t* middle_arr2 = NULL;
-	middle_arr2 = (co_t*)malloc(num_of_pool * sizeof(co_t));
+	middle_arr2 = (co_t*)malloc(num_of_pool * sizeof(co_t));//Allocation of memory to the set of centers
 	if (middle_arr2 == NULL) {
 		exit(0);
 	}
@@ -1119,12 +1124,12 @@ void reducing_route_finder7(co_t tracker_coordinate, co_t* middle_arr, int num_o
 	int p2 = closest_pool(tracker_coordinate, middle_arr, num_of_pool);
 	if (p2 == -1)return;
 	co_t temp2 = middle_arr[p2];
-	double ac = oil - distance(tracker_coordinate, temp2) * 0.2 + pool_size_arr[p2] * 0.2;
-	double aa = time + pool_size_arr[p2] + distance(tracker_coordinate, temp2) / 0.2;
-	if ((oil - distance(tracker_coordinate, temp2) * 0.2) > 0) {
-		reducing_route_finder2(middle_arr, p2, x, r, aa, ac, pool_size_arr, temp2);
-		middle_arr[p2].x = 2000;
-		co_t* middle_arr3 = reducing_route_finder6(num_of_pool);
+	double ac = oil - distance(tracker_coordinate, temp2) * 0.2 + pool_size_arr[p2] * 0.2;//Reduces the fuel it consumes
+	double aa = time + pool_size_arr[p2] + distance(tracker_coordinate, temp2) / 0.2;//Adds the time it moves
+	if ((oil - distance(tracker_coordinate, temp2) * 0.2) > 0) {//Checks if there is enough fuel
+		reducing_route_finder2(middle_arr, p2, x, r, aa, ac, pool_size_arr, temp2);//Reducing the function due to limiting 40 lines
+		middle_arr[p2].x = 2000;//Placing a large value so that it will not be used for subsequent routes
+		co_t* middle_arr3 = reducing_route_finder6(num_of_pool);//Reducing the function due to limiting 40 lines
 		for (int i = 0; i < num_of_pool; i++)
 			middle_arr3[i] = middle_arr[i];
 		x *= route_finder(temp2, end_coordinate, ac, aa, pool_size_arr, middle_arr3, pool_size_arr[p2], r, num_of_pool, 1);
@@ -1132,46 +1137,47 @@ void reducing_route_finder7(co_t tracker_coordinate, co_t* middle_arr, int num_o
 	}
 }
 
+//A function with double recursion, which finds all the existing routes and prints them to a temporary file
 int route_finder(co_t tracker_coordinate, co_t end_coordinate, double oil, double time, int pool_size_arr[], co_t middle_arr[], int size_of_pool, int r, int num_of_pool, int x) {
 	r++;
-	if (oil >= 0) {
-		if ((distance(tracker_coordinate, end_coordinate)) * 0.2 - 0.009 <= oil) {
-			double ab = reducing_route_finder5(oil, tracker_coordinate, end_coordinate);
-			reducing_route_finder(x, r, time, tracker_coordinate, end_coordinate, ab, size_of_pool);
+	if (oil >= 0) {//If there is fuel left
+		if ((distance(tracker_coordinate, end_coordinate)) * 0.2 - 0.009 <= oil) {//If the fuel is enough to the end
+			double ab = reducing_route_finder5(oil, tracker_coordinate, end_coordinate);//Reducing the function due to limiting 40 lines
+			reducing_route_finder(x, r, time, tracker_coordinate, end_coordinate, ab, size_of_pool);//Reducing the function due to limiting 40 lines
 			return 0;
 		}
-		else {
-			int p1 = closest_pool(tracker_coordinate, middle_arr, num_of_pool);
+		else {//If the fuel is not enough to reach the end
+			int p1 = closest_pool(tracker_coordinate, middle_arr, num_of_pool);//Finding the nearest pool
 			if (p1 == -1)return 1;
 			co_t temp1 = middle_arr[p1];
-			double ab = oil - distance(tracker_coordinate, temp1) * 0.2 + pool_size_arr[p1] * 0.2;
-			double bb = time + pool_size_arr[p1] + distance(tracker_coordinate, temp1) / 0.2;
-			if ((oil - distance(tracker_coordinate, temp1) * 0.2) > 0) {
-				reducing_route_finder2(middle_arr, p1, x, r, bb, ab, pool_size_arr, temp1);
-				middle_arr[p1].x = 2000;
-				co_t* middle_arr2 = reducing_route_finder6(num_of_pool);
+			double ab = oil - distance(tracker_coordinate, temp1) * 0.2 + pool_size_arr[p1] * 0.2;//Reduces the fuel it consumes
+			double bb = time + pool_size_arr[p1] + distance(tracker_coordinate, temp1) / 0.2;//Adds the time it moves
+			if ((oil - distance(tracker_coordinate, temp1) * 0.2) > 0) {//Checks if there is enough fuel
+				reducing_route_finder2(middle_arr, p1, x, r, bb, ab, pool_size_arr, temp1);//Reducing the function due to limiting 40 lines
+				middle_arr[p1].x = 2000;//Placing a large value so that it will not be used for subsequent routes
+				co_t* middle_arr2 = reducing_route_finder6(num_of_pool);//Reducing the function due to limiting 40 lines
 				for (int i = 0; i < num_of_pool; i++)
 					middle_arr2[i] = middle_arr[i];
 				x *= route_finder(temp1, end_coordinate, ab, time + pool_size_arr[p1] + distance(tracker_coordinate, temp1) / 0.2, pool_size_arr, middle_arr2, pool_size_arr[p1], r, num_of_pool, 1);
 				free(middle_arr2);
 			}
-			reducing_route_finder7(tracker_coordinate, middle_arr, num_of_pool, oil, end_coordinate, pool_size_arr, r, x, time);
+			reducing_route_finder7(tracker_coordinate, middle_arr, num_of_pool, oil, end_coordinate, pool_size_arr, r, x, time);//Reducing the function due to limiting 40 lines
 		}
 	}
-	reducing_route_finder4(x);
+	reducing_route_finder4(x);//Reducing the function due to limiting 40 lines
 	return x;
 }
 
 
 int pool_counter() {
-	char pointer = 0;
+	char pointer = 0;//Indicates the character in the file
 	int num_of_pool = 0;
 	FILE* pools;
 	fopen_s(&pools, TXT, "rt");
 	if (!pools) return 0;
 	fseek(pools, 40, SEEK_CUR);
 	for (pointer = getc(pools); pointer != EOF; pointer = getc(pools)) {
-		if (pointer == '(') {
+		if (pointer == '(') {//Count how many pools there are in the text file
 			num_of_pool++;
 		}
 	}
@@ -1181,7 +1187,7 @@ int pool_counter() {
 
 int* pool_size_arr_malloc(int num_of_pool) {
 	int* pool_size_arr = NULL;
-	pool_size_arr = (int*)malloc(num_of_pool * sizeof(int));
+	pool_size_arr = (int*)malloc(num_of_pool * sizeof(int));//Allocation of memory to an array of pool sizes
 	if (pool_size_arr == NULL) {
 		exit(0);
 	}
@@ -1190,7 +1196,7 @@ int* pool_size_arr_malloc(int num_of_pool) {
 
 co_t* middle_arr_malloc(int num_of_pool) {
 	co_t* middle_arr = NULL;
-	middle_arr = (co_t*)malloc(num_of_pool * sizeof(co_t));
+	middle_arr = (co_t*)malloc(num_of_pool * sizeof(co_t));//Allocation of memory to the set of pool centers
 	if (middle_arr == NULL) {
 		exit(0);
 	}
@@ -1201,42 +1207,41 @@ void reset_files() {
 	FILE* best_route;
 	fopen_s(&best_route, "best-route.txt", "wt");
 	if (!best_route) return;
-	fprintf_s(best_route, "");
+	fprintf_s(best_route, "");//Resets the files but does not delete them
 	fclose(best_route);
 
 	fopen_s(&best_route, "best-route2.txt", "wt");
 	if (!best_route) return;
-	fprintf_s(best_route, "");
+	fprintf_s(best_route, "");//Resets the files but does not delete them
 	fclose(best_route);
 }
 
 double oil_input() {
 	double oil;
-	char temp[80] = { 0 };
+	char temp[80] = { 0 };//Array for input
 	do {
 		printf_s("Please enter valid oil supply in range 1-1000\n");
 		gets_s(temp, 80);
-		//int enter = getchar();
-		oil = atof(temp);
-	} while ((oil < 1) || (oil > 1000));
+		oil = atof(temp);//Turning the array into a value in order to put the data into the oil variable
+	} while ((oil < 1) || (oil > 1000));//Proper input test
 	return oil;
 }
 
 void file_name_changer() {
-	remove("best-route2.txt");
-	char old_name[] = "temp.txt";
-	char new_name[] = "best-route2.txt";
-	int d = rename(old_name, new_name);
+	remove("best-route2.txt"); //File Remove
+	char old_name[] = "temp.txt";//Old name
+	char new_name[] = "best-route2.txt"; //New name
+	int d = rename(old_name, new_name);//Renaming
 }
 
 void reducing_correct_data1(FILE* best_route, FILE* best_route2, int i, int j, int k, char test) {
 	for (test = getc(best_route); test != EOF; test = getc(best_route)) {
-		if (test != 'X') {
+		if (test != 'X') {//If the text is not equal to X at the end of the line
 			if (test == '\n') {
 				j = i;
 				fseek(best_route, -j + k - 2, SEEK_CUR);
 				for (test = getc(best_route); k < j + 1; test = getc(best_route)) {
-					fprintf_s(best_route2, "%c", test);
+					fprintf_s(best_route2, "%c", test);//Print the relevant data for a new file
 					k++;
 				}
 				k = j + 1;
@@ -1257,7 +1262,7 @@ void reducing_correct_data1(FILE* best_route, FILE* best_route2, int i, int j, i
 				k += 5;
 				fseek(best_route, -j + k - 2, SEEK_CUR);
 				for (test = getc(best_route); k < j + 3; test = getc(best_route)) {
-					fprintf_s(best_route2, "%c", test);
+					fprintf_s(best_route2, "%c", test);//Print the relevant data for a new file
 					k++;
 				}
 				fprintf_s(best_route2, "\n");
@@ -1275,10 +1280,10 @@ void correct_data1(int i, int j, int k, char test) {
 	FILE* best_route2;
 	fopen_s(&best_route2, "temp.txt", "a");
 	if (!best_route2) return;
-	reducing_correct_data1(best_route, best_route2, i, j, k, test);
+	reducing_correct_data1(best_route, best_route2, i, j, k, test);//Reducing the function due to limiting 40 lines
 	fclose(best_route2);
 	fclose(best_route);
-	file_name_changer();
+	file_name_changer(); //Rename the file
 }
 
 void correct_data2(int i, int j, int k, char test) {
@@ -1289,14 +1294,14 @@ void correct_data2(int i, int j, int k, char test) {
 	fopen_s(&best_route2, "temp.txt", "a");
 	if (!best_route2) return;
 	for (test = getc(best_route); test != EOF; test = getc(best_route)) {
-		if (test == '\n') {
+		if (test == '\n') {//If it has reached the end of a line
 			j = i;
 			fseek(best_route, -3, SEEK_CUR);
 			test = getc(best_route);
-			if (test != 'X') {
+			if (test != 'X') {//If the text is not equal to X at the end of the line
 				fseek(best_route, -j + k, SEEK_CUR);
 				for (test = getc(best_route); k < j + 1; test = getc(best_route)) {
-					fprintf_s(best_route2, "%c", test);
+					fprintf_s(best_route2, "%c", test);//Print the relevant data for a new file
 					k++;
 				}
 				k = j + 1;
@@ -1312,13 +1317,13 @@ void correct_data2(int i, int j, int k, char test) {
 	}
 	fclose(best_route2);
 	fclose(best_route);
-	file_name_changer();
+	file_name_changer();//Rename the file
 }
 
 int reducing2_correct_data3(FILE* best_route, FILE* best_route2, char test, int r, int n) {
 	fseek(best_route, -r - 3, SEEK_CUR);
 	for (test = getc(best_route); n < r + 1; test = getc(best_route)) {
-		fprintf_s(best_route2, "%c", test);
+		fprintf_s(best_route2, "%c", test);//Print the relevant data for a new file
 		n++;
 	}
 	return n;
@@ -1327,7 +1332,7 @@ int reducing2_correct_data3(FILE* best_route, FILE* best_route2, char test, int 
 int reducing3_correct_data3(FILE* best_route, FILE* best_route2, char test, int r, int k, int j) {
 	fseek(best_route, k - r - 1, SEEK_CUR);
 	for (test = getc(best_route); k < j + 1; test = getc(best_route)) {
-		fprintf_s(best_route2, "%c", test);
+		fprintf_s(best_route2, "%c", test);//Print the relevant data for a new file
 		k++;
 	}
 	fseek(best_route, -2, SEEK_CUR);
@@ -1335,30 +1340,30 @@ int reducing3_correct_data3(FILE* best_route, FILE* best_route2, char test, int 
 }
 
 void reducing_correct_data3(FILE* best_route, FILE* best_route2, char test, int i, int j, int k, int r, int n) {
-	for (test = getc(best_route); test != EOF; test = getc(best_route)) {
+	for (test = getc(best_route); test != EOF; test = getc(best_route)) {//Editing the data in the temporary file
 		if (test == '\n') {
 			j = i;
 			fseek(best_route, k - j - 1, SEEK_CUR);
 			test = getc(best_route);
-			if (test == 49) {
+			if (test == 49) {//If this is the first point on the route
 				fseek(best_route, -2, SEEK_CUR);
 				for (test = getc(best_route); k < j + 1; test = getc(best_route)) {
-					fprintf_s(best_route2, "%c", test);
+					fprintf_s(best_route2, "%c", test);//Print the relevant data for a new file
 					k++;
 				}
 				fseek(best_route, -2, SEEK_CUR);
 				test = getc(best_route);
 			}
 			else {
-				if (test != 49) {
+				if (test != 49) {//If this is not the first point on the route
 					char temp = test;
 					fseek(best_route, -k - 3, SEEK_CUR);
 					for (test = getc(best_route); test != '\n'; test = getc(best_route)) {
 						if (test == '(') {
 							test = getc(best_route);
 							if (test == temp) {
-								n = reducing2_correct_data3(best_route, best_route2, test, r, n);
-								k = reducing3_correct_data3(best_route, best_route2, test, r, k, j);
+								n = reducing2_correct_data3(best_route, best_route2, test, r, n);//Reducing the function due to limiting 40 lines
+								k = reducing3_correct_data3(best_route, best_route2, test, r, k, j);//Reducing the function due to limiting 40 lines
 							}
 						}
 						r++;
@@ -1379,10 +1384,10 @@ void correct_data3(char test, int i, int j, int k, int r, int n) {
 	if (!best_route) return;
 	fopen_s(&best_route2, "temp.txt", "a");
 	if (!best_route2) return;
-	reducing_correct_data3(best_route, best_route2, test, i, j, k, r, n);
+	reducing_correct_data3(best_route, best_route2, test, i, j, k, r, n);//Reducing the function due to limiting 40 lines
 	fclose(best_route2);
 	fclose(best_route);
-	file_name_changer();
+	file_name_changer();//Renames the file
 }
 
 int set_counter() {
@@ -1392,14 +1397,14 @@ int set_counter() {
 	fopen_s(&best_route, "best-route2.txt", "rt");
 	if (!best_route) return 0;
 	for (test = getc(best_route); test != EOF; test = getc(best_route)) {
-		if (test == '\n')
+		if (test == '\n')//Count lines in file
 			counter++;
 	}
 	fclose(best_route);
 	return counter;
 }
 
-double* malloc_data(int counter) {
+double* malloc_data(int counter) {//Memory release
 	double* data = NULL;
 	data = (double*)malloc(counter * sizeof(double));
 	if (data == NULL) {
@@ -1413,11 +1418,11 @@ double* set_finel_time_arr(char test, int i, int j, int k, double* data) {
 	fopen_s(&best_route, "best-route2.txt", "rt");
 	if (!best_route) return 0;
 	for (test = getc(best_route); test != EOF; test = getc(best_route)) {
-		if (test == ')')
+		if (test == ')')//Finds the last part that contains the time
 			j = i;
 		if (test == '\n') {
 			fseek(best_route, j - i, SEEK_CUR);
-			fscanf_s(best_route, "%lf", &data[k]);
+			fscanf_s(best_route, "%lf", &data[k]);//Transfers to the array only the final time of the routes
 			k++;
 			for (test = getc(best_route); test != '\n'; test = getc(best_route));
 		}
@@ -1428,16 +1433,16 @@ double* set_finel_time_arr(char test, int i, int j, int k, double* data) {
 }
 
 double* set_finel_oil_arr(char test, int i, int j, int k, double* data) {
-	double trash;
+	double trash;//An unnecessary data
 	FILE* best_route;
 	fopen_s(&best_route, "best-route2.txt", "rt");
 	if (!best_route) return 0;
 	for (test = getc(best_route); test != EOF; test = getc(best_route)) {
-		if (test == ')')
+		if (test == ')')//Finds the last part that contains the amount of oil
 			j = i;
 		if (test == '\n') {
 			fseek(best_route, j - i, SEEK_CUR);
-			fscanf_s(best_route, "%lf %lf", &trash, &data[k]);
+			fscanf_s(best_route, "%lf %lf", &trash, &data[k]);//Transfers to the array only the final amount of fuel of the routes
 			k++;
 			for (test = getc(best_route); test != '\n'; test = getc(best_route));
 		}
@@ -1446,12 +1451,12 @@ double* set_finel_oil_arr(char test, int i, int j, int k, double* data) {
 	fclose(best_route);
 	return data;
 }
-
+//A recursive function that prints the organs in reverse order
 int print(list_t* head, int i, int counter2) {
-	if (head == NULL)
+	if (head == NULL)//Reaching the last organ of the list
 		return i;
 	i = print(head->next, i, counter2);
-	if (i == 0) {
+	if (i == 0) {//Print the list from last member to first
 		printf_s("Time=%.2lf (%d,%d) oil=%.2lf", head->time, head->x, head->y, head->oil);
 		i++;
 	}
@@ -1468,6 +1473,7 @@ list_t* add(double time, double oil, int size, int x, int y, list_t* head) {
 	if (new_node == NULL) {
 		exit(0);
 	}
+	//Adds an organ to the linked list
 	new_node->time = time;
 	new_node->oil = oil;
 	new_node->size = size;
@@ -1480,7 +1486,7 @@ list_t* add(double time, double oil, int size, int x, int y, list_t* head) {
 
 void free_list(list_t* head) {
 	list_t* tmp;
-	while (head != NULL) {
+	while (head != NULL) {//Release the linked list organ by organ
 		tmp = head;
 		head = head->next;
 		free(tmp);
@@ -1493,7 +1499,7 @@ void printing_to_screen(char test, int counter2, int j, int i, int p, int counte
 	if (!best_route) return;
 	for (test = getc(best_route); test != EOF; test = getc(best_route)) {
 		for (test = getc(best_route); (test != '\n') && (test != EOF); test = getc(best_route)) {
-			if (test == ')')
+			if (test == ')')//Count how many stopping points there are on the route
 				counter2++;
 			j++;
 		}
@@ -1508,17 +1514,17 @@ void printing_to_screen(char test, int counter2, int j, int i, int p, int counte
 			head = add(0, oil, 0, current_pos.x, current_pos.y, head);
 			for (p = 0; p < counter2; p++) {
 				fscanf_s(best_route, "%lf %lf %d %d %d ", &timeb, &oilb, &garbi, &xb, &yb);
-				head = add(timeb, oilb, garbi, xb, yb, head);
+				head = add(timeb, oilb, garbi, xb, yb, head);//Transfers data from the file to a linked list
 				fseek(best_route, 3, SEEK_CUR);
 				if (p == (counter2 - 1)) {
-					fseek(best_route, -4, SEEK_CUR);
+					fseek(best_route, -4, SEEK_CUR);//Skip a few characters
 					counter2 = 0;
 					j = 0;
 				}
 			}
-			print(head, 0, counter2);
+			print(head, 0, counter2);//A function that prints the linked list
 			printf_s("\n");
-			free_list(head);
+			free_list(head);//Release the linked list
 		}
 		i++;
 	}
@@ -1528,11 +1534,11 @@ void printing_to_screen(char test, int counter2, int j, int i, int p, int counte
 void best_route_file_creation(int i, int counter, double data[], double kk, int j, char test, int p, int counter2, int c, double timeb, double oilb, int sizeb, int xb, int yb, co_t current_pos, co_t end_coordinate) {
 	FILE* best_route;
 	FILE* best_route3;
-	fopen_s(&best_route, "best-route2.txt", "rt");
+	fopen_s(&best_route, "best-route2.txt", "rt"); // Reading from one file and copying to another
 	if (!best_route) return;
 	fopen_s(&best_route3, "best-route.txt", "at");
 	if (!best_route3) return;
-	for (i = 0; i < counter; i++)
+	for (i = 0; i < counter; i++)//Finds the route with the smallest time
 		if (kk >= data[i]) {
 			kk = data[i];
 			j++;
@@ -1547,34 +1553,35 @@ void best_route_file_creation(int i, int counter, double data[], double kk, int 
 					counter2++;
 				c++;
 			}
-			fseek(best_route, -c, SEEK_CUR);
+			fseek(best_route, -c, SEEK_CUR);//Count how many stops there are on each route
 			test = getc(best_route);
 			for (p = 0; p < counter2; p++) {
 				fscanf_s(best_route, "%lf %lf %d %d %d ", &timeb, &oilb, &sizeb, &xb, &yb);
 				fseek(best_route, 3, SEEK_CUR);
 				if (p == 0) {
-					fprintf_s(best_route3, "Best Route	Size\n");
+					fprintf_s(best_route3, "Best Route	Size\n");//Prints to a file according to the format
 					fprintf_s(best_route3, "(%3d,%3d)	0\n", current_pos.x, current_pos.y);
 				}
-				if (p < counter2-1)
+				if (p < counter2 - 1)
 					fprintf_s(best_route3, "(%3d,%3d)	%d\n", xb, yb, sizeb);
 			}
 		}
 	}
-	fprintf_s(best_route3, "(%3d,%3d)	0\n", end_coordinate.x, end_coordinate.y);
+	fprintf_s(best_route3, "(%3d,%3d)	0\n", end_coordinate.x, end_coordinate.y);//Print end coordinates
 	fclose(best_route3);
 	fclose(best_route);
 }
 
+
 void max_oil_file_creation(int i, int counter, double data[], double kk, int j, char test, int p, int counter2, int c, double timeb, double oilb, int sizeb, int xb, int yb, co_t current_pos, co_t end_coordinate, double oil) {
-	remove("for-nitai.txt");
+	remove("for-nitai.txt");//Remove the file before creating the file
 	FILE* best_route;
 	FILE* best_route3;
-	fopen_s(&best_route, "best-route2.txt", "rt");
+	fopen_s(&best_route, "best-route2.txt", "rt");//Reading from one file and copying to another
 	if (!best_route) return;
 	fopen_s(&best_route3, "for-nitai.txt", "at");
 	if (!best_route3) return;
-	for (i = 0; i < counter; i++)
+	for (i = 0; i < counter; i++)//Finding the route that has the most fuel left
 		if (kk <= data[i]) {
 			kk = data[i];
 			j++;
@@ -1584,13 +1591,13 @@ void max_oil_file_creation(int i, int counter, double data[], double kk, int j, 
 		if (test == '\n')
 			p++;
 		if (p == j) {
-			for (test = getc(best_route); test != '\n'; test = getc(best_route)) {
+			for (test = getc(best_route); test != '\n'; test = getc(best_route)) {//Count how many stops there are on each route
 				if (test == ')')
 					counter2++;
 				c++;
 			}
 			fseek(best_route, -c - 2, SEEK_CUR);
-			for (p = 0; p < counter2 + 1; p++) {
+			for (p = 0; p < counter2 + 1; p++) {//Print the data to a file
 				fscanf_s(best_route, "%lf %lf %d %d %d ", &timeb, &oilb, &sizeb, &xb, &yb);
 				fseek(best_route, 3, SEEK_CUR);
 				if (p == 0)
@@ -1608,19 +1615,19 @@ void max_oil_file_creation(int i, int counter, double data[], double kk, int j, 
 }
 
 void there_a_route(double oil, co_t current_pos, co_t end_coordinate) {
-	correct_data1(0, 0, 0, 0);
-	correct_data2(0, 0, 0, 0);
-	correct_data3(0, 0, 0, 0, 0, 0);
-	int counter = set_counter();
-	double* data = malloc_data(counter);
-	data = set_finel_time_arr(0, 0, 0, 0, data);
-	printing_to_screen(0, 0, 0, 0, 0, counter, data[0], data, oil, current_pos, 0, 0, 0, 0, 0);
-	remove("best-route.txt");
+	correct_data1(0, 0, 0, 0);//fixing the temporary file before use the data
+	correct_data2(0, 0, 0, 0);//fixing the temporary file before use the data
+	correct_data3(0, 0, 0, 0, 0, 0);//fixing the temporary file before use the data
+	int counter = set_counter();//count how many row in the file
+	double* data = malloc_data(counter);//get memory for the data
+	data = set_finel_time_arr(0, 0, 0, 0, data);// get the fastest route from the file
+	printing_to_screen(0, 0, 0, 0, 0, counter, data[0], data, oil, current_pos, 0, 0, 0, 0, 0);//print the data to the screen
+	remove("best-route.txt");//Remove the file before editing according to the required format
 	best_route_file_creation(0, counter, data, data[0], 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, current_pos, end_coordinate);
-	data = set_finel_oil_arr(0, 0, 0, 0, data);
-	max_oil_file_creation(0, counter, data, data[0], 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, current_pos, end_coordinate, oil);
-	remove("best-route2.txt");
-	printf_s("New best-route.txt file was created\n");
+	data = set_finel_oil_arr(0, 0, 0, 0, data);//Creates the file with the fastest route
+	max_oil_file_creation(0, counter, data, data[0], 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, current_pos, end_coordinate, oil);//Creates the file with the most oil-efficient route
+	remove("best-route2.txt");//Removes the temporary file
+	printf_s("New best-route.txt file was created\n");//Notification that the file was created successfully
 	free(data);
 }
 
@@ -1680,9 +1687,9 @@ Shows the fastest route from a certain point on the map to the end point conside
 int section_3(char trash) {
 	FILE* pools;
 	co_t end_coordinate = { 0 };
-	int num_of_pool = pool_counter();
-	int* pool_size_arr = pool_size_arr_malloc(num_of_pool);
-	if (file_curpt(num_of_pool) == 0) {
+	int num_of_pool = pool_counter();//get the number of pools
+	int* pool_size_arr = pool_size_arr_malloc(num_of_pool); //get the size of the pools array
+	if (file_corrupt(num_of_pool) == 0) {//if the file is corrupted
 		printf_s("function readpools resulted with file read error.Check that the text file has the correct format.\n");
 		return -1;
 	}
@@ -1693,7 +1700,7 @@ int section_3(char trash) {
 		return -1;
 	}
 	else {
-		fseek(pools, 12, SEEK_SET);
+		fseek(pools, 12, SEEK_SET);//take data for the file to the arrays
 		fscanf_s(pools, "%d %c %d", &end_coordinate.x, &trash, 1, &end_coordinate.y);
 		fseek(pools, 40, SEEK_CUR);
 		for (int i = 0; i < num_of_pool; i++) {
@@ -1702,10 +1709,10 @@ int section_3(char trash) {
 			fscanf_s(pools, "%d %c ", &pool_size_arr[i], &trash, 1);
 		}
 		fclose(pools);
-		reset_files();
-		co_t current_pos = input_check(end_coordinate);
-		double oil = oil_input();
-		reducing_section_3(current_pos, end_coordinate, oil, pool_size_arr, middle_arr, num_of_pool);
+		reset_files();//reset the file before start working
+		co_t current_pos = input_check(end_coordinate); //get start coordinate
+		double oil = oil_input();//get oil for the start
+		reducing_section_3(current_pos, end_coordinate, oil, pool_size_arr, middle_arr, num_of_pool);//to help the function be under 40 rows
 	}
 	free(pool_size_arr);
 	free(middle_arr);
@@ -1714,8 +1721,8 @@ int section_3(char trash) {
 
 void reducing_section_3(co_t current_pos, co_t end_coordinate, double oil, int pool_size_arr[], co_t middle_arr[], int num_of_pool) {
 	if (route_finder(current_pos, end_coordinate, oil, 0, pool_size_arr, middle_arr, 0, 0, num_of_pool, 1) != 0) {
-		printf_s("Sorry, could not reach destination with these inputs\n\n");
-		remove("best-route.txt");
+		printf_s("Sorry, could not reach destination with these inputs\n\n");//if there is not enough oil to get to the end
+		remove("best-route.txt");//removing the files
 		remove("best-route2.txt");
 	}
 	else {
@@ -1724,7 +1731,7 @@ void reducing_section_3(co_t current_pos, co_t end_coordinate, double oil, int p
 }
 
 
-int file_curpt(int num_of_pool) {
+int file_corrupt(int num_of_pool) {
 	FILE* pools;
 	int a, b, d, e;
 	char c, f, g;
@@ -1733,11 +1740,11 @@ int file_curpt(int num_of_pool) {
 		return -1;
 	}
 	else {
-		fseek(pools, 12, SEEK_SET);
+		fseek(pools, 12, SEEK_SET);//skip to the size of the map numbers
 		fscanf_s(pools, "%d %c %d", &a, &c, 1, &b);
-		fseek(pools, 39, SEEK_CUR);
+		fseek(pools, 39, SEEK_CUR);//skip to the pools data
 		for (int i = 0; i < num_of_pool; i++) {
-			fscanf_s(pools, "%c %d %c %d %c", &c, 1, &d, &f, 1, &e, &g, 1);
+			fscanf_s(pools, "%c %d %c %d %c", &c, 1, &d, &f, 1, &e, &g, 1);//checking if the data is corrupted
 			if (c != '(') {
 				fclose(pools);
 				return 0;
@@ -1766,16 +1773,16 @@ int input_menu() {
 	int choice = 0;
 	char str[81];
 	while (choice == 0) {
-		printf_s("--------------------------\nME LAB services\n--------------------------");
-		printf_s("\nMenu:\n1. Scan pools\n2. Print sorted pool list\n3. Select route\n4. Numeric report.\n5. Students addition\n9. Exit.\nEnter choice: ");
-		gets_s(str, 80);
-		if ((str[0] > '0') && ((str[0] < '6')) || (str[0] == '9')) {
+		printf_s("--------------------------\nME LAB services\n--------------------------");//menu body
+		printf_s("\nMenu:\n1. Scan pools\n2. Print sorted pool list\n3. Select route\n4. Numeric report.\n5. Students addition\n9. Exit.\nEnter choice: "); //menu options
+		gets_s(str, 80);//get input
+		if ((str[0] > '0') && ((str[0] < '6')) || (str[0] == '9')) {//check the input
 			if (str[1] == '\0') {
 				choice = str[0] - 48;
 				return choice;
 			}
 		}
-		printf_s("\nBad input, try again\n\n");
+		printf_s("\nBad input, try again\n\n");//the input is incorrect
 	}
 	return choice;
 }
@@ -1788,7 +1795,7 @@ void section_1(pixmat** matrix, image_t image, int width_flag, poolList_t* pools
 		val = fopen_s(&tx, TXT, "w");
 		if (!tx) return;
 		pools = poolsFunction(matrix, image, pools, width_flag);
-		if (pools == NULL) {
+		if (pools == NULL) {//if there is no pool
 			printf_s("\nTotal of 0 pools.\n");
 			fprintf_s(tx, "%s%dx%d%s", "Image size (", image.width, image.height, ")\nPool Center	Size\n===========	====");
 			fclose(tx);
