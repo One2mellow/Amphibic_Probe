@@ -100,7 +100,7 @@ poolList_t* poolsFunction(pixmat** mtrx, image_t image, poolList_t* pools, int w
 
 void bluePixRec(pixmat** mtrx, int** temp, image_t image); //Assigning values to 1/0 matrix for each pixel 1 for blue pixel, 0 for any other pixel
 
-void createBMP(char* filename, char* origin, char* txt, pixmat** matrix, image_t pic, unsigned char* header, int width_flag); // Print the route on the bmp copy
+void createBMP(char* filename, char* origin, char* txt, pixmat** matrix, image_t pic, unsigned char* header, int width_flag); // Print the route on the BMP copy
 
 void segment(pix_t* root, pixmat** mtrx, int** temp, image_t image, int i, int j, int* size); //using region base image segmentation to detect pools
 
@@ -245,7 +245,7 @@ int main() {
 		return -1;
 	}
 	width_flag = image.width;
-	for (i = 0; ((width_flag * 3) % 4) != 0; i++) // making sure width is divsible by 4 due to BMP format regulations
+	for (i = 0; ((width_flag * 3) % 4) != 0; i++) // making sure width * BytesPerPixel is divsible by 4 due to BMP color pallate regulations for 24bit BMP format
 		width_flag = image.width + i;
 
 	matrix = malloc(sizeof(pixmat*) * image.width);
@@ -291,7 +291,7 @@ void switcher(int choice, pixmat** matrix, int width_flag, image_t image) {
 				fprintf_s(tx, "%s%dx%d%s", "Image size (", image.width, image.height, ")\nPool Center	Size\n===========	====");
 				for (poolList_t* curr = pools; curr != NULL; curr = curr->next) {
 					fprintf_s(tx, "\n(%d,%d)", curr->pool_center.x, curr->pool_center.y);
-					for (i = 0; i < 9 - spaceMod(curr->pool_center.x, curr->pool_center.y); i++)
+					for (i = 0; i < 9 - spaceMod(curr->pool_center.x, curr->pool_center.y); i++) //Total line length in the pools.txt file
 						fputc(' ', tx);
 					fprintf_s(tx, "%d", curr->size);
 					count++; //iterating through the pool list, printing size and center
@@ -361,18 +361,17 @@ co_t pool_middle(pix_t* root, int size) {
 int loadImage(image_t* image, const char* filename, unsigned char* head) {
 	int width, height, return_value = 0; //Image width, image height, validating the the file can be opened
 	FILE* file; //File pointer to store the image in
-	return_value = fopen_s(&file, filename, "rb"); //Reading the BMP file as binary
+	return_value = fopen_s(&file, filename, "rb"); //Reading the BMP file as binary file
 	if (file) {
 		if (fgetc(file) == 'B' && fgetc(file) == 'M') {  //The first to bytes 'B' & 'M' are BMP header prifxes
-			fseek(file, 16, SEEK_CUR);
-		//	fseek(file, 4, SEEK_CUR);
+			fseek(file, 16, SEEK_CUR);//Skipping unrelevent data (for our purposes)
 			fread(&width, 4, 1, file); //Reading image width
 			fread(&height, 4, 1, file); //Reading image height
 			image->width = width;
 			image->height = height;
 			fseek(file, 0, SEEK_SET);
 			for (int i = 0;i < 54;i++) {
-				image->header[i] = fgetc(file); //Reading & saving header data information
+				image->header[i] = fgetc(file); //Reading & storing header data information
 			}
 		}
 		fclose(file);
@@ -384,16 +383,16 @@ int loadImage(image_t* image, const char* filename, unsigned char* head) {
 }
 
 int imgtrx(pixmat** mtrx, image_t image, char* filename, int width_flag) {
-	int val, i = 0, j, k;
-	FILE* file;
-	val = fopen_s(&file, filename, "rb");
+	int val, i, j, k; //val for checking if the file was opened successfully, i,j,k are counters
+	FILE* file; //File pointer to store the image in
+	val = fopen_s(&file, filename, "rb"); //Reading the BMP file as binary file
 	if (!file) {
-		printf_s("\nError open the %s\n", filename);
+		printf_s("\nError open the %s\n", filename); //In case we couldn't open the file
 		return -1;
 	}
 	if (file != 0){
 		fseek(file, 54, SEEK_SET); //Skipping the header bytes and getting to the color pallette 
-		for (i = 0; i < image.height; i++){
+		for (i = 0; i < image.height; i++){ //Our matrix is set from index '0' up to index that is one less than 'image height\width'
 			for (j = 0; j < image.width; j++){
 				mtrx[j][i].color.b = fgetc(file); //Saving the RGB data to the correct x,y location on the color pallette
 				mtrx[j][i].color.g = fgetc(file); //On the BMP the data is actually stored in order of BGR
@@ -402,7 +401,7 @@ int imgtrx(pixmat** mtrx, image_t image, char* filename, int width_flag) {
 				mtrx[j][i].cordinate.y = i;//assigning x,y values to each pixel (type of the pixmat struct)
 			}
 			for (k = 0; k < width_flag - image.width; k++)
-				fseek(file, 1, SEEK_CUR); //Skips padding
+				fseek(file, 1, SEEK_CUR); //Skips padding, width flag is set to the actual image width for cosidering the BPP*width/4 requirement
 		}
 	}
 	fclose(file);
@@ -410,10 +409,10 @@ int imgtrx(pixmat** mtrx, image_t image, char* filename, int width_flag) {
 }
 
 void createBMP(char* filename, char* origin, char* txt, pixmat** matrix, image_t pic, unsigned char* header, int width_flag) {
-	FILE* image, * route;
-	co_t start, end;
-	char position;
-	int i, j, k;
+	FILE* image, * route; //File pointers to store the image we are going to create and the txt file we are reading from
+	co_t start, end; //Coordinates for the start and finish of each section in our movement route
+	char position; //The next charecter we are going to read from the txt file (for validating input reasons)
+
 	imgtrx(matrix, pic, BMP, width_flag); //resetting the image matrix before painting a route
 	fopen_s(&image, filename, "wb"); //opening the image file
 	fopen_s(&route, txt, "rt"); //opening the best route file
@@ -433,13 +432,13 @@ void createBMP(char* filename, char* origin, char* txt, pixmat** matrix, image_t
 		for (int i = 0; i < 54; i++){
 			fputc(header[i], image); //printing header data to the new BMP file
 		}
-		for (i = 0; i < pic.height; i++){
-			for (j = 0; j < pic.width; j++){ //printing the modified color pallette to the new BMP (prnting the route)
+		for (int i = 0; i < pic.height; i++){
+			for (int j = 0; j < pic.width; j++){ //printing the modified color pallette to the new BMP (prnting the route)
 				fputc(matrix[j][i].color.b, image);
 				fputc(matrix[j][i].color.g, image);
 				fputc(matrix[j][i].color.r, image);
 			}
-			for (k = 0; k < width_flag - pic.width; k++)
+			for (int k = 0; k < width_flag - pic.width; k++) //width flag is set to the actual image width for cosidering the BPP* width / 4 requirement
 				fputc(0, image); //Prints padding to the image
 		}
 		fclose(image);
@@ -450,37 +449,37 @@ void createBMP(char* filename, char* origin, char* txt, pixmat** matrix, image_t
 }
 
 poolList_t* poolsFunction(pixmat** mtrx, image_t image, poolList_t* pools, int width_flag) {
-	int i, j, size;
-	int** temp = NULL;
-	pix_t* root = NULL;
+	int i, j, size; //i,j counter, size is the current pool size counter
+	int** temp = NULL; //2D matrix that will store the information for each pixel in the image (if it's blue or not)
+	pix_t* root = NULL; //The head for the linked list of pixels
 	co_t center;
-	if (sizeof(int*) * image.width > 0)
+	if (sizeof(int*) * image.width > 0) //Making sure we are assigning possible values in the malloc function 
 		temp = malloc(sizeof(int*) * image.width); //alocating memory for matrix which will contain 1/0 for each blue/non-blue pixel
 	if (temp) {
-		if (sizeof(int) * image.height > 0)
+		if (sizeof(int) * image.height > 0) //Making sure we are assigning possible values in the malloc function 
 			for (i = 0;i < image.width; i++) {
 				temp[i] = malloc(sizeof(int) * image.height);
-			}// allocate memory to temp color signed matrix
+			}//Allocate memory to 2D 1/0 temp matrix
 	}
-	bluePixRec(mtrx, temp, image);
+	bluePixRec(mtrx, temp, image); //Pixel's color recognizing function
 	if (temp != 0){
 		for (i = 0;i < image.height;i++) {
 			for (j = 0;j < image.width;j++) {
 				if (temp[j][i] == 1) { //Going over all the pixels in the matrix and checking if it is blue or not
 					size = 1;
 					temp[j][i] = 0;
-					pixInsert(&root, mtrx[j][i].cordinate); //saving the blue pixel to the head of linked list
-					segment(root, mtrx, temp, image, i, j, &size); //entering to Image segmentation function to find adjacent blue pixels
+					pixInsert(&root, mtrx[j][i].cordinate); //Saving the blue pixel to the head of linked list
+					segment(root, mtrx, temp, image, i, j, &size); //Entering to Image segmentation function to find adjacent blue pixels
 					if (size > 9) {
 						center = pool_middle(root, size);
-						poolInsert(&pools, size, center, root); //saving the pool to linked list ONLY if it has size of 10 or more
+						poolInsert(&pools, size, center, root); //Saving the pool to linked list ONLY if it has size of 10 or more
 					}
 				}
-				deallocPix(&root); //deallocting the memory of the pixel's linked list
+				deallocPix(&root); //Deallocting the memory of the pixel's linked list
 			}
 		}
 		for (i = 0;i < image.width;i++) {
-			free(temp[i]); //deallocating temp matrix memory
+			free(temp[i]); //Deallocating temp matrix memory
 		}
 		free(temp);
 		return pools;
@@ -489,10 +488,9 @@ poolList_t* poolsFunction(pixmat** mtrx, image_t image, poolList_t* pools, int w
 }
 
 void bluePixRec(pixmat** mtrx, int** temp, image_t image) {
-	int i, j;
-	for (i = 0; i < image.width; i++) {
-		for (j = 0;j < image.height;j++) {
-			if (mtrx[i][j].color.r == 155 && mtrx[i][j].color.g == 190 && mtrx[i][j].color.b == 245) { // Registering blue and non-blue pixel to 2d matrix named temp
+	for (int i = 0; i < image.width; i++) { //temp & matrx is set from index '0' up to index that is one less than 'image height\width'
+		for (int j = 0;j < image.height;j++) {
+			if (mtrx[i][j].color.r == 155 && mtrx[i][j].color.g == 190 && mtrx[i][j].color.b == 245) { // Registering blue(1) and non-blue(0) pixel to 2D matrix named temp
 				temp[i][j] = 1;
 			}
 			else {
