@@ -81,9 +81,7 @@ typedef struct data {
 	struct data* next;
 }data_t;
 
-int menu(); //menu function
-
-void switcher(int choice, pixmat** matrix, int width_flag, image_t image);
+void switcher(int choice, pixmat** matrix, int width_flag, image_t image); // Switch case for menu selection
 
 int load_image(image_t* image, const char* filename, unsigned char* head); //loading the BMP image and getting WxH values
 
@@ -261,18 +259,6 @@ int main() {
 	free(matrix);
 	printf_s("\nGood bye!\n");
 	return 0;
-}
-
-int menu() {
-	int choice; //item seection from the menu
-	int enter;
-	printf_s("--------------------------\nME LAB services\n--------------------------");
-
-	printf_s("\nMenu:\n1. Scan pools\n2. Print sorted pool list\n3. Select route\n4. Numeric report.\n5. Students addition\n9. Exit.\nEnter choice: ");
-
-	scanf_s("%d", &choice);
-	enter = getchar(); //dealing with the enter being saved in cartridge and getting put in the next char scanning
-	return choice;
 }
 
 void switcher(int choice, pixmat** matrix, int width_flag, image_t image) {
@@ -858,32 +844,37 @@ void fuel_store(double fuel) {
 }
 
 char store_menu(int country, double fuel, int random) {
-	char purchase;
+	char purchase, enter;
 	switch (country) {
 	case 1:
 		printf_s("\nA: Bottle of Wine (Mid-Range) %.2lf $\nB: Meal, Inexpensive Restaurant %.2lf $\nC: Monthly Pass (Regular Price) %.2lf $\nD: Meal for 2 People, Mid-range Restaurant, Three-course %.2lf $\nE: Parking in Rotschild st. in Tel Aviv %.2lf $\n", (fuel) / 5, (fuel) / 4, (fuel) / 3 + random % 2, (fuel) / 2 + random % 4, fuel + random % 10);
 		printf_s("What will you would like to buy? : ");
 		purchase = cashier(getchar(), fuel, random);
+		enter = getchar();
 		break;
 	case 2:
 		printf_s("\nA: Bottle of Wine (Mid-Range) %.2lf $\nB: 6 Domestic Beer (0.5 liter draught) %.2lf $\nC: 1 Pair of Jeans %.2lf $\nD: 1 Pair of Nike Running Shoes %.2lf $\nE: A tour in NASA space Station %.2lf $\n", (fuel) / 5, (fuel) / 4, (fuel) / 3 + random % 2, (fuel) / 2 + random % 4, fuel + random % 10);
 		printf_s("What will you would like to buy? : ");
 		purchase = cashier(getchar(), fuel, random);
+		enter = getchar();
 		break;
 	case 3:
 		printf_s("\nA: Beef Round (1kg) %.2lf $\nB: Meal for 2 People, Mid-range Restaurant, Three-course %.2lf $\nC: 1 Summer Dress in a Chain Store %.2lf $\nD: 1 Pair of Men Leather Business Shoes %.2lf $\nE: A Kung-Fu lesson with Shaolin munk %.2lf $\n", (fuel) / 5, (fuel) / 4, (fuel) / 3 + random % 2, (fuel) / 2 + random % 4, fuel + random % 10);
 		printf_s("What will you would like to buy? : ");
 		purchase = cashier(getchar(), fuel, random);
+		enter = getchar();
 		break;
 	case 4:
 		printf_s("\nA: Beef Round (1kg) %.2lf $\nB: 2 Bottles of Wine (Mid-Range) %.2lf $\nC: Monthly Pass (Regular Price) %.2lf $\nD: Meal for 2 People, Mid-range Restaurant, Three-course %.2lf $\nE: Horseback riding with the one and only Vladimir Putin %.2lf $\n", (fuel) / 5, (fuel) / 4, (fuel) / 3 + random % 2, (fuel) / 2 + random % 4, fuel + random % 10);
 		printf_s("What will you would like to buy? : ");
 		purchase = cashier(getchar(), fuel, random);
+		enter = getchar();
 		break;
 	case 5:
 		printf_s("\nA: 3 Meals, Inexpensive Restaurant %.2lf $\nB: 1 Pair of Nike Running Shoes(Fake ones) %.2lf $\nC: A couple retreat to Istanbul's best Spa & Turkish bath %.2lf $\nD: A picture infront the palace (without getting arrested) %.2lf $\nE: Starring in your own Soap Opera %.2lf $\n", (fuel) / 5, (fuel) / 4, (fuel) / 3 + random % 2, (fuel) / 2 + random % 4, fuel + random % 10);
 		printf_s("What will you would like to buy? : ");
 		purchase = cashier(getchar(), fuel, random);
+		enter = getchar();
 		break;
 	default:
 		purchase = 'F';
@@ -922,6 +913,7 @@ void warehouse(link* root, char purchase, int country) {
 
 
 char cashier(char purchase, double fuel, int random) {
+	char enter;
 	switch (purchase)
 	{
 	case 'A':
@@ -951,6 +943,7 @@ char cashier(char purchase, double fuel, int random) {
 	default:
 		printf_s("No such product\n But I'll take your fuel anywayyyy\a\nJust kidding, try again, enter only capital letters A-E, make sure you have enough currency:\t");
 		cashier(getchar(), fuel, random);
+		enter = getchar();
 		break;
 	}
 	return '0';
