@@ -124,6 +124,8 @@ void printnsortpools();
 
 void free_list_printing(printing_t* head);
 
+void deallocNumeric(data_t* head);
+
 void print_list(printing_t* head);
 
 printing_t* pools_sorting_ninsert(printing_t* head, int coordinate_x, int coordinate_y, int poooolsize);
@@ -140,15 +142,15 @@ char cashier(char purchase, double fuel, int random); //Checking if you have eno
 
 list_t* interReverseLL(list_t* root); //revesrs the linked list order of type list_t
 
-void NumericReport(image_t image);
+void numericReport(image_t image);
 
-void addnewnode(data_t** head, double d, double c);
+void addCost(data_t** head, double d, double c);
 
-data_t* costsCalc(pix_t* curr, co_t start, co_t end);
+data_t* numericCostEquation(pix_t* curr, co_t start, co_t end);
 
-void printData(data_t* head, double dt);
+void printCost(data_t* head, double dt);
 
-pix_t* pointsOfRoute(FILE* route);
+pix_t* routeCoordinates(FILE* route);
 
 int section_3(char trash);// section 3 find the best route that get you to the ending point
 
@@ -283,7 +285,7 @@ void switcher(int choice, pixmat** matrix, int width_flag, image_t image) {
 			createBMP(BMPCPY, BMP, BEST_TXT, matrix, image, image.header, width_flag);
 		break;
 	case 4:
-		NumericReport(image);
+		numericReport(image);
 		break;
 	case 5:
 		time2Glow(SPECIAL, matrix, image, width_flag);
@@ -733,6 +735,15 @@ void free_list_printing(printing_t* head) {
 	}
 }
 
+void deallocNumeric(data_t* head) {
+	data_t* tmp;
+	while (head != NULL) {
+		tmp = head;
+		head = head->next;
+		free(tmp);
+	}
+}
+
 void print_list(printing_t* head) {
 	while (head != NULL) {
 		printf_s("(%3d,%3d)  \t%d \n", head->center_x, head->center_y, head->poolsize);
@@ -762,6 +773,44 @@ printing_t* pools_sorting_ninsert(printing_t* head, int coordinate_x, int coordi
 		head = new_node;
 	}
 	return head;
+}
+
+data_t* numericCostEquation(pix_t* curr, co_t start, co_t end) {     //points from best route
+	int  fuel = 20, drive = 1;
+	double costs = 0, d = 0, n = 0;// n is step counter D is distance  
+	//pix_t* start = curr, * end = curr->next;
+	data_t* head = NULL;
+	d = d + distance(start, end);
+	while (n < d) {
+		addCost(&head, n, costs);
+		n += 0.1;
+		if (n < d)
+			costs += ((2.5 / (costs + 1) + drive) * 0.1);
+	}
+	if (head->next)//                             {
+		costs += ((2.5 / (costs + 1) + fuel) * 0.1);
+	addCost(&head, distance(start, end), costs);
+	//start = end;
+	//end = head->next;//
+	return head;
+}
+
+void addCost(data_t** head, double d, double c) {
+
+	data_t* newNode = malloc(sizeof(data_t));
+	if (!newNode)return;
+	newNode->d = d;
+	newNode->c = c;
+	newNode->next = NULL;
+
+	if (*head == NULL)
+		*head = newNode;
+
+	else {
+		data_t* lastNode = *head;
+		while (lastNode->next != NULL) lastNode = lastNode->next;
+		lastNode->next = newNode;
+	}
 }
 
 void time2Glow(char* filename, pixmat** matrix, image_t image, int width_flag) {
@@ -940,8 +989,9 @@ list_t* interReverseLL(list_t* root) {
 	return root;
 }
 
-void NumericReport(image_t image) {
+void numericReport(image_t image) {
 	co_t start, end;
+	data_t* head;
 	FILE* route;
 	char position;
 	double dt;//dt is the input user
@@ -962,7 +1012,7 @@ void NumericReport(image_t image) {
 		if (end.x == 0 && end.y == 0) return;
 		pix_t* curr = NULL; //current step 
 		int c;
-		curr = pointsOfRoute(route);
+		curr = routeCoordinates(route);
 		printf_s("\nPlease enter a positive intger as distance display interval:\n");
 		do {
 			scanf_s("%lf", &dt);
@@ -970,36 +1020,17 @@ void NumericReport(image_t image) {
 			if ((dt - (int)dt != 0) || dt <= 0)
 				printf_s("Bad input, try again\n");
 		} while ((dt - (int)dt != 0) || dt <= 0);
-		data_t* head = costsCalc(curr, start, end);
+		head = numericCostEquation(curr, start, end);
 		data_t* temp = head;
 		printf_s("Distance   Consumption\n========== ===========\n");
-		printData(head, dt);
+		printCost(head, dt);
 		start = end;//                                  
 	} while (end.x != image.width && end.y != image.height);// at the end of one calculations
-	//freedata_t(head);
-	//freepix_t(curr);
+	deallocNumeric(head);
 	return;
 }
 
-void addnewnode(data_t** head, double d, double c) {
-
-	data_t* newNode = malloc(sizeof(data_t));
-	if (!newNode)return;
-	newNode->d = d;
-	newNode->c = c;
-	newNode->next = NULL;
-
-	if (*head == NULL)
-		*head = newNode;
-
-	else {
-		data_t* lastNode = *head;
-		while (lastNode->next != NULL) lastNode = lastNode->next;
-		lastNode->next = newNode;
-	}
-}
-
-void printData(data_t* head, double dt) {
+void printCost(data_t* head, double dt) {
 	data_t* temp = head;
 	int i;
 	while (temp->next) {
@@ -1011,7 +1042,15 @@ void printData(data_t* head, double dt) {
 	printf_s("   %7.3lf    %7.3lf\t\n", temp->d, temp->c);
 }
 
-pix_t* pointsOfRoute(FILE* route) {
+double distance(co_t a, co_t b) {//Finding the distance between two coordinates
+	double x1, x2, y1, y2;
+	x1 = a.x, x2 = b.x, y1 = a.y, y2 = b.y;
+	double d;
+	d = sqrt(pow(x1 - x2, 2) + pow(y1 - y2, 2));//A formula for finding distance
+	return d;
+}
+
+pix_t* routeCoordinates(FILE* route) {
 	pix_t* tail = NULL, * temp, * head = NULL;
 	char data[40];
 	int i = 0;
@@ -1029,34 +1068,6 @@ pix_t* pointsOfRoute(FILE* route) {
 		}
 	}
 	return tail;
-}
-
-double distance(co_t a, co_t b) {//Finding the distance between two coordinates
-	double x1, x2, y1, y2;
-	x1 = a.x, x2 = b.x, y1 = a.y, y2 = b.y;
-	double d;
-	d = sqrt(pow(x1 - x2, 2) + pow(y1 - y2, 2));//A formula for finding distance
-	return d;
-}
-
-data_t* costsCalc(pix_t* curr, co_t start, co_t end) {     //points from best route
-	int  fuel = 20, drive = 1;
-	double costs = 0, d = 0, n = 0;// n is step counter D is distance  
-	//pix_t* start = curr, * end = curr->next;
-	data_t* head = NULL;
-	d = d + distance(start, end);
-	while (n < d) {
-		addnewnode(&head, n, costs);
-		n += 0.1;
-		if (n < d)
-			costs += ((2.5 / (costs + 1) + drive) * 0.1);
-	}
-	if (head->next)//                             {
-		costs += ((2.5 / (costs + 1) + fuel) * 0.1);
-	addnewnode(&head, distance(start, end), costs);
-	//start = end;
-	//end = head->next;//
-	return head;
 }
 
 
