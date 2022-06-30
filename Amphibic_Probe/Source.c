@@ -9,7 +9,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#include <time.h>//	lecture #6
+#include <time.h> //lecture #6
 
 #define BMP "fishpool-another-ex1.bmp"
 #define BMPCPY "fishpool-copy.bmp"
@@ -124,6 +124,8 @@ void printnsortpools();
 
 void free_list_printing(printing_t* head);
 
+void deallocNumeric(data_t* head);
+
 void print_list(printing_t* head);
 
 printing_t* pools_sorting_ninsert(printing_t* head, int coordinate_x, int coordinate_y, int poooolsize);
@@ -140,15 +142,15 @@ char cashier(char purchase, double fuel, int random); //Checking if you have eno
 
 list_t* interReverseLL(list_t* root); //revesrs the linked list order of type list_t
 
-void NumericReport(image_t image);
+void numericReport(image_t image);
 
-void addnewnode(data_t** head, double d, double c);
+void addCost(data_t** head, double d, double c);
 
-data_t* costsCalc(pix_t* curr, co_t start, co_t end);
+data_t* numericCostEquation(pix_t* curr, co_t start, co_t end);
 
-void print_jump(data_t* head, double dt);
+void printCost(data_t* head, double dt);
 
-pix_t* pointsOfRoute(FILE* route);
+pix_t* routeCoordinates(FILE* route);
 
 int section_3(char trash);// section 3 find the best route that get you to the ending point
 
@@ -249,18 +251,19 @@ int main() {
 		width_flag = image.width + i;
 
 	matrix = malloc(sizeof(pixmat*) * image.width);
-	if (matrix){
-		for (i = 0;i < image.width;i++) {
+	if (matrix) {
+		for (i = 0; i < image.width; i++) {
 			matrix[i] = malloc(sizeof(pixmat) * image.height);
 		} // allocate memory to image pixel matrix
-	} else
+	}
+	else
 		return 1;
 
-	while (choice != 9){
+	while (choice != 9) {
 		choice = input_menu();
-		switcher(choice, matrix, width_flag,image);
+		switcher(choice, matrix, width_flag, image);
 	}
-	for (i = 0;i < image.width;i++) {
+	for (i = 0; i < image.width; i++) {
 		free(matrix[i]);
 	}
 	free(matrix);
@@ -283,7 +286,7 @@ void switcher(int choice, pixmat** matrix, int width_flag, image_t image) {
 			createBMP(BMPCPY, BMP, BEST_TXT, matrix, image, image.header, width_flag);
 		break;
 	case 4:
-		NumericReport(image);
+		numericReport(image);
 		break;
 	case 5:
 		time2Glow(SPECIAL, matrix, image, width_flag);
@@ -291,6 +294,7 @@ void switcher(int choice, pixmat** matrix, int width_flag, image_t image) {
 	}
 }
 
+//Made by Nadav Asor
 co_t pool_middle(pix_t* root, int size) {
 	int x_max, x_min, y_max, y_min, i;
 	co_t middle = { 0 };
@@ -340,7 +344,7 @@ int loadImage(image_t* image, const char* filename, unsigned char* head) {
 			image->width = width;
 			image->height = height;
 			fseek(file, 0, SEEK_SET);
-			for (int i = 0;i < 54;i++) {
+			for (int i = 0; i < 54; i++) {
 				image->header[i] = fgetc(file); //Reading & storing header data information
 			}
 		}
@@ -360,10 +364,10 @@ int imgtrx(pixmat** mtrx, image_t image, char* filename, int width_flag) {
 		printf_s("\nError open the %s\n", filename); //In case we couldn't open the file
 		return -1;
 	}
-	if (file != 0){
+	if (file != 0) {
 		fseek(file, 54, SEEK_SET); //Skipping the header bytes and getting to the color pallette 
-		for (i = 0; i < image.height; i++){ //Our matrix is set from index '0' up to index that is one less than 'image height\width'
-			for (j = 0; j < image.width; j++){
+		for (i = 0; i < image.height; i++) { //Our matrix is set from index '0' up to index that is one less than 'image height\width'
+			for (j = 0; j < image.width; j++) {
 				mtrx[j][i].color.b = fgetc(file); //Saving the RGB data to the correct x,y location on the color pallette
 				mtrx[j][i].color.g = fgetc(file); //On the BMP the data is actually stored in order of BGR
 				mtrx[j][i].color.r = fgetc(file);
@@ -399,11 +403,11 @@ void createBMP(char* filename, char* origin, char* txt, pixmat** matrix, image_t
 			routePainter(matrix, start.x, start.y, end.x, end.y, pic.height, pic.width); //painting teh movemnt route on the map for given coordinates
 			start = end; //next movement starts from the last end point
 		} while (end.x != width_flag && end.y != pic.height); //making sure we haven't reach to the edge of the map (top-right corner) 
-		for (int i = 0; i < 54; i++){
+		for (int i = 0; i < 54; i++) {
 			fputc(header[i], image); //printing header data to the new BMP file
 		}
-		for (int i = 0; i < pic.height; i++){
-			for (int j = 0; j < pic.width; j++){ //printing the modified color pallette to the new BMP (prnting the route)
+		for (int i = 0; i < pic.height; i++) {
+			for (int j = 0; j < pic.width; j++) { //printing the modified color pallette to the new BMP (prnting the route)
 				fputc(matrix[j][i].color.b, image);
 				fputc(matrix[j][i].color.g, image);
 				fputc(matrix[j][i].color.r, image);
@@ -427,14 +431,14 @@ poolList_t* poolsFunction(pixmat** mtrx, image_t image, poolList_t* pools, int w
 		temp = malloc(sizeof(int*) * image.width); //alocating memory for matrix which will contain 1/0 for each blue/non-blue pixel
 	if (temp) {
 		if (sizeof(int) * image.height > 0) //Making sure we are assigning possible values in the malloc function 
-			for (i = 0;i < image.width; i++) {
+			for (i = 0; i < image.width; i++) {
 				temp[i] = malloc(sizeof(int) * image.height);
 			}//Allocate memory to 2D 1/0 temp matrix
 	}
 	bluePixRec(mtrx, temp, image); //Pixel's color recognizing function
-	if (temp != 0){
-		for (i = 0;i < image.height;i++) {
-			for (j = 0;j < image.width;j++) {
+	if (temp != 0) {
+		for (i = 0; i < image.height; i++) {
+			for (j = 0; j < image.width; j++) {
 				if (temp[j][i] == 1) { //Going over all the pixels in the matrix and checking if it is blue or not
 					size = 1;
 					temp[j][i] = 0;
@@ -448,18 +452,19 @@ poolList_t* poolsFunction(pixmat** mtrx, image_t image, poolList_t* pools, int w
 				deallocPix(&root); //Deallocting the memory of the pixel's linked list
 			}
 		}
-		for (i = 0;i < image.width;i++) {
+		for (i = 0; i < image.width; i++) {
 			free(temp[i]); //Deallocating temp matrix memory
 		}
 		free(temp);
 		return pools;
-	} else
+	}
+	else
 		return pools;
 }
 
 void bluePixRec(pixmat** mtrx, int** temp, image_t image) {
 	for (int i = 0; i < image.width; i++) { //temp & matrx is set from index '0' up to index that is one less than 'image height\width'
-		for (int j = 0;j < image.height;j++) {
+		for (int j = 0; j < image.height; j++) {
 			if (mtrx[i][j].color.r == 155 && mtrx[i][j].color.g == 190 && mtrx[i][j].color.b == 245) { // Registering blue(1) and non-blue(0) pixel to 2D matrix named temp
 				temp[i][j] = 1;
 			}
@@ -597,13 +602,13 @@ int spaceMod(int x, int y) {
 void routePainter(pixmat** matrix, int x, int y, int x_final, int y_final, int height, int width) {
 	int  b, j = 0, i = 0, s_f = 1, dif;
 	float movratio;
-	x--;y--; //compensating for starting point which must be 1,1
+	x--; y--; //compensating for starting point which must be 1,1
 	matrix[x][y].color.r = 18; matrix[x][y].color.g = 180; matrix[x][y].color.b = 30; //color pixel at the beggining
 	movratio = ((float)y_final - (float)y) / ((float)x_final - (float)x); //Calculating the slope of the line
 	b = y - (int)(movratio * x); //Calculating line's constant
 	if (movratio == 1 || movratio < 1) //Covering cases so that the starting pixel color won't be overpainted
 		x++;
-	for (x; x < x_final && x < width - 1 && y < y_final && y < height - 1; x++)	{ //Making sure we are not going over the end point or the image borders
+	for (x; x < x_final && x < width - 1 && y < y_final && y < height - 1; x++) { //Making sure we are not going over the end point or the image borders
 		if (movratio != 1)
 		{
 			dif = y;
@@ -620,7 +625,8 @@ void routePainter(pixmat** matrix, int x, int y, int x_final, int y_final, int h
 					dif++;
 					matrix[x][dif].color.r = 100; matrix[x][dif].color.g = 30; matrix[x][dif].color.b = 232;
 				}
-			}else //In case the slope is not too steep\gentle
+			}
+			else //In case the slope is not too steep\gentle
 				matrix[x][y].color.r = 100; matrix[x][y].color.g = 30; matrix[x][y].color.b = 232;
 		}
 		else { //For slope = 1
@@ -733,6 +739,15 @@ void free_list_printing(printing_t* head) {
 	}
 }
 
+void deallocNumeric(data_t* head) {
+	data_t* tmp;
+	while (head != NULL) {
+		tmp = head;
+		head = head->next;
+		free(tmp);
+	}
+}
+
 void print_list(printing_t* head) {
 	while (head != NULL) {
 		printf_s("(%3d,%3d)  \t%d \n", head->center_x, head->center_y, head->poolsize);
@@ -764,6 +779,44 @@ printing_t* pools_sorting_ninsert(printing_t* head, int coordinate_x, int coordi
 	return head;
 }
 
+data_t* numericCostEquation(pix_t* curr, co_t start, co_t end) {     //points from best route
+	int  fuel = 20, drive = 1;
+	double costs = 0, d = 0, n = 0;// n is step counter D is distance  
+	//pix_t* start = curr, * end = curr->next;
+	data_t* head = NULL;
+	d = d + distance(start, end);
+	while (n < d) {
+		addCost(&head, n, costs);
+		n += 0.1;
+		if (n < d)
+			costs += ((2.5 / (costs + 1) + drive) * 0.1);
+	}
+	if (head->next)//                             {
+		costs += ((2.5 / (costs + 1) + fuel) * 0.1);
+	addCost(&head, distance(start, end), costs);
+	//start = end;
+	//end = head->next;//
+	return head;
+}
+
+void addCost(data_t** head, double d, double c) {
+
+	data_t* newNode = malloc(sizeof(data_t));
+	if (!newNode)return;
+	newNode->d = d;
+	newNode->c = c;
+	newNode->next = NULL;
+
+	if (*head == NULL)
+		*head = newNode;
+
+	else {
+		data_t* lastNode = *head;
+		while (lastNode->next != NULL) lastNode = lastNode->next;
+		lastNode->next = newNode;
+	}
+}
+
 void time2Glow(char* filename, pixmat** matrix, image_t image, int width_flag) {
 	FILE* file, * txt;
 	list_t* curr, * root = NULL;
@@ -776,7 +829,7 @@ void time2Glow(char* filename, pixmat** matrix, image_t image, int width_flag) {
 		return;
 	}
 	else {
-	fopen_s(&txt, FUEL_TXT, "wt");
+		fopen_s(&txt, FUEL_TXT, "wt");
 		if (file != 0 && txt != 0) {
 			pos = fgetc(file);
 			fseek(file, 0, SEEK_SET);
@@ -863,7 +916,7 @@ char storeMenu(int country, double fuel, int random) {
 void warehouse(link* root, char purchase, int country) {
 	root[0].a = "https://images.app.goo.gl/ywD6DBAA7VYeydC7A"; root[0].b = "https://images.app.goo.gl/tHh1p6ZpRtVyAU3QA"; root[0].c = "https://images.app.goo.gl/8EYuGorXd3i1Zm4S8"; root[0].d = "https://images.app.goo.gl/7EBnM4NXzPVeMVBZ6"; root[0].e = "https://images.app.goo.gl/gft2hhyj6tL16T3J6";
 	root[1].a = root[0].a; root[1].b = "https://images.app.goo.gl/j4dE3DmupwjMrsmM7"; root[1].c = "https://images.app.goo.gl/iAV8FFF2Puq8jBVt5"; root[1].d = "https://images.app.goo.gl/agoj1a1cBfMntM179"; root[1].e = "https://images.app.goo.gl/jL7L1ap2dS6P5XRP7";
-	root[2].a = "https://images.app.goo.gl/jZoXAhupeoL3vAvU7";root[2].b = "https://images.app.goo.gl/Qep3v3heo9oKAh9w9"; root[2].c = "https://images.app.goo.gl/mMEkYzUGVQ4N3ps27"; root[2].d = "https://images.app.goo.gl/WypDRjnJvUjRAddM8"; root[2].e = "https://images.app.goo.gl/fNQQReVSpatNh4Tv5";
+	root[2].a = "https://images.app.goo.gl/jZoXAhupeoL3vAvU7"; root[2].b = "https://images.app.goo.gl/Qep3v3heo9oKAh9w9"; root[2].c = "https://images.app.goo.gl/mMEkYzUGVQ4N3ps27"; root[2].d = "https://images.app.goo.gl/WypDRjnJvUjRAddM8"; root[2].e = "https://images.app.goo.gl/fNQQReVSpatNh4Tv5";
 	root[3].a = root[2].a; root[3].b = root[1].a; root[3].c = root[0].c; root[3].d = "https://images.app.goo.gl/H23qyGT3Co3Z6ZL29"; root[3].e = "https://images.app.goo.gl/UTKJsDncjcbXrFZ79";
 	root[4].a = "https://images.app.goo.gl/rmXDTxquFaJ5wkW59"; root[4].b = "https://images.app.goo.gl/kgHje9Cg7ezoQwBT7"; root[4].c = "https://images.app.goo.gl/rUfouppXL9rt3o1o9"; root[4].d = "https://images.app.goo.gl/Wz2qRQ8Do6bD66pZ8"; root[4].e = "https://images.app.goo.gl/VxPKtzbjnmnaNpe89";
 	switch (purchase)
@@ -940,8 +993,9 @@ list_t* interReverseLL(list_t* root) {
 	return root;
 }
 
-void NumericReport(image_t image) {
+void numericReport(image_t image) {
 	co_t start, end;
+	data_t* head;
 	FILE* route;
 	char position;
 	double dt;//dt is the input user
@@ -962,7 +1016,7 @@ void NumericReport(image_t image) {
 		if (end.x == 0 && end.y == 0) return;
 		pix_t* curr = NULL; //current step 
 		int c;
-		curr = pointsOfRoute(route);
+		curr = routeCoordinates(route);
 		printf_s("\nPlease enter a positive intger as distance display interval:\n");
 		do {
 			scanf_s("%lf", &dt);
@@ -970,56 +1024,17 @@ void NumericReport(image_t image) {
 			if ((dt - (int)dt != 0) || dt <= 0)
 				printf_s("Bad input, try again\n");
 		} while ((dt - (int)dt != 0) || dt <= 0);
-		data_t* head = costsCalc(curr, start, end);
+		head = numericCostEquation(curr, start, end);
 		data_t* temp = head;
 		printf_s("Distance   Consumption\n========== ===========\n");
-		print_jump(head, dt);
+		printCost(head, dt);
 		start = end;//                                  
 	} while (end.x != image.width && end.y != image.height);// at the end of one calculations
-	//freedata_t(head);
-	//freepix_t(curr);
+	deallocNumeric(head);
 	return;
 }
 
-void addnewnode(data_t** head, double d, double c) {
-
-	data_t* newNode = malloc(sizeof(data_t));
-	if (!newNode)return;
-	newNode->d = d;
-	newNode->c = c;
-	newNode->next = NULL;
-
-	if (*head == NULL)
-		*head = newNode;
-
-	else {
-		data_t* lastNode = *head;
-		while (lastNode->next != NULL) lastNode = lastNode->next;
-		lastNode->next = newNode;
-	}
-}
-
-data_t* costsCalc(pix_t* curr, co_t start, co_t end) {     //points from best route
-	int  fuel = 20, drive = 1;
-	double costs = 0, D = 0, n = 0;// n is step counter D is distance  
-	//pix_t* start = curr, * end = curr->next;
-	data_t* head = NULL;
-	D = D + distance(start, end);
-	while (n < D) {
-		addnewnode(&head, n, costs);
-		n += 0.1;
-		if (n < D)
-			costs += ((2.5 / (costs + 1) + drive) * 0.1);
-	}
-	if (head->next)//                             {
-		costs += ((2.5 / (costs + 1) + fuel) * 0.1);
-	addnewnode(&head, distance(start, end), costs);
-	//start = end;
-	//end = head->next;//
-	return head;
-}
-
-void print_jump(data_t* head, double dt) {
+void printCost(data_t* head, double dt) {
 	data_t* temp = head;
 	int i;
 	while (temp->next) {
@@ -1031,7 +1046,16 @@ void print_jump(data_t* head, double dt) {
 	printf_s("   %7.3lf    %7.3lf\t\n", temp->d, temp->c);
 }
 
-pix_t* pointsOfRoute(FILE* route) {
+//Made by Nadav Asor
+double distance(co_t a, co_t b) {//Finding the distance between two coordinates
+	double x1, x2, y1, y2;
+	x1 = a.x, x2 = b.x, y1 = a.y, y2 = b.y;
+	double d;
+	d = sqrt(pow(x1 - x2, 2) + pow(y1 - y2, 2));//A formula for finding distance
+	return d;
+}
+
+pix_t* routeCoordinates(FILE* route) {
 	pix_t* tail = NULL, * temp, * head = NULL;
 	char data[40];
 	int i = 0;
@@ -1052,14 +1076,7 @@ pix_t* pointsOfRoute(FILE* route) {
 }
 
 
-double distance(co_t a, co_t b) {//Finding the distance between two coordinates
-	double x1, x2, y1, y2;
-	x1 = a.x, x2 = b.x, y1 = a.y, y2 = b.y;
-	double d;
-	d = sqrt(pow(x1 - x2, 2) + pow(y1 - y2, 2));//A formula for finding distance
-	return d;
-}
-
+//Made by Nadav Asor
 int closest_pool(co_t current_pos, co_t middle_arr[], int size) {
 	int i, j = -1;
 	double smallest_d = 10000;//Placing a large value
@@ -1073,6 +1090,7 @@ int closest_pool(co_t current_pos, co_t middle_arr[], int size) {
 	return j;
 }
 
+//Made by Nadav Asor
 int reducing_route_finder(int x, int r, double time, co_t tracker_coordinate, co_t end_coordinate, double ab, int size_of_pool) {
 	FILE* best_route;
 	fopen_s(&best_route, "best-route.txt", "at");
@@ -1083,6 +1101,7 @@ int reducing_route_finder(int x, int r, double time, co_t tracker_coordinate, co
 	return x;
 }
 
+//Made by Nadav Asor
 int reducing_route_finder2(co_t middle_arr[], int p1, int x, int r, double bb, double ab, int pool_size_arr[], co_t temp1) {
 	if (middle_arr[p1].x != 2000) {
 		FILE* best_route;
@@ -1095,6 +1114,7 @@ int reducing_route_finder2(co_t middle_arr[], int p1, int x, int r, double bb, d
 	return x;
 }
 
+//Made by Nadav Asor
 int reducing_route_finder4(int x) {
 	FILE* best_route;
 	fopen_s(&best_route, "best-route.txt", "at");
@@ -1104,6 +1124,7 @@ int reducing_route_finder4(int x) {
 	return x;
 }
 
+//Made by Nadav Asor
 double reducing_route_finder5(double oil, co_t tracker_coordinate, co_t end_coordinate) {
 	double ab = (oil - distance(tracker_coordinate, end_coordinate) * 0.2);
 	if (ab < 0)//Correction of the negative sign if the fuel is precise enough for the route
@@ -1111,6 +1132,7 @@ double reducing_route_finder5(double oil, co_t tracker_coordinate, co_t end_coor
 	return ab;
 }
 
+//Made by Nadav Asor
 co_t* reducing_route_finder6(int num_of_pool) {
 	co_t* middle_arr2 = NULL;
 	middle_arr2 = (co_t*)malloc(num_of_pool * sizeof(co_t));//Allocation of memory to the set of centers
@@ -1120,6 +1142,7 @@ co_t* reducing_route_finder6(int num_of_pool) {
 	return middle_arr2;
 }
 
+//Made by Nadav Asor
 void reducing_route_finder7(co_t tracker_coordinate, co_t* middle_arr, int num_of_pool, double oil, co_t end_coordinate, int pool_size_arr[], int r, int x, double time) {
 	int p2 = closest_pool(tracker_coordinate, middle_arr, num_of_pool);
 	if (p2 == -1)return;
@@ -1137,6 +1160,8 @@ void reducing_route_finder7(co_t tracker_coordinate, co_t* middle_arr, int num_o
 	}
 }
 
+
+//Made by Nadav Asor
 //A function with double recursion, which finds all the existing routes and prints them to a temporary file
 int route_finder(co_t tracker_coordinate, co_t end_coordinate, double oil, double time, int pool_size_arr[], co_t middle_arr[], int size_of_pool, int r, int num_of_pool, int x) {
 	r++;
@@ -1169,6 +1194,7 @@ int route_finder(co_t tracker_coordinate, co_t end_coordinate, double oil, doubl
 }
 
 
+//Made by Nadav Asor
 int pool_counter() {
 	char pointer = 0;//Indicates the character in the file
 	int num_of_pool = 0;
@@ -1185,6 +1211,7 @@ int pool_counter() {
 	return num_of_pool;
 }
 
+//Made by Nadav Asor
 int* pool_size_arr_malloc(int num_of_pool) {
 	int* pool_size_arr = NULL;
 	pool_size_arr = (int*)malloc(num_of_pool * sizeof(int));//Allocation of memory to an array of pool sizes
@@ -1194,6 +1221,7 @@ int* pool_size_arr_malloc(int num_of_pool) {
 	return pool_size_arr;
 }
 
+//Made by Nadav Asor
 co_t* middle_arr_malloc(int num_of_pool) {
 	co_t* middle_arr = NULL;
 	middle_arr = (co_t*)malloc(num_of_pool * sizeof(co_t));//Allocation of memory to the set of pool centers
@@ -1203,6 +1231,7 @@ co_t* middle_arr_malloc(int num_of_pool) {
 	return middle_arr;
 }
 
+//Made by Nadav Asor
 void reset_files() {
 	FILE* best_route;
 	fopen_s(&best_route, "best-route.txt", "wt");
@@ -1216,6 +1245,7 @@ void reset_files() {
 	fclose(best_route);
 }
 
+//Made by Nadav Asor
 double oil_input() {
 	double oil;
 	char temp[80] = { 0 };//Array for input
@@ -1227,6 +1257,7 @@ double oil_input() {
 	return oil;
 }
 
+//Made by Nadav Asor
 void file_name_changer() {
 	remove("best-route2.txt"); //File Remove
 	char old_name[] = "temp.txt";//Old name
@@ -1234,6 +1265,7 @@ void file_name_changer() {
 	int d = rename(old_name, new_name);//Renaming
 }
 
+//Made by Nadav Asor
 void reducing_correct_data1(FILE* best_route, FILE* best_route2, int i, int j, int k, char test) {
 	for (test = getc(best_route); test != EOF; test = getc(best_route)) {
 		if (test != 'X') {//If the text is not equal to X at the end of the line
@@ -1273,6 +1305,7 @@ void reducing_correct_data1(FILE* best_route, FILE* best_route2, int i, int j, i
 	}
 }
 
+//Made by Nadav Asor
 void correct_data1(int i, int j, int k, char test) {
 	FILE* best_route;
 	fopen_s(&best_route, "best-route.txt", "rt");
@@ -1286,6 +1319,7 @@ void correct_data1(int i, int j, int k, char test) {
 	file_name_changer(); //Rename the file
 }
 
+//Made by Nadav Asor
 void correct_data2(int i, int j, int k, char test) {
 	FILE* best_route;
 	FILE* best_route2;
@@ -1320,6 +1354,7 @@ void correct_data2(int i, int j, int k, char test) {
 	file_name_changer();//Rename the file
 }
 
+//Made by Nadav Asor
 int reducing2_correct_data3(FILE* best_route, FILE* best_route2, char test, int r, int n) {
 	fseek(best_route, -r - 3, SEEK_CUR);
 	for (test = getc(best_route); n < r + 1; test = getc(best_route)) {
@@ -1329,6 +1364,7 @@ int reducing2_correct_data3(FILE* best_route, FILE* best_route2, char test, int 
 	return n;
 }
 
+//Made by Nadav Asor
 int reducing3_correct_data3(FILE* best_route, FILE* best_route2, char test, int r, int k, int j) {
 	fseek(best_route, k - r - 1, SEEK_CUR);
 	for (test = getc(best_route); k < j + 1; test = getc(best_route)) {
@@ -1339,6 +1375,7 @@ int reducing3_correct_data3(FILE* best_route, FILE* best_route2, char test, int 
 	return k;
 }
 
+//Made by Nadav Asor
 void reducing_correct_data3(FILE* best_route, FILE* best_route2, char test, int i, int j, int k, int r, int n) {
 	for (test = getc(best_route); test != EOF; test = getc(best_route)) {//Editing the data in the temporary file
 		if (test == '\n') {
@@ -1377,6 +1414,7 @@ void reducing_correct_data3(FILE* best_route, FILE* best_route2, char test, int 
 	}
 }
 
+//Made by Nadav Asor
 void correct_data3(char test, int i, int j, int k, int r, int n) {
 	FILE* best_route;
 	FILE* best_route2;
@@ -1390,6 +1428,7 @@ void correct_data3(char test, int i, int j, int k, int r, int n) {
 	file_name_changer();//Renames the file
 }
 
+//Made by Nadav Asor
 int set_counter() {
 	char test = 0;
 	int counter = 0;
@@ -1404,6 +1443,7 @@ int set_counter() {
 	return counter;
 }
 
+//Made by Nadav Asor
 double* malloc_data(int counter) {//Memory release
 	double* data = NULL;
 	data = (double*)malloc(counter * sizeof(double));
@@ -1413,6 +1453,7 @@ double* malloc_data(int counter) {//Memory release
 	return data;
 }
 
+//Made by Nadav Asor
 double* set_finel_time_arr(char test, int i, int j, int k, double* data) {
 	FILE* best_route;
 	fopen_s(&best_route, "best-route2.txt", "rt");
@@ -1432,6 +1473,7 @@ double* set_finel_time_arr(char test, int i, int j, int k, double* data) {
 	return data;
 }
 
+//Made by Nadav Asor
 double* set_finel_oil_arr(char test, int i, int j, int k, double* data) {
 	double trash;//An unnecessary data
 	FILE* best_route;
@@ -1451,6 +1493,8 @@ double* set_finel_oil_arr(char test, int i, int j, int k, double* data) {
 	fclose(best_route);
 	return data;
 }
+
+//Made by Nadav Asor
 //A recursive function that prints the organs in reverse order
 int print(list_t* head, int i, int counter2) {
 	if (head == NULL)//Reaching the last organ of the list
@@ -1467,6 +1511,7 @@ int print(list_t* head, int i, int counter2) {
 	return i;
 }
 
+//Made by Nadav Asor
 list_t* add(double time, double oil, int size, int x, int y, list_t* head) {
 	list_t* new_node = NULL;
 	new_node = (list_t*)malloc(sizeof(list_t));
@@ -1484,6 +1529,7 @@ list_t* add(double time, double oil, int size, int x, int y, list_t* head) {
 	return head;
 }
 
+//Made by Nadav Asor
 void free_list(list_t* head) {
 	list_t* tmp;
 	while (head != NULL) {//Release the linked list organ by organ
@@ -1493,6 +1539,7 @@ void free_list(list_t* head) {
 	}
 }
 
+//Made by Nadav Asor
 void printing_to_screen(char test, int counter2, int j, int i, int p, int counter, double kk, double data[], double oil, co_t current_pos, double timeb, double oilb, int garbi, int xb, int yb) {
 	FILE* best_route;
 	fopen_s(&best_route, "best-route2.txt", "rt");
@@ -1531,6 +1578,7 @@ void printing_to_screen(char test, int counter2, int j, int i, int p, int counte
 	fclose(best_route);
 }
 
+//Made by Nadav Asor
 void best_route_file_creation(int i, int counter, double data[], double kk, int j, char test, int p, int counter2, int c, double timeb, double oilb, int sizeb, int xb, int yb, co_t current_pos, co_t end_coordinate) {
 	FILE* best_route;
 	FILE* best_route3;
@@ -1573,6 +1621,7 @@ void best_route_file_creation(int i, int counter, double data[], double kk, int 
 }
 
 
+//Made by Nadav Asor
 void max_oil_file_creation(int i, int counter, double data[], double kk, int j, char test, int p, int counter2, int c, double timeb, double oilb, int sizeb, int xb, int yb, co_t current_pos, co_t end_coordinate, double oil) {
 	remove("for-nitai.txt");//Remove the file before creating the file
 	FILE* best_route;
@@ -1614,6 +1663,7 @@ void max_oil_file_creation(int i, int counter, double data[], double kk, int j, 
 	fclose(best_route);
 }
 
+//Made by Nadav Asor
 void there_a_route(double oil, co_t current_pos, co_t end_coordinate) {
 	correct_data1(0, 0, 0, 0);//fixing the temporary file before use the data
 	correct_data2(0, 0, 0, 0);//fixing the temporary file before use the data
@@ -1631,8 +1681,8 @@ void there_a_route(double oil, co_t current_pos, co_t end_coordinate) {
 	free(data);
 }
 
- co_t input_check(co_t image) {
-	 co_t coordinate = { 0 };
+co_t input_check(co_t image) {
+	co_t coordinate = { 0 };
 	do {
 		char input[81];
 		char x[80] = { 0 }, y[80] = { 0 };
@@ -1661,27 +1711,28 @@ void there_a_route(double oil, co_t current_pos, co_t end_coordinate) {
 	return coordinate;
 }
 
- void stringfixer(char* input, int* commacount, co_t image) {
-	 char* dex;
-	 int i;
-	 dex = strchr(input, ',');
-	 while (dex == NULL) {
-		 printf_s("Please Enter valid x,y start coordinate, bmp width is %d and height is %d\n", image.x, image.y);
-		 gets_s(input, 81);
-		 dex = strchr(input, ',');
-	 }
-	 for (i = 0; input[i] != '\0'; i++) {
-		 if (input[i] < '0' || input[i] > '9')
-			 if (input[i] != ',' && input[i] != ' ') {
-				 printf_s("Please Enter valid x,y start coordinate, bmp width is %d and height is %d\n", image.x, image.y);
-				 gets_s(input, 81);
-				 i = 0;
-			 }
-		 if (input[i] == ',')
-			 *commacount += 1;
-	 }
- }
+void stringfixer(char* input, int* commacount, co_t image) {
+	char* dex;
+	int i;
+	dex = strchr(input, ',');
+	while (dex == NULL) {
+		printf_s("Please Enter valid x,y start coordinate, bmp width is %d and height is %d\n", image.x, image.y);
+		gets_s(input, 81);
+		dex = strchr(input, ',');
+	}
+	for (i = 0; input[i] != '\0'; i++) {
+		if (input[i] < '0' || input[i] > '9')
+			if (input[i] != ',' && input[i] != ' ') {
+				printf_s("Please Enter valid x,y start coordinate, bmp width is %d and height is %d\n", image.x, image.y);
+				gets_s(input, 81);
+				i = 0;
+			}
+		if (input[i] == ',')
+			*commacount += 1;
+	}
+}
 
+//Made by Nadav Asor
 /*Section 3 -
 Shows the fastest route from a certain point on the map to the end point considering the amount of oil*/
 int section_3(char trash) {
@@ -1719,6 +1770,7 @@ int section_3(char trash) {
 	return 0;
 }
 
+//Made by Nadav Asor
 void reducing_section_3(co_t current_pos, co_t end_coordinate, double oil, int pool_size_arr[], co_t middle_arr[], int num_of_pool) {
 	if (route_finder(current_pos, end_coordinate, oil, 0, pool_size_arr, middle_arr, 0, 0, num_of_pool, 1) != 0) {
 		printf_s("Sorry, could not reach destination with these inputs\n\n");//if there is not enough oil to get to the end
@@ -1731,6 +1783,7 @@ void reducing_section_3(co_t current_pos, co_t end_coordinate, double oil, int p
 }
 
 
+//Made by Nadav Asor
 int file_corrupt(int num_of_pool) {
 	FILE* pools;
 	int a, b, d, e;
@@ -1769,6 +1822,7 @@ int file_corrupt(int num_of_pool) {
 	return 1;
 }
 
+//Made by Nadav Asor
 int input_menu() {
 	int choice = 0;
 	char str[81];
@@ -1788,7 +1842,7 @@ int input_menu() {
 }
 
 
-void section_1(pixmat** matrix, image_t image, int width_flag, poolList_t* pools , int val, int count, int i) {
+void section_1(pixmat** matrix, image_t image, int width_flag, poolList_t* pools, int val, int count, int i) {
 	FILE* tx;
 	if (imgtrx(matrix, image, BMP, width_flag) != -1) {
 		if (pools) deallocPool(pools);
