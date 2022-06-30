@@ -4,7 +4,7 @@
 #include <math.h>
 #include <time.h>//	lecture #6
 
-#define BMP "fishpool-another-ex1.bmp"
+#define BMP "1.bmp"
 #define BMPCPY "fishpool-copy.bmp"
 #define TXT "pools.txt"
 #define BEST_TXT "best-route.txt"
@@ -988,6 +988,7 @@ void NumericReport(image_t image) {
 			position = fgetc(route);
 		fseek(route, -1, SEEK_CUR);
 		end = best_co(route);
+		if (end.x == 0 && end.y == 0) return;
 		pix_t* curr = NULL; //current step 
 		int c;
 		curr = pointsOfRoute(route);
