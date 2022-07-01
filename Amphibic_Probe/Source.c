@@ -83,8 +83,8 @@ typedef struct country_link { // struct to store link to all store products in o
 }link;
 
 typedef struct data {
-	double d; //distance
-	double c; //cost
+	double distance;
+	double cost;
 	struct data* next;
 }data_t;
 
@@ -124,9 +124,11 @@ void printnsortpools();
 
 void free_list_printing(printing_t* head);
 
-void deallocNumeric(data_t* head);
+void demalloc_data(data_t* head);
 
-void print_list(printing_t* head);
+void demalloc_route(pix_t* head);
+
+void print_to_screen(data_t* head, double jump);
 
 printing_t* pools_sorting_ninsert(printing_t* head, int coordinate_x, int coordinate_y, int poooolsize);
 
@@ -142,13 +144,17 @@ char cashier(char purchase, double fuel, int random); //Checking if you have eno
 
 list_t* interReverseLL(list_t* root); //revesrs the linked list order of type list_t
 
-void numericReport(image_t image);
+pix_t* route_coordinates(FILE* F);
 
-void addCost(data_t** head, double d, double c);
+void numericReport();
 
-data_t* numericCostEquation(pix_t* curr, co_t start, co_t end);
+double distance2(pix_t* route, pix_t* temp);
 
-void printCost(data_t* head, double dt);
+void node_adder(data_t** head, double d, double c);
+
+data_t* numericCostEquation(pix_t* route);
+
+void print_list(printing_t* head);
 
 pix_t* routeCoordinates(FILE* route);
 
@@ -285,7 +291,7 @@ void switcher(int choice, pixmat** matrix, int width_flag, image_t image) {
 			createBMP(BMPCPY, BMP, BEST_TXT, matrix, image, image.header, width_flag);
 		break;
 	case 4:
-		numericReport(image);
+		numericReport();
 		break;
 	case 5:
 		time2Glow(SPECIAL, matrix, image, width_flag);
@@ -735,13 +741,20 @@ void free_list_printing(printing_t* head) {
 	}
 }
 
-void deallocNumeric(data_t* head) {
-	data_t* tmp;
-	while (head != NULL) {
-		tmp = head;
-		head = head->next;
-		free(tmp);
+void demalloc_data(data_t* head) {
+	if (!head) {
+		return;
 	}
+	demalloc_data(head->next);
+	free(head);
+}
+
+void demalloc_route(pix_t* head) {
+	if (!head) {
+		return;
+	}
+	demalloc_route(head->next);
+	free(head);
 }
 
 void print_list(printing_t* head) {
@@ -775,41 +788,46 @@ printing_t* pools_sorting_ninsert(printing_t* head, int coordinate_x, int coordi
 	return head;
 }
 
-data_t* numericCostEquation(pix_t* curr, co_t start, co_t end) {     //points from best route
-	int  fuel = 20, drive = 1;
-	double costs = 0, d = 0, n = 0;// n is step counter D is distance  
-	//pix_t* start = curr, * end = curr->next;
+data_t* numericCostEquation(pix_t* route) {//points from best route
+	pix_t* tm1 = route, * tm2 = route->next;
 	data_t* head = NULL;
-	d = d + distance(start, end);
-	while (n < d) {
-		addCost(&head, n, costs);
-		n += 0.1;
-		if (n < d)
-			costs += ((2.5 / (costs + 1) + drive) * 0.1);
+	int drive = 1, oil = 20;
+	double cost = 0, dist = 0, t = 0;
+	while (tm2 != NULL) {
+		dist = dist + distance2(tm1, tm2);
+		while (t < dist) {
+			node_adder(&head, t, cost);
+			t += 0.1;
+			if (t < dist) {
+				cost += ((2.5 / (cost + 1) + drive) * 0.1);
+			}
+		}
+		if (tm2->next) {
+			cost += ((2.5 / (cost + 1) + oil) * 0.1);
+			node_adder(&head, t, cost);
+		}
+		tm1 = tm2;
+		tm2 = tm2->next;
 	}
-	if (head->next)//                             {
-		costs += ((2.5 / (costs + 1) + fuel) * 0.1);
-	addCost(&head, distance(start, end), costs);
-	//start = end;
-	//end = head->next;//
 	return head;
 }
 
-void addCost(data_t** head, double d, double c) {
-
-	data_t* newNode = malloc(sizeof(data_t));
-	if (!newNode)return;
-	newNode->d = d;
-	newNode->c = c;
-	newNode->next = NULL;
-
-	if (*head == NULL)
-		*head = newNode;
-
+void node_adder(data_t** head, double distance, double cost) {
+	data_t* new_node = NULL;
+	new_node = malloc(sizeof(data_t));
+	if (!new_node) {
+		return;
+	}
+	new_node->distance = distance;
+	new_node->cost = cost;
+	new_node->next = NULL;
+	if (*head == NULL) {
+		*head = new_node;
+	}
 	else {
-		data_t* lastNode = *head;
-		while (lastNode->next != NULL) lastNode = lastNode->next;
-		lastNode->next = newNode;
+		data_t* end_node = *head;
+		while (end_node->next != NULL) end_node = end_node->next; {
+			end_node->next = new_node; }
 	}
 }
 
@@ -989,57 +1007,106 @@ list_t* interReverseLL(list_t* root) {
 	return root;
 }
 
-void numericReport(image_t image) {
-	co_t start, end;
-	data_t* head;
-	FILE* route;
-	char position;
-	double dt;//dt is the input user
-	fopen_s(&route, BEST_TXT, "rt");
-	if (!route) {
+pix_t* route_coordinates(FILE* best_route_file) {
+	int i = 0;
+	char str[25];
+	pix_t* head = NULL;
+	pix_t* node = NULL;
+	pix_t* temp = NULL;
+	fseek(best_route_file, 0, SEEK_SET);
+	while (fgets(str, sizeof(str), best_route_file)) {
+		i++;
+		if (i > 1) {
+			temp = malloc(sizeof(pix_t));
+			if (!temp) {
+				return NULL;
+			}
+			temp->p.x = atoi(&str[1]);
+			temp->p.y = atoi(strchr(str, ',') + 1);
+			if (temp->p.x < 1 || temp->p.x>250) {
+				head = NULL;
+				return head;
+			}
+			if (node) {
+				node->next = temp;
+			}
+			else {
+				head = temp;
+			}
+			node = temp;
+		}
+	}
+	if (node) {
+		node->next = NULL;
+	}
+	return head;
+}
+
+
+void numericReport() {
+	int r;
+	FILE* best_route_file;
+	pix_t* the_route = NULL;
+	data_t* head = NULL, * temp = NULL;
+	double skip_size;
+	fopen_s(&best_route_file, "best-route.txt", "rt");
+	if (!best_route_file) {
 		printf_s("Problem with file best-route.txt, or it might be empty.\n");
 		return;
 	}
-	position = fgetc(route);
-	fseek(route, 15, SEEK_SET);
-	start = bestCo(route);//                        
+	the_route = route_coordinates(best_route_file);
+	if (the_route == NULL) {
+		printf_s("Problem with file best-route.txt, or it might be empty.\n");
+		return;
+	}
+	printf_s("Please enter a positive intger as distance display interval: ");
 	do {
-		position = fgetc(route);
-		while (position != '(' && position != EOF)
-			position = fgetc(route);
-		fseek(route, -1, SEEK_CUR);
-		end = bestCo(route);
-		if (end.x == 0 && end.y == 0) return;
-		pix_t* curr = NULL; //current step 
-		int c;
-		curr = routeCoordinates(route);
-		printf_s("\nPlease enter a positive intger as distance display interval:\n");
-		do {
-			scanf_s("%lf", &dt);
-			while ((c = getchar()) != '\n' && c != EOF);
-			if ((dt - (int)dt != 0) || dt <= 0)
+		scanf_s("%lf", &skip_size);
+		while ((r = getchar()) != '\n' && r != EOF); {
+			if ((skip_size - (int)skip_size != 0) || skip_size <= 0) {
 				printf_s("Bad input, try again\n");
-		} while ((dt - (int)dt != 0) || dt <= 0);
-		head = numericCostEquation(curr, start, end);
-		data_t* temp = head;
-		printf_s("Distance   Consumption\n========== ===========\n");
-		printCost(head, dt);
-		start = end;//                                  
-	} while (end.x != image.width && end.y != image.height);// at the end of one calculations
-	deallocNumeric(head);
-	return;
+			}
+		}
+	} while ((skip_size - (int)skip_size != 0) || skip_size <= 0);
+	head = numericCostEquation(the_route);
+	temp = head;
+	printf_s("Distance   Consumption\n========== ===========\n");
+	print_to_screen(head, skip_size);
+	demalloc_data(head);
+	demalloc_route(the_route);
+	fclose(best_route_file);
 }
 
-void printCost(data_t* head, double dt) {
-	data_t* temp = head;
-	int i;
+void print_to_screen(data_t* head, double skip_size) {
+	data_t* temp = NULL;
+	temp = head;
 	while (temp->next) {
-		printf_s("   %7.3lf    %7.3lf\t\n", temp->d, temp->c);
-		for (i = 0; i < dt * 10; i++) {
+		if (temp->distance == 0) {
+			printf_s("   %7.3lf    %7.3lf\t\n", temp->distance, temp->cost);
+		}
+		else {
+			double g = temp->distance - (int)temp->distance;
+			if (g > 0.001) {
+				g = 1 - g;
+				printf_s("   %7.3lf    %7.3lf\t\n", temp->distance + g, temp->cost);
+			}
+			else {
+				printf_s("   %7.3lf    %7.3lf\t\n", temp->distance, temp->cost);
+
+			}
+		}
+		for (int i = 0; i < skip_size * 10; i++) {
 			if (temp->next)temp = temp->next;
 		}
 	}
-	printf_s("   %7.3lf    %7.3lf\t\n", temp->d, temp->c);
+	printf_s("   %7.3lf    %7.3lf\t\n", temp->distance, temp->cost);
+}
+
+
+double  distance2(pix_t* route, pix_t* temp) {
+	double distance = 0;
+	distance = sqrt(pow((double)(route->p.x) - (double)(temp->p.x), 2) + pow((double)(route->p.y) - (double)(temp->p.y), 2));
+	return distance;
 }
 
 double distance(co_t a, co_t b) {//Finding the distance between two coordinates
@@ -1802,7 +1869,7 @@ int input_menu() {
 void section_1(pixmat** matrix, image_t image, int width_flag, poolList_t* pools , int val, int count, int i) {
 	FILE* tx;
 	if (imgtrx(matrix, image, BMP, width_flag) != -1) {
-		if (pools) deallocPool(pools);
+		if (pools) deallocPool(&pools);
 		val = fopen_s(&tx, TXT, "w");
 		if (!tx) return;
 		pools = poolsFunction(matrix, image, pools, width_flag);
