@@ -421,8 +421,8 @@ void createBMP(char* filename, char* origin, char* txt, pixmat** matrix, image_t
 				fputc(matrix[j][i].color.g, image);
 				fputc(matrix[j][i].color.r, image);
 			}
-			for (int k = 0; k < width_flag - pic.width; k++) //width flag is set to the actual image width for cosidering the BPP* width / 4 requirement
-				fputc(0, image); //Prints padding to the image
+				for (int k = 0; k < width_flag - pic.width; k++) //width flag is set to the actual image width for cosidering the BPP* width / 4 requirement
+					fputc(0, image); //Prints padding to the image
 		}
 		fclose(image);
 		fclose(route);// closing open files
