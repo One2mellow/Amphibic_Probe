@@ -11,7 +11,7 @@
 #include <math.h>
 #include <time.h> //lecture #6
 
-#define BMP "fishpool-another-ex1.bmp"
+#define BMP "fishpool.bmp"
 #define BMPCPY "fishpool-copy.bmp"
 #define TXT "pools.txt"
 #define BEST_TXT "best-route.txt"
