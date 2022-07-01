@@ -381,8 +381,9 @@ int imgtrx(pixmat** mtrx, image_t image, char* filename, int width_flag) {
 				mtrx[j][i].cordinate.x = j;
 				mtrx[j][i].cordinate.y = i;//assigning x,y values to each pixel (type of the pixmat struct)
 			}
-			for (k = 0; k < width_flag - image.width; k++)
-				fseek(file, 1, SEEK_CUR); //Skips padding, width flag is set to the actual image width for cosidering the BPP*width/4 requirement
+			if (width_flag - image.width > 1)
+				for (k = 0; k < width_flag - image.width; k++)
+					fseek(file, 1, SEEK_CUR); //Skips padding, width flag is set to the actual image width for cosidering the BPP*width/4 requirement
 		}
 	}
 	fclose(file);
@@ -1082,7 +1083,6 @@ void numericReport() {
 	fopen_s(&best_route_file, "best-route.txt", "rt");
 	if (!best_route_file) { //In case we can't open file
 		printf_s("Problem with file best-route.txt, or it might be empty.\n");
-		fclose(best_route_file);
 		return;
 	}
 	the_route = route_coordinates(best_route_file); //Fetching route coordinates from file
@@ -1091,7 +1091,7 @@ void numericReport() {
 		fclose(best_route_file);
 		return;
 	}
-	printf_s("Please enter a positive intger as distance display interval: ");
+	printf_s("\nPlease enter a positive intger as distance display interval: ");
 	do {
 		scanf_s("%lf", &skip_size);
 		while ((r = getchar()) != '\n' && r != EOF); {
@@ -1149,26 +1149,6 @@ double distance(co_t a, co_t b) {//Finding the distance between two coordinates
 	double d;
 	d = sqrt(pow(x1 - x2, 2) + pow(y1 - y2, 2));//A formula for finding distance
 	return d;
-}
-
-pix_t* routeCoordinates(FILE* route) {
-	pix_t* tail = NULL, * temp, * head = NULL;
-	char data[40];
-	int i = 0;
-	fseek(route, 0, SEEK_SET);
-	while (fgets(data, sizeof(data), route)) {
-		i++;
-		if (i > 1) {
-			temp = malloc(sizeof(pix_t));
-			if (!temp)return NULL;
-			temp->p.x = atoi(&data[1]);
-			temp->p.y = atoi(strchr(data, ',') + 1);
-			if (tail)tail->next = temp;
-			else head = temp;
-			tail = temp;
-		}
-	}
-	return tail;
 }
 
 //Nadav
