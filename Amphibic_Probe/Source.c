@@ -120,13 +120,13 @@ void ReachToEnd(pixmat**, int* x, int* y, int* x_final, int* y_final);
 
 co_t best_co(FILE* route); //extrcats coordinates from best route file
 
-void printnsortpools();
+void printnsortpools(); //the main function for section 2, takes the data from pools.txt, and puts it into a sorted connected list
 
-void free_list_printing(printing_t* head);
+void free_list_printing(printing_t* head);//deallocating after all the list was printed
 
-void print_list(printing_t* head);
+void print_list(printing_t* head);//printing the connected list in section 2
 
-printing_t* pools_sorting_ninsert(printing_t* head, int coordinate_x, int coordinate_y, int poooolsize);
+printing_t* pools_sorting_ninsert(printing_t* head, int coordinate_x, int coordinate_y, int poooolsize); //take the data from 'printnsortpools' and puts it into new nodes in the connected list, sorts every new node into the list
 
 void time2glow(char* filename, pixmat** matrix, image_t image, int width_flag); //for setion 5
 
@@ -714,17 +714,17 @@ co_t best_co(FILE* route) {
 	}
 	return coordinate;
 }
-
-void printnsortpools() {
-	printing_t* head = NULL;
-	FILE* pools;
-	char trash;
+// Yonatan
+void printnsortpools() { 
+	printing_t* head = NULL; // points the head of the connected list
+	FILE* pools; // to open the file
+	char trash; 
 	co_t end_coordinate = { 0 };
-	int num_of_pool = pool_counter();
-	int poooolsize = 0, coordinate_x = 0, coordinate_y = 0;
-	int* pool_size_arr = pool_size_arr_malloc(num_of_pool);
+	int num_of_pool = pool_counter(); //counts pools
+	int poooolsize = 0, coordinate_x = 0, coordinate_y = 0; 
+	int* pool_size_arr = pool_size_arr_malloc(num_of_pool); 
 	co_t* middle_arr = middle_arr_malloc(num_of_pool);
-	if (file_curpt(num_of_pool) == 0) {
+	if (file_curpt(num_of_pool) == 0) { //checking for corrupted file, if there are illegal edits
 		printf_s("\nfunction readpools resulted with file read error. Check that the text file has the correct format.\n");
 		return;
 	}
@@ -736,15 +736,15 @@ void printnsortpools() {
 	else {
 		if (num_of_pool <= 0) { printf_s("\nList is empty\n"); } //if there are no pools)
 		else {
-			printf_s("\nSorted pools by size:\nCoordinate      Size\n==========  \t====\n");
-			fseek(pools, 12, SEEK_SET);
-			fscanf_s(pools, "%d %c %d", &end_coordinate.x, &trash, 1, &end_coordinate.y);
-			fseek(pools, 40, SEEK_CUR);
+			printf_s("\nSorted pools by size:\nCoordinate      Size\n==========  \t====\n"); //format
+			fseek(pools, 12, SEEK_SET); //jumps 1st line
+			fscanf_s(pools, "%d %c %d", &end_coordinate.x, &trash, 1, &end_coordinate.y); //stashing into trash the 2nd line
+			fseek(pools, 40, SEEK_CUR); //jumps the padding
 			for (int i = 0; i < num_of_pool; i++) {
-				fscanf_s(pools, "%d %c %d", &coordinate_x, &trash, 1, &coordinate_y);
+				fscanf_s(pools, "%d %c %d", &coordinate_x, &trash, 1, &coordinate_y); // taking the numbers into integers
 				fseek(pools, 1, SEEK_CUR);
-				fscanf_s(pools, "%d %c ", &poooolsize, &trash, 1);
-				head = pools_sorting_ninsert(head, coordinate_x, coordinate_y, poooolsize);
+				fscanf_s(pools, "%d %c ", &poooolsize, &trash, 1);//taking the last number into the pool size
+				head = pools_sorting_ninsert(head, coordinate_x, coordinate_y, poooolsize); 
 			}
 		}
 		fclose(pools);
@@ -755,7 +755,7 @@ void printnsortpools() {
 	free(middle_arr);
 }
 
-
+// Yonatan
 void free_list_printing(printing_t* head) {
 	printing_t* tmp;
 	while (head != NULL) {
@@ -764,33 +764,33 @@ void free_list_printing(printing_t* head) {
 		free(tmp);
 	}
 }
-
+// Yonatan
 void print_list(printing_t* head) {
 	while (head != NULL) {
 		printf_s("(%3d,%3d)  \t%d \n", head->center_x, head->center_y, head->poolsize);
 		head = head->next;
 	}
 }
-
+// Yonatan
 printing_t* pools_sorting_ninsert(printing_t* head, int coordinate_x, int coordinate_y, int poooolsize) {
-
-	printing_t* ptr = head;
+	//making the nodes in the list and sorting them
+	printing_t* ptr = head; // holds the first node in the list
 	printing_t* new_node = malloc(sizeof(printing_t));
-	if (!new_node) return head;
+	if (!new_node) return head; //if failed to allocate
 	new_node->center_x = coordinate_x;
 	new_node->center_y = coordinate_y;
 	new_node->poolsize = poooolsize;
-	new_node->next = NULL;
+	new_node->next = NULL; //in order to prevent the last node to be garbage
 	if (!head) // empty list_t
 		return new_node;
-	if (poooolsize < ptr->poolsize) {
-		while (ptr->next && poooolsize < ptr->next->poolsize)
+	if (poooolsize < ptr->poolsize) { //if the size of the new pool is smaller
+		while (ptr->next && poooolsize < ptr->next->poolsize) //until the new pool is in her place
 			ptr = ptr->next;
-		new_node->next = ptr->next;
-		ptr->next = new_node;
+		new_node->next = ptr->next; //pushes the new node in to his new place and connecting him to the next node
+		ptr->next = new_node; //connects the previos node to the new node
 	}
 	else { // Place at beginning of list_t
-		new_node->next = head;
+		new_node->next = head; // the new head
 		head = new_node;
 	}
 	return head;
@@ -1194,23 +1194,23 @@ int route_finder(co_t tracker_coordinate, co_t end_coordinate, double oil, doubl
 	return x;
 }
 
-
+// Nadav
 int pool_counter() {
 	char pointer = 0;
 	int num_of_pool = 0;
 	FILE* pools;
 	fopen_s(&pools, TXT, "rt");
 	if (!pools) return 0;
-	fseek(pools, 40, SEEK_CUR);
+	fseek(pools, 40, SEEK_CUR); // jumps over the padding of pools.txt
 	for (pointer = getc(pools); pointer != EOF; pointer = getc(pools)) {
-		if (pointer == '(') {
+		if (pointer == '(') { //counts the one char at a time in the file according to the format
 			num_of_pool++;
 		}
 	}
 	fclose(pools);
 	return num_of_pool;
 }
-
+//Nadav
 int* pool_size_arr_malloc(int num_of_pool) {
 	int* pool_size_arr = NULL;
 	pool_size_arr = (int*)malloc(num_of_pool * sizeof(int));
@@ -1219,7 +1219,7 @@ int* pool_size_arr_malloc(int num_of_pool) {
 	}
 	return pool_size_arr;
 }
-
+//Nadav
 co_t* middle_arr_malloc(int num_of_pool) {
 	co_t* middle_arr = NULL;
 	middle_arr = (co_t*)malloc(num_of_pool * sizeof(co_t));
@@ -1753,30 +1753,30 @@ void reducing_section_3(co_t current_pos, co_t end_coordinate, double oil, int p
 	}
 }
 
-
-int file_curpt(int num_of_pool) {
+//Nadav
+int file_curpt(int num_of_pool) { //checking if the file is corrupted by passing each line and checking for characters different than numbers
 	FILE* pools;
 	int a, b, d, e;
 	char c, f, g;
 	fopen_s(&pools, "pools.txt", "rt");
 	if (!pools) {
-		return -1;
+		return -1; //if the file failed to open
 	}
 	else {
-		fseek(pools, 12, SEEK_SET);
-		fscanf_s(pools, "%d %c %d", &a, &c, 1, &b);
+		fseek(pools, 12, SEEK_SET); // jumps the first line
+		fscanf_s(pools, "%d %c %d", &a, &c, 1, &b); //stashing the 2nd line into trash data
 		fseek(pools, 39, SEEK_CUR);
 		for (int i = 0; i < num_of_pool; i++) {
 			fscanf_s(pools, "%c %d %c %d %c", &c, 1, &d, &f, 1, &e, &g, 1);
 			if (c != '(') {
 				fclose(pools);
-				return 0;
+				return 0;  // if the coordinates format is corupted
 			}
 			if (f != ',') {
-				fclose(pools);
+				fclose(pools); 
 				return 0;
 			}
-			if (g != ')') {
+			if (g != ')') { 
 				fclose(pools);
 				return 0;
 			}
