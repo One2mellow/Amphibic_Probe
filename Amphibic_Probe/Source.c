@@ -250,6 +250,7 @@ int main() {
 	if ((loadImage(&image, BMP, image.header)) != 0) {
 		return -1;
 	}
+
 	width_flag = image.width;
 	for (i = 0; ((width_flag * 3) % 4) != 0; i++) // making sure width * BytesPerPixel is divsible by 4 due to BMP color pallate regulations for 24bit BMP format
 		width_flag = image.width + i;
