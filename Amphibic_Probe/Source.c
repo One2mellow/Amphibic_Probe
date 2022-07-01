@@ -1055,10 +1055,6 @@ pix_t* route_coordinates(FILE* best_route_file) {
 			}
 			temp->p.x = atoi(&str[1]);
 			temp->p.y = atoi(strchr(str, ',') + 1); //Converting to int type and saving the coordinate values
-			if (temp->p.x < 1 || temp->p.x>250) {
-				head = NULL;
-				return head;
-			}
 			if (node) {
 				node->next = temp;
 			}
@@ -1087,11 +1083,7 @@ void numericReport() {
 		return;
 	}
 	the_route = route_coordinates(best_route_file); //Fetching route coordinates from file
-	if (the_route == NULL) {
-		printf_s("Problem with file best-route.txt, or it might be empty.\n");
-		fclose(best_route_file);
-		return;
-	}
+	
 	printf_s("\nPlease enter a positive intger as distance display interval: ");
 	do {
 		scanf_s("%lf", &skip_size);
