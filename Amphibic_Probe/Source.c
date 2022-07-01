@@ -82,7 +82,7 @@ typedef struct country_link { // struct to store link to all store products in o
 	char* e;
 }link;
 
-typedef struct data {
+typedef struct data { //Struct to use with the numeric report function
 	double distance;
 	double cost;
 	struct data* next;
@@ -120,17 +120,19 @@ void reachToEnd(pixmat**, int x, int y, int x_final, int y_final); //Compensatin
 
 co_t bestCo(FILE* route); //Extrcats coordinates from best route file
 
-void printnsortpools();
+void printnsortpools(); //the main function for section 2, takes the data from pools.txt, and puts it into a sorted connected list
 
-void free_list_printing(printing_t* head);
+void free_list_printing(printing_t* head); //deallocating after all the list was printed
+
+void print_list(printing_t* head); //printing the connected list in section 2
+
+printing_t* pools_sorting_ninsert(printing_t* head, int coordinate_x, int coordinate_y, int poooolsize); //take the data from 'printnsortpools' and puts it into new nodes in the connected list, sorts every new node into the list
 
 void demalloc_data(data_t* head);
 
 void demalloc_route(pix_t* head);
 
 void print_to_screen(data_t* head, double jump);
-
-printing_t* pools_sorting_ninsert(printing_t* head, int coordinate_x, int coordinate_y, int poooolsize);
 
 void time2Glow(char* filename, pixmat** matrix, image_t image, int width_flag); //for setion 5
 
@@ -153,8 +155,6 @@ double distance2(pix_t* route, pix_t* temp);
 void node_adder(data_t** head, double d, double c);
 
 data_t* numericCostEquation(pix_t* route);
-
-void print_list(printing_t* head);
 
 pix_t* routeCoordinates(FILE* route);
 
@@ -257,16 +257,17 @@ int main() {
 		width_flag = image.width + i;
 
 	matrix = malloc(sizeof(pixmat*) * image.width);
-	if (matrix){
+	if (matrix) {
 		for (i = 0;i < image.width;i++) {
 			matrix[i] = malloc(sizeof(pixmat) * image.height);
 		} // allocate memory to image pixel matrix
-	} else
+	}
+	else
 		return 1;
 
-	while (choice != 9){
+	while (choice != 9) {
 		choice = input_menu();
-		switcher(choice, matrix, width_flag,image);
+		switcher(choice, matrix, width_flag, image);
 	}
 	for (i = 0;i < image.width;i++) {
 		free(matrix[i]);
@@ -368,10 +369,10 @@ int imgtrx(pixmat** mtrx, image_t image, char* filename, int width_flag) {
 		printf_s("\nError open the %s\n", filename); //In case we couldn't open the file
 		return -1;
 	}
-	if (file != 0){
+	if (file != 0) {
 		fseek(file, 54, SEEK_SET); //Skipping the header bytes and getting to the color pallette 
-		for (i = 0; i < image.height; i++){ //Our matrix is set from index '0' up to index that is one less than 'image height\width'
-			for (j = 0; j < image.width; j++){
+		for (i = 0; i < image.height; i++) { //Our matrix is set from index '0' up to index that is one less than 'image height\width'
+			for (j = 0; j < image.width; j++) {
 				mtrx[j][i].color.b = fgetc(file); //Saving the RGB data to the correct x,y location on the color pallette
 				mtrx[j][i].color.g = fgetc(file); //On the BMP the data is actually stored in order of BGR
 				mtrx[j][i].color.r = fgetc(file);
@@ -407,11 +408,11 @@ void createBMP(char* filename, char* origin, char* txt, pixmat** matrix, image_t
 			routePainter(matrix, start.x, start.y, end.x, end.y, pic.height, pic.width); //painting teh movemnt route on the map for given coordinates
 			start = end; //next movement starts from the last end point
 		} while (end.x != width_flag && end.y != pic.height); //making sure we haven't reach to the edge of the map (top-right corner) 
-		for (int i = 0; i < 54; i++){
+		for (int i = 0; i < 54; i++) {
 			fputc(header[i], image); //printing header data to the new BMP file
 		}
-		for (int i = 0; i < pic.height; i++){
-			for (int j = 0; j < pic.width; j++){ //printing the modified color pallette to the new BMP (prnting the route)
+		for (int i = 0; i < pic.height; i++) {
+			for (int j = 0; j < pic.width; j++) { //printing the modified color pallette to the new BMP (prnting the route)
 				fputc(matrix[j][i].color.b, image);
 				fputc(matrix[j][i].color.g, image);
 				fputc(matrix[j][i].color.r, image);
@@ -440,7 +441,7 @@ poolList_t* poolsFunction(pixmat** mtrx, image_t image, poolList_t* pools, int w
 			}//Allocate memory to 2D 1/0 temp matrix
 	}
 	bluePixRec(mtrx, temp, image); //Pixel's color recognizing function
-	if (temp != 0){
+	if (temp != 0) {
 		for (i = 0;i < image.height;i++) {
 			for (j = 0;j < image.width;j++) {
 				if (temp[j][i] == 1) { //Going over all the pixels in the matrix and checking if it is blue or not
@@ -461,7 +462,8 @@ poolList_t* poolsFunction(pixmat** mtrx, image_t image, poolList_t* pools, int w
 		}
 		free(temp);
 		return pools;
-	} else
+	}
+	else
 		return pools;
 }
 
@@ -611,7 +613,7 @@ void routePainter(pixmat** matrix, int x, int y, int x_final, int y_final, int h
 	b = y - (int)(movratio * x); //Calculating line's constant
 	if (movratio == 1 || movratio < 1) //Covering cases so that the starting pixel color won't be overpainted
 		x++;
-	for (x; x < x_final && x < width - 1 && y < y_final && y < height - 1; x++)	{ //Making sure we are not going over the end point or the image borders
+	for (x; x < x_final && x < width - 1 && y < y_final && y < height - 1; x++) { //Making sure we are not going over the end point or the image borders
 		if (movratio != 1)
 		{
 			dif = y;
@@ -628,7 +630,8 @@ void routePainter(pixmat** matrix, int x, int y, int x_final, int y_final, int h
 					dif++;
 					matrix[x][dif].color.r = 100; matrix[x][dif].color.g = 30; matrix[x][dif].color.b = 232;
 				}
-			}else //In case the slope is not too steep\gentle
+			}
+			else //In case the slope is not too steep\gentle
 				matrix[x][y].color.r = 100; matrix[x][y].color.g = 30; matrix[x][y].color.b = 232;
 		}
 		else { //For slope = 1
@@ -691,16 +694,17 @@ co_t bestCo(FILE* route) {
 	return coordinate;
 }
 
+// Yonatan
 void printnsortpools() {
-	printing_t* head = NULL;
-	FILE* pools;
+	printing_t* head = NULL; // points the head of the connected list
+	FILE* pools; // to open the file
 	char trash;
 	co_t end_coordinate = { 0 };
-	int num_of_pool = pool_counter();
+	int num_of_pool = pool_counter(); //counts pools
 	int poooolsize = 0, coordinate_x = 0, coordinate_y = 0;
 	int* pool_size_arr = pool_size_arr_malloc(num_of_pool);
 	co_t* middle_arr = middle_arr_malloc(num_of_pool);
-	if (file_corrupt(num_of_pool) == 0) {
+	if (file_corrupt(num_of_pool) == 0) { //checking for corrupted file, if there are illegal edits
 		printf_s("\nfunction readpools resulted with file read error. Check that the text file has the correct format.\n");
 		return;
 	}
@@ -712,14 +716,14 @@ void printnsortpools() {
 	else {
 		if (num_of_pool <= 0) { printf_s("\nList is empty\n"); } //if there are no pools)
 		else {
-			printf_s("\nSorted pools by size:\nCoordinate      Size\n==========  \t====\n");
-			fseek(pools, 12, SEEK_SET);
-			fscanf_s(pools, "%d %c %d", &end_coordinate.x, &trash, 1, &end_coordinate.y);
-			fseek(pools, 40, SEEK_CUR);
+			printf_s("\nSorted pools by size:\nCoordinate      Size\n==========  \t====\n"); //format
+			fseek(pools, 12, SEEK_SET); //jumps 1st line
+			fscanf_s(pools, "%d %c %d", &end_coordinate.x, &trash, 1, &end_coordinate.y); //stashing into trash the 2nd line
+			fseek(pools, 40, SEEK_CUR); //jumps the padding
 			for (int i = 0; i < num_of_pool; i++) {
-				fscanf_s(pools, "%d %c %d", &coordinate_x, &trash, 1, &coordinate_y);
+				fscanf_s(pools, "%d %c %d", &coordinate_x, &trash, 1, &coordinate_y); // taking the numbers into integers
 				fseek(pools, 1, SEEK_CUR);
-				fscanf_s(pools, "%d %c ", &poooolsize, &trash, 1);
+				fscanf_s(pools, "%d %c ", &poooolsize, &trash, 1); //taking the last number into the pool size
 				head = pools_sorting_ninsert(head, coordinate_x, coordinate_y, poooolsize);
 			}
 		}
@@ -731,7 +735,7 @@ void printnsortpools() {
 	free(middle_arr);
 }
 
-
+// Yonatan
 void free_list_printing(printing_t* head) {
 	printing_t* tmp;
 	while (head != NULL) {
@@ -740,6 +744,40 @@ void free_list_printing(printing_t* head) {
 		free(tmp);
 	}
 }
+
+// Yonatan
+void print_list(printing_t* head) {
+	while (head != NULL) {
+		printf_s("(%3d,%3d)  \t%d \n", head->center_x, head->center_y, head->poolsize);
+		head = head->next;
+	}
+}
+
+// Yonatan
+printing_t* pools_sorting_ninsert(printing_t* head, int coordinate_x, int coordinate_y, int poooolsize) {
+	//making the nodes in the list and sorting them
+	printing_t* ptr = head; // holds the first node in the list
+	printing_t* new_node = malloc(sizeof(printing_t));
+	if (!new_node) return head; //if failed to allocate
+	new_node->center_x = coordinate_x;
+	new_node->center_y = coordinate_y;
+	new_node->poolsize = poooolsize;
+	new_node->next = NULL; //in order to prevent the last node to be garbage
+	if (!head) // empty list_t
+		return new_node;
+	if (poooolsize < ptr->poolsize) { //if the size of the new pool is smaller
+		while (ptr->next && poooolsize < ptr->next->poolsize) //until the new pool is in her place
+			ptr = ptr->next;
+		new_node->next = ptr->next; //pushes the new node in to his new place and connecting him to the next node
+		ptr->next = new_node; //connects the previos node to the new node
+	}
+	else { // Place at beginning of list_t
+		new_node->next = head; // the new head
+		head = new_node;
+	}
+	return head;
+}
+
 
 void demalloc_data(data_t* head) {
 	if (!head) {
@@ -755,37 +793,6 @@ void demalloc_route(pix_t* head) {
 	}
 	demalloc_route(head->next);
 	free(head);
-}
-
-void print_list(printing_t* head) {
-	while (head != NULL) {
-		printf_s("(%3d,%3d)  \t%d \n", head->center_x, head->center_y, head->poolsize);
-		head = head->next;
-	}
-}
-
-printing_t* pools_sorting_ninsert(printing_t* head, int coordinate_x, int coordinate_y, int poooolsize) {
-
-	printing_t* ptr = head;
-	printing_t* new_node = malloc(sizeof(printing_t));
-	if (!new_node) return head;
-	new_node->center_x = coordinate_x;
-	new_node->center_y = coordinate_y;
-	new_node->poolsize = poooolsize;
-	new_node->next = NULL;
-	if (!head) // empty list_t
-		return new_node;
-	if (poooolsize < ptr->poolsize) {
-		while (ptr->next && poooolsize < ptr->next->poolsize)
-			ptr = ptr->next;
-		new_node->next = ptr->next;
-		ptr->next = new_node;
-	}
-	else { // Place at beginning of list_t
-		new_node->next = head;
-		head = new_node;
-	}
-	return head;
 }
 
 data_t* numericCostEquation(pix_t* route) {//points from best route
@@ -843,7 +850,7 @@ void time2Glow(char* filename, pixmat** matrix, image_t image, int width_flag) {
 		return;
 	}
 	else {
-	fopen_s(&txt, FUEL_TXT, "wt");
+		fopen_s(&txt, FUEL_TXT, "wt");
 		if (file != 0 && txt != 0) {
 			pos = fgetc(file);
 			fseek(file, 0, SEEK_SET);
@@ -1246,14 +1253,14 @@ int route_finder(co_t tracker_coordinate, co_t end_coordinate, double oil, doubl
 	return x;
 }
 
-
+// Nadav
 int pool_counter() {
 	char pointer = 0;//Indicates the character in the file
 	int num_of_pool = 0;
 	FILE* pools;
 	fopen_s(&pools, TXT, "rt");
 	if (!pools) return 0;
-	fseek(pools, 40, SEEK_CUR);
+	fseek(pools, 40, SEEK_CUR); // jumps over the padding of pools.txt
 	for (pointer = getc(pools); pointer != EOF; pointer = getc(pools)) {
 		if (pointer == '(') {//Count how many pools there are in the text file
 			num_of_pool++;
@@ -1263,6 +1270,7 @@ int pool_counter() {
 	return num_of_pool;
 }
 
+//Nadav
 int* pool_size_arr_malloc(int num_of_pool) {
 	int* pool_size_arr = NULL;
 	pool_size_arr = (int*)malloc(num_of_pool * sizeof(int));//Allocation of memory to an array of pool sizes
@@ -1272,6 +1280,7 @@ int* pool_size_arr_malloc(int num_of_pool) {
 	return pool_size_arr;
 }
 
+//Nadav
 co_t* middle_arr_malloc(int num_of_pool) {
 	co_t* middle_arr = NULL;
 	middle_arr = (co_t*)malloc(num_of_pool * sizeof(co_t));//Allocation of memory to the set of pool centers
@@ -1709,8 +1718,8 @@ void there_a_route(double oil, co_t current_pos, co_t end_coordinate) {
 	free(data);
 }
 
- co_t input_check(co_t image) {
-	 co_t coordinate = { 0 };
+co_t input_check(co_t image) {
+	co_t coordinate = { 0 };
 	do {
 		char input[81];
 		char x[80] = { 0 }, y[80] = { 0 };
@@ -1739,26 +1748,26 @@ void there_a_route(double oil, co_t current_pos, co_t end_coordinate) {
 	return coordinate;
 }
 
- void stringfixer(char* input, int* commacount, co_t image) {
-	 char* dex;
-	 int i;
-	 dex = strchr(input, ',');
-	 while (dex == NULL) {
-		 printf_s("Please Enter valid x,y start coordinate, bmp width is %d and height is %d\n", image.x, image.y);
-		 gets_s(input, 81);
-		 dex = strchr(input, ',');
-	 }
-	 for (i = 0; input[i] != '\0'; i++) {
-		 if (input[i] < '0' || input[i] > '9')
-			 if (input[i] != ',' && input[i] != ' ') {
-				 printf_s("Please Enter valid x,y start coordinate, bmp width is %d and height is %d\n", image.x, image.y);
-				 gets_s(input, 81);
-				 i = 0;
-			 }
-		 if (input[i] == ',')
-			 *commacount += 1;
-	 }
- }
+void stringfixer(char* input, int* commacount, co_t image) {
+	char* dex;
+	int i;
+	dex = strchr(input, ',');
+	while (dex == NULL) {
+		printf_s("Please Enter valid x,y start coordinate, bmp width is %d and height is %d\n", image.x, image.y);
+		gets_s(input, 81);
+		dex = strchr(input, ',');
+	}
+	for (i = 0; input[i] != '\0'; i++) {
+		if (input[i] < '0' || input[i] > '9')
+			if (input[i] != ',' && input[i] != ' ') {
+				printf_s("Please Enter valid x,y start coordinate, bmp width is %d and height is %d\n", image.x, image.y);
+				gets_s(input, 81);
+				i = 0;
+			}
+		if (input[i] == ',')
+			*commacount += 1;
+	}
+}
 
 /*Section 3 -
 Shows the fastest route from a certain point on the map to the end point considering the amount of oil*/
@@ -1808,24 +1817,24 @@ void reducing_section_3(co_t current_pos, co_t end_coordinate, double oil, int p
 	}
 }
 
-
-int file_corrupt(int num_of_pool) {
+//Nadav
+int file_corrupt(int num_of_pool) { //checking if the file is corrupted by passing each line and checking for characters different than numbers
 	FILE* pools;
 	int a, b, d, e;
 	char c, f, g;
 	fopen_s(&pools, "pools.txt", "rt");
 	if (!pools) {
-		return -1;
+		return -1; //if the file failed to open
 	}
 	else {
 		fseek(pools, 12, SEEK_SET);//skip to the size of the map numbers
-		fscanf_s(pools, "%d %c %d", &a, &c, 1, &b);
+		fscanf_s(pools, "%d %c %d", &a, &c, 1, &b); //stashing the 2nd line into trash data
 		fseek(pools, 39, SEEK_CUR);//skip to the pools data
 		for (int i = 0; i < num_of_pool; i++) {
 			fscanf_s(pools, "%c %d %c %d %c", &c, 1, &d, &f, 1, &e, &g, 1);//checking if the data is corrupted
 			if (c != '(') {
 				fclose(pools);
-				return 0;
+				return 0; // if the coordinates format is corupted
 			}
 			if (f != ',') {
 				fclose(pools);
@@ -1866,7 +1875,7 @@ int input_menu() {
 }
 
 
-void section_1(pixmat** matrix, image_t image, int width_flag, poolList_t* pools , int val, int count, int i) {
+void section_1(pixmat** matrix, image_t image, int width_flag, poolList_t* pools, int val, int count, int i) {
 	FILE* tx;
 	if (imgtrx(matrix, image, BMP, width_flag) != -1) {
 		if (pools) deallocPool(&pools);
