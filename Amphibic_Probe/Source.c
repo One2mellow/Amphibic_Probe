@@ -1082,11 +1082,13 @@ void numericReport() {
 	fopen_s(&best_route_file, "best-route.txt", "rt");
 	if (!best_route_file) { //In case we can't open file
 		printf_s("Problem with file best-route.txt, or it might be empty.\n");
+		fclose(best_route_file);
 		return;
 	}
 	the_route = route_coordinates(best_route_file); //Fetching route coordinates from file
 	if (the_route == NULL) {
 		printf_s("Problem with file best-route.txt, or it might be empty.\n");
+		fclose(best_route_file);
 		return;
 	}
 	printf_s("Please enter a positive intger as distance display interval: ");
@@ -1951,12 +1953,12 @@ void section_1(pixmat** matrix, image_t image, int width_flag, poolList_t* pools
 			printf_s("\nCoordinate x1,y1 of the first discoverd pool (%d,%d)", pools->pool_center.x, pools->pool_center.y);
 			printf_s("\nSize %d", pools->size);
 			if (val == 0) {
-				fprintf_s(tx, "%s%dx%d%s", "Image size (", image.width, image.height, ")\nPool Center	Size\n===========	====");
+				fprintf_s(tx, "%s%dx%d%s", "Image size (", image.width, image.height, ")\nPool Center	Size\n===========	====\n");
 				for (poolList_t* curr = pools; curr != NULL; curr = curr->next) {
-					fprintf_s(tx, "\n(%d,%d)", curr->pool_center.x, curr->pool_center.y);
+					fprintf_s(tx, "(%d,%d)", curr->pool_center.x, curr->pool_center.y);
 					for (i = 0; i < 9 - spaceMod(curr->pool_center.x, curr->pool_center.y); i++) //Total line length in the pools.txt file
 						fputc(' ', tx);
-					fprintf_s(tx, "%d", curr->size);
+					fprintf_s(tx, "%d\n", curr->size);
 					count++; //iterating through the pool list, printing size and center
 				}
 			}
